@@ -1,6 +1,6 @@
 """The one config file, as seen from Python.
 
-seo-agent.config.json (or $SEO_AGENT_CONFIG) is shared with the dashboard
+n-seo.config.json (or $N_SEO_CONFIG) is shared with the dashboard
 (src/config.ts). Every script imports this instead of carrying its own site
 list, so a site added to the config is picked up by every pull, probe, audit
 and export. Stdlib only.
@@ -12,8 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
-CONFIG_PATH = Path(os.environ.get("SEO_AGENT_CONFIG") or ROOT / "seo-agent.config.json")
-EXAMPLE_PATH = ROOT / "seo-agent.config.example.json"
+CONFIG_PATH = Path(os.environ.get("N_SEO_CONFIG") or ROOT / "n-seo.config.json")
+EXAMPLE_PATH = ROOT / "n-seo.config.example.json"
 
 MODULE_KEYS = [
     "indexStatus", "metadataAudit", "opportunityScan", "llm", "hackerNews",
@@ -53,7 +53,7 @@ def load(force: bool = False) -> dict:
         })
     conv = raw.get("conversions") or {}
     _cache = {
-        "name": raw.get("name") or "SEO Agent",
+        "name": raw.get("name") or "n-seo",
         "port": int(os.environ.get("SEO_PORT") or raw.get("port") or 4600),
         "google": {**(raw.get("google") or {}),
                    "auth": (raw.get("google") or {}).get("auth") or "service-account-key"},

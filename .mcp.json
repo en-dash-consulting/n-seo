@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "seo-agent": {
+    "n-seo": {
       "command": "npx",
       "args": ["tsx", "src/mcp-stdio.ts"]
     }

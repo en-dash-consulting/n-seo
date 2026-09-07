@@ -14,7 +14,7 @@ uses [Semantic Versioning](https://semver.org/).
   email do not belong on a mirror).
 
 ### Added
-- **One config file** (`seo-agent.config.json`) read by the dashboard and every
+- **One config file** (`n-seo.config.json`) read by the dashboard and every
   Python script: sites, Google auth, watch pages, conversions, module switches.
   Falls back to the example so a fresh checkout runs.
 - **Google auth without gcloud**: service-account JSON key, JWT signed locally
@@ -48,4 +48,4 @@ uses [Semantic Versioning](https://semver.org/).
 - Docs: README, ARCHITECTURE, SETUP-GOOGLE, SCHEDULING, OPERATING-RULES,
   PLAYBOOK, MCP, ADDING-A-SITE, FAQ, CONTRIBUTING, SECURITY.
 
-[Unreleased]: https://github.com/OWNER/seo-agent/compare/main...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/main...HEAD

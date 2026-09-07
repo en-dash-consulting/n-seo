@@ -1,4 +1,4 @@
-# seo-agent — operating rules for agents working in this repo
+# n-seo — operating rules for agents working in this repo
 
 This repo is a local search-ops control plane. Read README.md and
 docs/OPERATING-RULES.md before substantive work; docs/ARCHITECTURE.md has the
@@ -52,7 +52,7 @@ npm run mcp:smoke                  # MCP server check
 ```
 
 If the dashboard runs as a launchd service, restart it after code changes:
-`launchctl kickstart -k gui/$(id -u)/com.seo-agent.dashboard`.
+`launchctl kickstart -k gui/$(id -u)/n-seo.dashboard`.
 
 ## Design language
 

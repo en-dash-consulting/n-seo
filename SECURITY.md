@@ -2,7 +2,7 @@
 
 ## Model
 
-seo-agent is a **local-only** tool. It runs on your machine, reads your Google
+n-seo is a **local-only** tool. It runs on your machine, reads your Google
 data with credentials you control, and writes JSON files under `data/`. There
 is no hosted service, no telemetry, and no outbound traffic other than:
 
@@ -17,7 +17,7 @@ Nothing posts, sends, or publishes on your behalf.
 ## Credentials
 
 - The service-account key belongs outside the repo (default
-  `~/.config/seo-agent/service-account.json`, `chmod 600`). `.gitignore`
+  `~/.config/n-seo/service-account.json`, `chmod 600`). `.gitignore`
   excludes `*.key.json`, `service-account*.json`, `.env` and your live config,
   but review `git status` before your first push anyway.
 - Grant the service account the **least** access that works: *Full* on the
@@ -39,7 +39,7 @@ Nothing posts, sends, or publishes on your behalf.
   auth; do not expose the port to the internet. For access from another device
   use a tunnel (Tailscale, cloudflared).
 - `POST /mcp` requires a bearer token (`SEO_MCP_TOKEN` in the environment or
-  `.env`, or `~/.config/seo-agent/mcp-token`). With no token configured the
+  `.env`, or `~/.config/n-seo/mcp-token`). With no token configured the
   endpoint returns **503** rather than serving. The comparison is
   constant-time. The stdio MCP transport needs no token: the OS process
   boundary is the authentication.

@@ -1,6 +1,6 @@
 # Adding a site
 
-One entry in `seo-agent.config.json`. There are no per-script site lists:
+One entry in `n-seo.config.json`. There are no per-script site lists:
 every pull, probe, audit, page and export reads the same `sites` array.
 
 ```json

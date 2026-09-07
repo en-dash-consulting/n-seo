@@ -1,6 +1,6 @@
 ---
 name: orient
-description: Fast, cheap orientation for a fresh session on this seo-agent install. Use FIRST in any new session here — reads current state from the running system instead of re-deriving it from raw data.
+description: Fast, cheap orientation for a fresh session on this n-seo install. Use FIRST in any new session here — reads current state from the running system instead of re-deriving it from raw data.
 ---
 
 # Orient — get current in ~4 reads, not 40
@@ -10,7 +10,7 @@ its conclusions. Procedure, in order — stop when you have what the task needs:
 
 1. **The queue is the truth for "what's next"**:
    `curl -s http://localhost:4600/api/actions` (the port is `port` in
-   `seo-agent.config.json`; the MCP `list_actions` tool returns the same).
+   `n-seo.config.json`; the MCP `list_actions` tool returns the same).
    Every active and watching action with evidence and spec.
 2. **What happened lately**: the last entry of `docs/daily-log.md` (probe
    health, watched-page numbers, conversions line) and `data/last-run.json`
@@ -37,7 +37,7 @@ decisions ride the 90-day window · proposals never self-promote.
 ## If something is broken
 
 - Dashboard down: `npm start`, or if it runs as a service,
-  `launchctl kickstart -k gui/$(id -u)/com.seo-agent.dashboard`.
+  `launchctl kickstart -k gui/$(id -u)/n-seo.dashboard`.
 - Daily run failing: the Logs page (`/logs`) or `data/daily-ops.log`, then
   `python3 ops/doctor.py`. 401/403 from Google means the service account
   lost access or the key file moved — see `docs/SETUP-GOOGLE.md`.

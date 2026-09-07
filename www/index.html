@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n-seo — An SEO on your machine</title>
+<meta name="description" content="n-seo is an open-source, local-first SEO / AEO / GEO control plane. It reads Search Console and GA4 every morning, probes your sites, and hands you a ranked queue of concrete moves with the numbers attached. Your data stays on your machine. It briefs you; it never posts for you.">
+<meta name="keywords" content="n-seo, open source SEO tool, Search Console dashboard, GA4, local-first SEO, AEO, GEO, AI crawlers, llms.txt, MCP, Claude Code, striking distance, CTR gaps">
+<meta name="author" content="En Dash Consulting">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://en-dash-consulting.github.io/n-seo/">
+<meta name="theme-color" content="#0d1b3e">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://en-dash-consulting.github.io/n-seo/">
+<meta property="og:title" content="n-seo — An SEO on your machine">
+<meta property="og:description" content="Open-source, local-first SEO control plane. Reads Search Console and GA4, probes your sites, hands you a ranked queue of moves — with the numbers. It briefs you; it never posts for you.">
+<meta property="og:image" content="https://en-dash-consulting.github.io/n-seo/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="n-seo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="n-seo — An SEO on your machine">
+<meta name="twitter:description" content="Open-source, local-first SEO control plane from the makers of n-dx. Reads Search Console and GA4, probes your sites, ranks the moves. It briefs you; it never posts for you.">
+<meta name="twitter:image" content="https://en-dash-consulting.github.io/n-seo/assets/og.png">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "n-seo",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux",
+  "description": "Open-source, local-first SEO / AEO / GEO control plane. Pulls Search Console and GA4, probes live sites, and produces a ranked action queue with evidence. Read-only MCP server for AI agents.",
+  "url": "https://en-dash-consulting.github.io/n-seo/",
+  "codeRepository": "https://github.com/en-dash-consulting/n-seo",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Organization", "name": "En Dash Consulting", "url": "https://endash.us" }
+}
+</script>
+
+<style>
+  :root {
+    --navy: #0d1b3e;
+    --navy-mid: #132247;
+    --navy-light: #1a2f5a;
+    --teal: #00ffb3;
+    --teal-dim: #1a9970;
+    --teal-subtle: rgba(45,212,160,0.12);
+    --amber: #ffaa33;
+    --amber-subtle: rgba(245,158,66,0.12);
+    --purple: #a78bff;
+    --purple-subtle: rgba(139,124,248,0.12);
+    --white: #ffffff;
+    --muted: #dde6f8;
+    --dim: #9fb0d6;
+    --border: rgba(255,255,255,0.10);
+    --card: rgba(255,255,255,0.05);
+    --card-hover: rgba(255,255,255,0.09);
+    --font-display: 'Montserrat', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--teal); }
+  img { max-width: 100%; height: auto; display: block; }
+  code, pre, .mono { font-family: var(--font-mono); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
+  h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: 800; }
+  h3 { font-size: 1.1rem; font-weight: 700; }
+  p { margin: 0; }
+  .eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+  .lede { color: var(--muted); font-size: 1.1rem; max-width: 66ch; margin-top: 14px; font-weight: 300; }
+  section { padding: 84px 0; border-top: 1px solid var(--border); }
+
+  /* nav */
+  .nav { position: sticky; top: 0; z-index: 10; background: rgba(13,27,62,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .nav .wrap { display: flex; align-items: center; gap: 22px; height: 62px; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
+  .logo svg { width: 28px; height: 28px; }
+  .nav-links { display: flex; gap: 6px; margin-left: auto; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; padding: 6px 12px; border-radius: 999px; }
+  .nav-links a:hover { color: var(--white); background: var(--card); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 500; border-radius: 10px; padding: 12px 20px; font-size: 0.98rem; border: 1px solid var(--border); color: var(--white); transition: background .15s, border-color .15s; }
+  .btn:hover { background: var(--card-hover); border-color: rgba(255,255,255,0.22); }
+  .btn.primary { background: var(--teal); color: var(--navy); border-color: var(--teal); font-weight: 700; }
+  .btn.primary:hover { background: #33ffc2; }
+  .btn.small { padding: 8px 14px; font-size: 0.88rem; }
+
+  /* hero */
+  .hero { position: relative; padding: 96px 0 72px; overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(900px 480px at 80% 0%, rgba(0,255,179,0.14), transparent 60%),
+                radial-gradient(700px 480px at 0% 100%, rgba(167,139,255,0.12), transparent 60%); }
+  .hero-grid { position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px; mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent 80%); }
+  .hero .wrap { position: relative; }
+  .badge { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px 12px; line-height: 1.5; font-family: var(--font-mono); font-size: 0.8rem; color: var(--teal); border: 1px solid rgba(0,255,179,0.35); background: rgba(0,255,179,0.08); border-radius: 999px; padding: 6px 14px; }
+  .badge b { font-weight: 500; color: var(--white); }
+  .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); font-weight: 900; margin: 26px 0 18px; }
+  .hero h1 span { color: var(--teal); }
+  .hero .sub { color: var(--muted); font-size: 1.2rem; font-weight: 300; max-width: 62ch; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .hero-shot { margin-top: 56px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--navy-mid); box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+  .hero-shot img { width: 100%; }
+  .shot-caption { font-family: var(--font-mono); font-size: 0.78rem; color: var(--dim); margin-top: 12px; text-align: center; }
+
+  /* three promises */
+  .promises { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .promise { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; }
+  .promise .k { font-family: var(--font-mono); color: var(--teal); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .promise h3 { margin: 8px 0 8px; }
+  .promise p { color: var(--muted); font-size: 0.97rem; }
+
+  /* quickstart */
+  .qs { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; }
+  pre { margin: 0; background: #08122c; border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; font-size: 0.92rem; line-height: 1.7; color: var(--muted); overflow-x: auto; }
+  pre .c { color: var(--dim); }
+  pre .t { color: var(--teal); }
+  .steps { counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start; }
+  .step::before { counter-increment: step; content: counter(step); width: 30px; height: 30px; border-radius: 50%; background: var(--teal); color: var(--navy); font-family: var(--font-mono); font-weight: 500; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-top: 2px; }
+  .step h3 { font-size: 1rem; }
+  .step p { color: var(--muted); font-size: 0.95rem; }
+
+  /* loop */
+  .loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 40px; }
+  .loop > div { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .loop .n { font-family: var(--font-mono); font-size: 0.78rem; color: var(--purple); }
+  .loop h3 { margin: 6px 0 8px; }
+  .loop p { color: var(--muted); font-size: 0.93rem; }
+
+  /* gallery */
+  .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 44px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .tile img { width: 100%; border-bottom: 1px solid var(--border); aspect-ratio: 14 / 9; object-fit: cover; object-position: top; }
+  .tile .t { padding: 18px 20px 20px; }
+  .tile h3 { margin-bottom: 6px; }
+  .tile p { color: var(--muted); font-size: 0.95rem; }
+
+  /* rules */
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+  .rule { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+  .rule .r { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; }
+  .rule .r span { color: var(--amber); }
+  .rule p { color: var(--muted); font-size: 0.93rem; margin-top: 8px; }
+  .aside { margin-top: 28px; background: var(--purple-subtle); border: 1px solid rgba(167,139,255,0.3); border-radius: 14px; padding: 20px 24px; color: var(--muted); }
+  .aside b { color: var(--white); }
+
+  /* agent */
+  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .prompts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .prompt { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.95rem; color: var(--muted); }
+  .prompt::before { content: "› "; color: var(--teal); font-family: var(--font-mono); }
+
+  /* modules */
+  table { width: 100%; border-collapse: collapse; margin-top: 36px; font-size: 0.95rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  td.on { color: var(--teal); font-family: var(--font-mono); font-size: 0.85rem; }
+  td.off { color: var(--dim); font-family: var(--font-mono); font-size: 0.85rem; }
+  .tbl-wrap { overflow-x: auto; }
+
+  /* free */
+  .free { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 36px; }
+  .free > div { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; color: var(--muted); font-size: 0.97rem; }
+  .free b { color: var(--white); }
+
+  /* cta */
+  .cta { text-align: center; padding: 96px 0; }
+  .cta h2 { font-size: clamp(2rem, 4vw, 3rem); }
+  .cta .hero-actions { justify-content: center; }
+
+  footer { border-top: 1px solid var(--border); padding: 36px 0 48px; color: var(--dim); font-size: 0.9rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; }
+  footer .fam { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--white); }
+  footer img { height: 34px; width: auto; border-radius: 6px; }
+
+  @media (max-width: 900px) {
+    .promises, .rules, .loop { grid-template-columns: 1fr 1fr; }
+    .qs, .agent, .gallery, .free { grid-template-columns: 1fr; }
+    .nav-links a:not(.btn) { display: none; }
+  }
+  @media (max-width: 600px) {
+    .promises, .rules, .loop { grid-template-columns: 1fr; }
+    section { padding: 60px 0; }
+    .hero { padding: 64px 0 48px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="n-seo home">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#00ffb3"/><path d="M14 42 L26 30 L34 38 L50 22" fill="none" stroke="#0d1b3e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 22 H50 V34" fill="none" stroke="#0d1b3e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      n-seo
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#see">What you get</a>
+      <a href="#rules">The rules</a>
+      <a href="#agent">Your agent</a>
+      <a href="#free">Free</a>
+      <a class="btn small" href="https://github.com/en-dash-consulting/n-seo">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="wrap">
+    <div class="badge"><span>● open source · MIT · local-first</span><b>from the makers of n-dx</b></div>
+    <h1>An SEO on your machine<span>.</span></h1>
+    <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and hands you a ranked queue of concrete moves — with the numbers attached. Your data stays on your machine. It briefs you; it never posts for you.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#start">Run it in 5 minutes</a>
+      <a class="btn" href="https://github.com/en-dash-consulting/n-seo">View on GitHub ↗</a>
+    </div>
+
+    <div class="hero-shot">
+      <img src="assets/shot-overview-dark.png" alt="n-seo overview: the Today board grouping what is waiting on you — Fix, Approve, Ship — above a per-site strip of sessions, clicks, AI-referral share and search share" width="1400" height="900" loading="eager">
+    </div>
+    <p class="shot-caption">The overview on demo data. Every row is a link; every number is derived live from files on your disk.</p>
+
+    <div class="promises">
+      <div class="promise"><div class="k">Data</div><h3>Yours, on your disk</h3><p>Nothing leaves your machine except calls to the Google APIs you authorize. No account, no SaaS, no telemetry.</p></div>
+      <div class="promise"><div class="k">Judgment</div><h3>Evidence first</h3><p>Every card shows the queries, positions and impressions behind it, then the move, then a spec. You learn what actually moves the numbers.</p></div>
+      <div class="promise"><div class="k">Hands</div><h3>It briefs; you act</h3><p>No module edits your site, sends an email or posts a comment. Community modules write briefings. The words are always yours.</p></div>
+    </div>
+  </div>
+</header>
+
+<section id="start">
+  <div class="wrap">
+    <div class="eyebrow">Quickstart</div>
+    <h2>Five minutes, no Google setup</h2>
+    <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+, curl and openssl are all it needs.</p>
+    <div class="qs" style="margin-top: 36px;">
+<pre><span class="c"># see it working</span>
+git clone https://github.com/en-dash-consulting/n-seo
+cd n-seo && npm install
+npm run demo        <span class="c"># synthetic data for example.com</span>
+npm start           <span class="c"># → http://localhost:4600</span>
+
+<span class="c"># connect your sites</span>
+cp n-seo.config.example.json n-seo.config.json
+python3 ops/doctor.py   <span class="c"># checks key + access</span>
+python3 ops/daily.py    <span class="c"># the morning run, by hand</span></pre>
+      <div class="steps">
+        <div class="step"><div><h3>Try it on demo data</h3><p>Every page, every card, every chart — populated. Poke around the queue, open a spec, toggle a module in Settings.</p></div></div>
+        <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally with openssl — no gcloud, no pip installs. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
+        <div class="step"><div><h3>Schedule the morning run</h3><p>launchd on macOS, cron or systemd on Linux. It waits for the network, retries once, logs every step, and tells you when something failed. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SCHEDULING.md">Scheduling →</a></p></div></div>
+        <div class="step"><div><h3>Ship what it tells you to</h3><p>In your own repo, your own way. The next morning's data says whether it worked, and the card moves to <em>watching</em> instead of disappearing.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="eyebrow">How it works</div>
+    <h2>What an agency does every month, as a loop that runs every morning</h2>
+    <p class="lede">Four planes. The first and second are automated; the third is you (or your AI agent); the fourth is what makes the second one honest.</p>
+    <div class="loop">
+      <div><div class="n">01 · awareness</div><h3>Pull everything</h3><p>Search Console (16 months and the trailing 90 days), GA4 sessions, sources and landing pages, per-page time series, URL Inspection verdicts for every sitemap URL, and a no-auth probe of each site: robots, sitemap, llms.txt, soft 404s, blocked AI crawlers, JS-only shells.</p></div>
+      <div><div class="n">02 · analysis</div><h3>Rank the moves</h3><p>Rules over the 90-day window turn snapshots into actions: metadata that misses the ranking language, pages that rank well but rarely get clicked, queries sitting at position 5–15, landing pages that don't deliver what the click promised, traffic drops. Impact per unit of effort orders the queue.</p></div>
+      <div><div class="n">03 · action</div><h3>You ship</h3><p>Each card opens to the evidence, the move and a build spec. You change the title, add the section, fix the 404 — in your repo, on a branch, your way. Accept machine proposals into your queue with one click; nothing self-modifies it.</p></div>
+      <div><div class="n">04 · measurement</div><h3>The data decides</h3><p>Shipped work becomes <em>watching</em>, never deleted. Watched pages are reported in the daily log; the scan judges whether a change succeeded, failed or needs more time. That feedback is how you hone your own principles.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="see">
+  <div class="wrap">
+    <div class="eyebrow">What you get</div>
+    <h2>A dashboard that leads with what to do next</h2>
+    <p class="lede">Server-rendered, no bundler, light and dark. Compact, searchable, and split cleanly into active work and shipped work being measured.</p>
+    <div class="gallery">
+      <div class="tile"><img src="assets/shot-actions-dark.png" alt="The action queue: proposals from the opportunity scan with Accept buttons, then active cards ranked by impact per effort" loading="lazy"><div class="t"><h3>The action queue</h3><p>Proposed → active → watching. Each card carries its evidence, the move, a spec and a success criterion. Filter by title, site, tag or kind.</p></div></div>
+      <div class="tile"><img src="assets/shot-trends-dark.png" alt="Trends: daily Google clicks and GA4 sessions as band charts above a per-page heatmap on the same time axis" loading="lazy"><div class="t"><h3>Trends</h3><p>One window drives everything: clicks per day, sessions per day, and which pages were hit on which days. Hover a day to highlight it across every row.</p></div></div>
+      <div class="tile"><img src="assets/shot-indexing-dark.png" alt="Indexing: Search Console's verdict on every sitemap URL, grouped by coverage state, with stale verdicts flagged" loading="lazy"><div class="t"><h3>Indexing</h3><p>Search Console's verdict on every URL in your sitemap. Tells "nobody searches for this" apart from "Google has never fetched this" — they look identical in performance data.</p></div></div>
+      <div class="tile"><img src="assets/shot-settings-dark.png" alt="Settings: sites, Google access, and one card per opt-in module with its own fields" loading="lazy"><div class="t"><h3>Settings</h3><p>One config file, edited from the page. Toggle modules, set the digest topics, describe your expertise for briefings, list the pages to watch.</p></div></div>
+    </div>
+    <p class="shot-caption" style="margin-top: 22px;">Also: per-site pages (striking distance, CTR gaps, landing pages, AI-referral sources), Insights, Probes, Logs, Content (drafts, campaigns, participation briefings).</p>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="eyebrow">The rules</div>
+    <h2>The principles an agency charges for, written down — and yours to edit</h2>
+    <p class="lede">n-seo ships with an opinionated operating model. Each rule is a few lines you can read, argue with and change. The queue shows you why it thinks so, every time.</p>
+    <div class="rules">
+      <div class="rule"><div class="r"><span>28-day</span> title freeze</div><p>After you rewrite a page's title or description, leave it alone for four weeks. Churn reads as manipulation and resets Google's evaluation. Measure, then move.</p></div>
+      <div class="rule"><div class="r"><span>≈8</span> metadata changes a week</div><p>Twenty-five title rewrites in one afternoon is a pattern. Stagger the batches across your sites.</p></div>
+      <div class="rule"><div class="r"><span>90 days</span> decide; 16 months remember</div><p>Decisions ride the trailing 90 days so a fix you shipped last week stops being accused. The long window is for totals and history.</p></div>
+      <div class="rule"><div class="r">Impact <span>orders</span>, never forecasts</div><p>The clicks-per-month number on a card exists to rank the queue. It is not a promise, and the tool never reports it as one.</p></div>
+      <div class="rule"><div class="r">Shipped → <span>watching</span></div><p>Done work stays on the board with a dated note until the data has spoken. Deleting it is how you forget what you learned.</p></div>
+      <div class="rule"><div class="r">Briefings, <span>never</span> comments</div><p>Community participation is human. The tool finds the thread and briefs you on the gist, the debate and your genuine angle. It will not write the words.</p></div>
+    </div>
+    <div class="aside"><b>Why "hone your own principles"?</b> Because the rules above are a starting point, not a doctrine. Every rule in the action engine is a plain TypeScript function with a threshold you can see. When a card is wrong, you learn why; when it is right, you learn what moved. After a few months the queue reflects what works for <em>your</em> sites, and you can explain every line of it.</div>
+  </div>
+</section>
+
+<section id="agent">
+  <div class="wrap agent">
+    <div>
+      <div class="eyebrow">Bring your own agent</div>
+      <h2>Your AI agent gets the same view you do</h2>
+      <p class="lede">A read-only MCP server exposes the queue, per-site metrics, the metadata audit, index coverage, trends and ops health. Claude Code picks it up from the repo's <code>.mcp.json</code> with no setup; Claude Desktop and other clients use stdio or an authenticated HTTP endpoint.</p>
+      <p class="lede">Read-only is the point: an agent can reason over your search data all day and still cannot bypass the freeze, the batching, or you.</p>
+    </div>
+    <div>
+      <div class="prompts">
+        <div class="prompt">What should I do first this week, and why?</div>
+        <div class="prompt">Which pages on example.com rank well but rarely get clicked?</div>
+        <div class="prompt">Did last week's title change on /pricing move anything yet?</div>
+        <div class="prompt">Which sitemap URLs has Google never crawled?</div>
+        <div class="prompt">Draft the spec for the top striking-distance page as a PR description.</div>
+      </div>
+      <p class="shot-caption" style="text-align:left; margin-top: 14px;">15 tools, 3 doc resources, every one annotated read-only. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md">MCP docs →</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="modules">
+  <div class="wrap">
+    <div class="eyebrow">Modules</div>
+    <h2>Opt in, and honest about what each one touches</h2>
+    <p class="lede">Everything beyond the core pulls is off until you turn it on. Nothing here posts, sends or publishes on your behalf.</p>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Module</th><th>What it does</th><th>Needs</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td>Index coverage sweep</td><td>URL Inspection verdict for every sitemap URL</td><td>Search Console access</td><td class="on">on</td></tr>
+        <tr><td>Metadata audit</td><td>Fetches each ranking page's live title and description, judges them against the queries it ranks for</td><td>—</td><td class="on">on</td></tr>
+        <tr><td>Opportunity scan</td><td>84-day trend refresh; rising queries no queue item covers become candidates</td><td>—</td><td class="on">on</td></tr>
+        <tr><td>LLM inference</td><td>Turns candidates into proposals and watched items into verdicts; writes digest briefings</td><td>any CLI that reads a prompt on stdin — <code>claude -p</code> by default</td><td class="off">off</td></tr>
+        <tr><td>Hacker News digest</td><td>Finds fresh threads in your expertise areas and briefs you on each</td><td>your HN username</td><td class="off">off</td></tr>
+        <tr><td>Reddit digest</td><td>Same for subreddits</td><td>a free Reddit "script" app's credentials</td><td class="off">off</td></tr>
+        <tr><td>IndexNow</td><td>Key generation and pings to Bing / Copilot / Yandex on publish</td><td>—</td><td class="off">off</td></tr>
+        <tr><td>Static export</td><td>Snapshot the dashboard to HTML for a mirror behind your own auth</td><td>—</td><td class="off">off</td></tr>
+        <tr><td>Git auto-commit</td><td>Commit the daily log after each run</td><td>a git remote, optionally</td><td class="off">off</td></tr>
+        <tr><td>Notifications</td><td>Desktop notification when a step fails</td><td>macOS</td><td class="off">off</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="free">
+  <div class="wrap">
+    <div class="eyebrow">Cost</div>
+    <h2>Free means free</h2>
+    <div class="free">
+      <div><b>No SaaS, no account, no seat price.</b> MIT licensed. Clone it, run it, fork it, ship it inside your company.</div>
+      <div><b>Google's APIs are free within quota.</b> Search Console and GA4 reporting cost nothing at this scale; the index sweep is capped well under the daily limit.</div>
+      <div><b>Bring the LLM you already have — or none.</b> The core loop needs no model at all. The inference module runs whatever command you give it, on your machine, with your prompt.</div>
+      <div><b>We run our own sites on it.</b> n-seo is the generalized version of the control plane En Dash uses for its own portfolio every morning. When it breaks, we notice first.</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Stop paying someone to read Search Console for you.</h2>
+    <p class="lede" style="margin: 14px auto 0;">Run the demo, connect a site, read the queue tomorrow morning.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="https://github.com/en-dash-consulting/n-seo">Get n-seo on GitHub ↗</a>
+      <a class="btn" href="https://github.com/en-dash-consulting/n-seo#readme">Read the README</a>
+    </div>
+  </div>
+</section>
+
+<footer role="contentinfo">
+  <div class="wrap">
+    <span style="font-family: var(--font-display); font-weight: 800; color: var(--white);">n-seo</span>
+    <span>Open source · MIT</span>
+    <span style="display:inline-flex;align-items:center;gap:8px;">Built by <a href="https://endash.us" aria-label="En Dash Consulting"><img src="assets/logo-endash.webp" alt="En Dash Consulting" width="125" height="125" loading="lazy"></a></span>
+    <div class="fam">
+      <a href="https://github.com/en-dash-consulting/n-seo">GitHub</a>
+      <a href="https://n-dx.dev">n-dx</a>
+      <a href="https://html-in-canvas.dev">html-in-canvas.dev</a>
+      <a href="https://learn-pretext.com">learn-pretext.com</a>
+      <a href="https://endash.us">En Dash</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

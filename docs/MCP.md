@@ -27,10 +27,10 @@ npm run mcp:smoke    # list tools and call a few against your data
 ```json
 {
   "mcpServers": {
-    "seo-agent": {
+    "n-seo": {
       "command": "npx",
       "args": ["tsx", "src/mcp-stdio.ts"],
-      "cwd": "/path/to/seo-agent"
+      "cwd": "/path/to/n-seo"
     }
   }
 }
@@ -41,11 +41,11 @@ npm run mcp:smoke    # list tools and call a few against your data
 `POST /mcp` on the dashboard, streamable HTTP, stateless — a fresh server per
 request, so no session state crosses callers. It requires a bearer token,
 read from `SEO_MCP_TOKEN` (env or `.env`), else from
-`~/.config/seo-agent/mcp-token` (chmod 600).
+`~/.config/n-seo/mcp-token` (chmod 600).
 
 ```sh
 curl -X POST http://localhost:4600/mcp \
-  -H "Authorization: Bearer $(cat ~/.config/seo-agent/mcp-token)" \
+  -H "Authorization: Bearer $(cat ~/.config/n-seo/mcp-token)" \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'

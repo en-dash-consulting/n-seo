@@ -33,7 +33,7 @@ describe("config", () => {
   });
 
   test("normalizes sites: label/gscHost default to host, empty strings become undefined", () => {
-    sb.write("seo-agent.config.json", JSON.stringify({
+    sb.write("n-seo.config.json", JSON.stringify({
       sites: [{ host: "a.example.com", gscProperty: "", ga4Property: "", brand: "" }],
     }));
     const c = cfg.loadConfig();
@@ -44,14 +44,14 @@ describe("config", () => {
     assert.equal(s.gscProperty, undefined);
     assert.equal(s.ga4Property, undefined);
     assert.equal(s.brand, undefined);
-    assert.equal(c.name, "SEO Agent");
+    assert.equal(c.name, "n-seo");
     assert.equal(c.google.auth, "service-account-key");
     assert.deepEqual(c.watchPages, []);
     assert.equal(c.conversions, undefined);
   });
 
   test("every MODULE_INFO key is present with enabled=false by default; unknown modules survive", () => {
-    sb.write("seo-agent.config.json", JSON.stringify({
+    sb.write("n-seo.config.json", JSON.stringify({
       sites: [],
       modules: { llm: { enabled: true, command: "cat" }, custom: { enabled: "yes", x: 1 } },
     }));
@@ -68,16 +68,16 @@ describe("config", () => {
   });
 
   test("conversions kept only when a site is named", () => {
-    sb.write("seo-agent.config.json", JSON.stringify({
+    sb.write("n-seo.config.json", JSON.stringify({
       sites: [], conversions: { site: "example.com", events: ["sign_up"] },
     }));
     assert.equal(cfg.loadConfig().conversions?.site, "example.com");
-    sb.write("seo-agent.config.json", JSON.stringify({ sites: [], conversions: { site: "", events: ["x"] } }));
+    sb.write("n-seo.config.json", JSON.stringify({ sites: [], conversions: { site: "", events: ["x"] } }));
     assert.equal(cfg.loadConfig().conversions, undefined);
   });
 
   test("SEO_PORT overrides the file", () => {
-    sb.write("seo-agent.config.json", JSON.stringify({ sites: [], port: 4700 }));
+    sb.write("n-seo.config.json", JSON.stringify({ sites: [], port: 4700 }));
     assert.equal(cfg.loadConfig().port, 4700);
     process.env.SEO_PORT = "4999";
     try {
@@ -88,22 +88,22 @@ describe("config", () => {
   });
 
   test("saveConfig bootstraps from the example and preserves unknown keys", () => {
-    fs.rmSync(`${sb.root}/seo-agent.config.json`, { force: true });
+    fs.rmSync(`${sb.root}/n-seo.config.json`, { force: true });
     cfg.saveConfig((raw: any) => {
       raw.modules.hackerNews.enabled = true;
       raw.someFutureKey = { keep: "me" };
     });
-    const written = sb.json("seo-agent.config.json");
+    const written = sb.json("n-seo.config.json");
     assert.equal(written.modules.hackerNews.enabled, true);
     assert.equal(written.name, "My sites", "copied from the example");
     assert.deepEqual(written.someFutureKey, { keep: "me" });
     cfg.saveConfig((raw: any) => { raw.name = "Renamed"; });
-    assert.deepEqual(sb.json("seo-agent.config.json").someFutureKey, { keep: "me" }, "second save keeps it");
+    assert.deepEqual(sb.json("n-seo.config.json").someFutureKey, { keep: "me" }, "second save keeps it");
     assert.equal(cfg.loadConfig().name, "Renamed");
   });
 
   test("siteByHost matches host or gscHost", () => {
-    sb.write("seo-agent.config.json", JSON.stringify({
+    sb.write("n-seo.config.json", JSON.stringify({
       sites: [{ host: "example.com", gscHost: "www.example.com" }],
     }));
     assert.equal(cfg.siteByHost("www.example.com")?.host, "example.com");

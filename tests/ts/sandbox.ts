@@ -23,11 +23,11 @@ export interface Sandbox {
 }
 
 export function makeSandbox(opts: { data?: boolean } = {}): Sandbox {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "seo-agent-test-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "n-seo-test-"));
   for (const dir of ["src", "config", "content", "docs"]) {
     fs.cpSync(path.join(REPO, dir), path.join(root, dir), { recursive: true });
   }
-  for (const f of ["seo-agent.config.example.json", "package.json", "tsconfig.json"]) {
+  for (const f of ["n-seo.config.example.json", "package.json", "tsconfig.json"]) {
     fs.copyFileSync(path.join(REPO, f), path.join(root, f));
   }
   fs.symlinkSync(path.join(REPO, "node_modules"), path.join(root, "node_modules"));

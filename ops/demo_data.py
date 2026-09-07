@@ -268,7 +268,7 @@ def write_probe(sites):
             "llms.txt": {"status": 200 if healthy else 404, "exists": healthy, "bytes": 2400 if healthy else 0},
             "llms-full.txt": {"status": 200 if healthy else 404, "exists": healthy, "bytes": 18000 if healthy else 0},
             "homepage": {"status": 200, "title": f"{s['label'].title()} — the friendly demo site",
-                         "meta_description": "A demo site used to show what seo-agent's dashboard looks like with data in it.",
+                         "meta_description": "A demo site used to show what n-seo's dashboard looks like with data in it.",
                          "canonical": f"https://{s['gscHost']}/", "og_tags": 4 if healthy else 0,
                          "jsonld_types": ["WebSite", "Organization"] if healthy else [],
                          "h1_count": 1, "lang": "en", "visible_text_bytes": 2100 if healthy else 380},
@@ -454,7 +454,7 @@ def main():
         print("no sites in config — nothing to generate")
         return 1
     if seo_config.using_example():
-        print("no seo-agent.config.json — generating demo data for the example config's sites")
+        print("no n-seo.config.json — generating demo data for the example config's sites")
     DATA.mkdir(parents=True, exist_ok=True)
     index_of = {s["host"]: i for i, s in enumerate(sites)}
     props = seo_config.gsc_properties()

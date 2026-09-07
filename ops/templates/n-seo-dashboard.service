@@ -1,5 +1,5 @@
 [Unit]
-Description=seo-agent dashboard
+Description=n-seo dashboard
 After=network.target
 
 [Service]

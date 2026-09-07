@@ -38,7 +38,7 @@ CONTRACT_KEYS = {
 class DemoDataTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tmp = Path(tempfile.mkdtemp(prefix="seo-agent-demo-"))
+        cls.tmp = Path(tempfile.mkdtemp(prefix="n-seo-demo-"))
         cls.data = cls.tmp / "data"
         cls._saved = (demo_data.DATA, seo_config.CONFIG_PATH, seo_config._cache, sys.argv, seo_config.ROOT)
         demo_data.DATA = cls.data
@@ -149,7 +149,7 @@ class DemoDataTests(unittest.TestCase):
 
     def test_deterministic(self):
         a = (self.data / "gsc/example.com/queries_90d.json").read_bytes()
-        tmp2 = Path(tempfile.mkdtemp(prefix="seo-agent-demo2-"))
+        tmp2 = Path(tempfile.mkdtemp(prefix="n-seo-demo2-"))
         try:
             demo_data.DATA = tmp2 / "data"
             seo_config.ROOT = tmp2
@@ -164,7 +164,7 @@ class DemoDataTests(unittest.TestCase):
         self.assertEqual(a, b)
 
     def test_clean_flag(self):
-        tmp3 = Path(tempfile.mkdtemp(prefix="seo-agent-demo3-"))
+        tmp3 = Path(tempfile.mkdtemp(prefix="n-seo-demo3-"))
         (tmp3 / "data").mkdir()
         (tmp3 / "data" / "x").write_text("x")
         saved_argv = sys.argv

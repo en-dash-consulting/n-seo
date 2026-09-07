@@ -32,7 +32,7 @@ def ga4_rows(pairs):
 
 class DailyDiffTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="seo-agent-diff-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="n-seo-diff-"))
         self.data = self.tmp / "data"
         (self.data / "probes").mkdir(parents=True)
         (self.data / "gsc" / "example.com").mkdir(parents=True)

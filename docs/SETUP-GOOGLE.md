@@ -25,19 +25,19 @@ APIs & Services → Library. Enable all three:
 ## 3. Create a service account and key
 
 IAM & Admin → Service Accounts → Create service account. Name it something like
-`seo-agent-reader`. **Grant it no project roles** — it needs none. Access to
+`n-seo-reader`. **Grant it no project roles** — it needs none. Access to
 your Search Console and GA4 data comes from the consoles themselves in step 4.
 
 Open the account → Keys → Add key → Create new key → JSON. Store the download
 outside the repo, readable only by you:
 
 ```sh
-mkdir -p ~/.config/seo-agent
-mv ~/Downloads/<project>-<hash>.json ~/.config/seo-agent/service-account.json
-chmod 600 ~/.config/seo-agent/service-account.json
+mkdir -p ~/.config/n-seo
+mv ~/Downloads/<project>-<hash>.json ~/.config/n-seo/service-account.json
+chmod 600 ~/.config/n-seo/service-account.json
 ```
 
-Note the account's email (`seo-agent-reader@<project>.iam.gserviceaccount.com`).
+Note the account's email (`n-seo-reader@<project>.iam.gserviceaccount.com`).
 You will paste it into two places next.
 
 ## 4. Grant access in the consoles
@@ -69,14 +69,14 @@ While you are in Admin, open **Property details** and note the numeric
 ## 5. Fill in the config
 
 ```sh
-cp seo-agent.config.example.json seo-agent.config.json
+cp n-seo.config.example.json n-seo.config.json
 ```
 
 ```json
 {
   "google": {
     "auth": "service-account-key",
-    "serviceAccountKey": "~/.config/seo-agent/service-account.json"
+    "serviceAccountKey": "~/.config/n-seo/service-account.json"
   },
   "sites": [
     {

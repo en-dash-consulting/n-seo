@@ -1,5 +1,5 @@
 [Unit]
-Description=seo-agent daily run (pull, probe, audit, log)
+Description=n-seo daily run (pull, probe, audit, log)
 After=network-online.target
 Wants=network-online.target
 

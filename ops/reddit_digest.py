@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ingest"))
 import seo_config  # noqa: E402
 import llm  # noqa: E402
 
-UA = "seo-agent/0.1 (participation research)"
+UA = "n-seo/0.1 (participation research)"
 MAX_AGE_DAYS = 7
 MAX_COMMENTS = 80  # not already saturated; early threads are prime real estate
 MAX_PICKS = 6

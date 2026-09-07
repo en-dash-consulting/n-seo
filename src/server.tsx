@@ -40,10 +40,10 @@ app.get("/api/actions", (c) => c.json(allActions()));
    The stdio transport (src/mcp-stdio.ts) is the default and needs no secret.
    This endpoint exists for clients that can't spawn a local process, so it
    has to carry its own auth: a bearer token from SEO_MCP_TOKEN (or the file
-   ~/.config/seo-agent/mcp-token). The dashboard binds every interface, so
+   ~/.config/n-seo/mcp-token). The dashboard binds every interface, so
    with no token set this refuses to serve rather than exposing your search
    data to the LAN. Stateless — a fresh server and transport per request. */
-const MCP_TOKEN_FILE = path.join(process.env.HOME ?? "", ".config", "seo-agent", "mcp-token");
+const MCP_TOKEN_FILE = path.join(process.env.HOME ?? "", ".config", "n-seo", "mcp-token");
 
 /** One KEY=value from ./.env, so the token can live next to the Reddit
  *  credentials instead of only in the environment. */
@@ -84,10 +84,10 @@ const mcpAuthorized = (c: { req: { header: (k: string) => string | undefined } }
 
 app.all("/mcp", async (c) => {
   if (!MCP_TOKEN) {
-    return c.json({ error: "MCP endpoint disabled: set SEO_MCP_TOKEN (or ~/.config/seo-agent/mcp-token) to enable it." }, 503);
+    return c.json({ error: "MCP endpoint disabled: set SEO_MCP_TOKEN (or ~/.config/n-seo/mcp-token) to enable it." }, 503);
   }
   if (!mcpAuthorized(c)) {
-    return c.json({ error: "unauthorized" }, 401, { "WWW-Authenticate": 'Bearer realm="seo-agent"' });
+    return c.json({ error: "unauthorized" }, 401, { "WWW-Authenticate": 'Bearer realm="n-seo"' });
   }
   const body = c.req.method === "POST" ? await c.req.json().catch(() => undefined) : undefined;
   const server = createMcpServer();
@@ -117,7 +117,7 @@ app.get("/favicon.svg", (c) => {
 
 app.get("/", (c) =>
   c.html(
-    <Layout title="Overview · SEO Agent" active="overview">
+    <Layout title="Overview · n-seo" active="overview">
       <Overview />
     </Layout>
   )
@@ -125,7 +125,7 @@ app.get("/", (c) =>
 
 app.get("/actions", (c) =>
   c.html(
-    <Layout title="Actions · SEO Agent" active="actions">
+    <Layout title="Actions · n-seo" active="actions">
       <ActionsPage flash={c.req.query("flash")} />
     </Layout>
   )
@@ -133,7 +133,7 @@ app.get("/actions", (c) =>
 
 app.get("/content", (c) =>
   c.html(
-    <Layout title="Content · SEO Agent" active="content">
+    <Layout title="Content · n-seo" active="content">
       <ContentPage />
     </Layout>
   )
@@ -143,7 +143,7 @@ app.get("/drafts/:slug", (c) => {
   const d = draftBySlug(c.req.param("slug"));
   if (!d) return c.notFound();
   return c.html(
-    <Layout title={`Draft · ${d.channel} · SEO Agent`} active="content">
+    <Layout title={`Draft · ${d.channel} · n-seo`} active="content">
       <DraftPage d={d} />
     </Layout>
   );
@@ -153,7 +153,7 @@ app.get("/campaigns/:slug", (c) => {
   const camp = campaignBySlug(c.req.param("slug"));
   if (!camp) return c.notFound();
   return c.html(
-    <Layout title={`${camp.name} · SEO Agent`} active="content">
+    <Layout title={`${camp.name} · n-seo`} active="content">
       <CampaignPage c={camp} />
     </Layout>
   );
@@ -161,7 +161,7 @@ app.get("/campaigns/:slug", (c) => {
 
 app.get("/insights", (c) =>
   c.html(
-    <Layout title="Insights · SEO Agent" active="insights">
+    <Layout title="Insights · n-seo" active="insights">
       <InsightsPage />
     </Layout>
   )
@@ -171,7 +171,7 @@ app.get("/site/:host", (c) => {
   const site = siteByHost(c.req.param("host"));
   if (!site) return c.notFound();
   return c.html(
-    <Layout title={`${site.host} · SEO Agent`} active={site.host}>
+    <Layout title={`${site.host} · n-seo`} active={site.host}>
       <SiteDetail site={site} />
     </Layout>
   );
@@ -179,7 +179,7 @@ app.get("/site/:host", (c) => {
 
 app.get("/indexing", (c) =>
   c.html(
-    <Layout title="Indexing · SEO Agent" active="indexing">
+    <Layout title="Indexing · n-seo" active="indexing">
       <IndexingPage />
     </Layout>
   )
@@ -187,7 +187,7 @@ app.get("/indexing", (c) =>
 
 app.get("/probes", (c) =>
   c.html(
-    <Layout title="Probes · SEO Agent" active="probes">
+    <Layout title="Probes · n-seo" active="probes">
       <Probes />
     </Layout>
   )
@@ -195,7 +195,7 @@ app.get("/probes", (c) =>
 
 app.get("/trends", (c) =>
   c.html(
-    <Layout title="Trends · SEO Agent" active="trends">
+    <Layout title="Trends · n-seo" active="trends">
       <TrendsPage days={90} />
     </Layout>
   )
@@ -204,7 +204,7 @@ app.get("/trends/:days", (c) => {
   const days = Number(c.req.param("days"));
   if (!TREND_RANGES.includes(days)) return c.notFound();
   return c.html(
-    <Layout title="Trends · SEO Agent" active="trends">
+    <Layout title="Trends · n-seo" active="trends">
       <TrendsPage days={days} />
     </Layout>
   );
@@ -212,7 +212,7 @@ app.get("/trends/:days", (c) => {
 
 app.get("/logs", (c) =>
   c.html(
-    <Layout title="Logs · SEO Agent" active="logs">
+    <Layout title="Logs · n-seo" active="logs">
       <LogsPage />
     </Layout>
   )
@@ -220,7 +220,7 @@ app.get("/logs", (c) =>
 
 app.get("/settings", (c) =>
   c.html(
-    <Layout title="Settings · SEO Agent" active="settings">
+    <Layout title="Settings · n-seo" active="settings">
       <SettingsPage saved={c.req.query("saved") === "1"} error={c.req.query("error")} />
     </Layout>
   )
@@ -258,5 +258,5 @@ app.post("/api/backlog/:id/retire", (c) => {
 
 const HOST = process.env.SEO_HOST ?? "127.0.0.1";
 serve({ fetch: app.fetch, port: PORT, hostname: HOST }, (info) => {
-  console.log(`seo-agent → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${info.port}`);
+  console.log(`n-seo → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${info.port}`);
 });

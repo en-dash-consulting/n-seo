@@ -64,7 +64,7 @@ def _sa_key_token(scope: str) -> str:
     }).encode())
     signing_input = f"{header}.{claims}".encode()
     # openssl needs the private key in a file; keep it 0600 and short-lived.
-    fd, tmp = tempfile.mkstemp(prefix="seo-agent-", suffix=".pem")
+    fd, tmp = tempfile.mkstemp(prefix="n-seo-", suffix=".pem")
     try:
         os.fchmod(fd, 0o600)
         with os.fdopen(fd, "w") as f:

@@ -1,5 +1,5 @@
 {
-  "name": "seo-agent",
+  "name": "n-seo",
   "version": "0.1.0",
   "description": "Local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and turns the data into a ranked action queue you can act on without an agency.",
   "license": "MIT",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Install (or remove) the two macOS LaunchAgents for seo-agent:
-#   com.seo-agent.dashboard  — the dashboard, kept alive, starts at login
-#   com.seo-agent.daily      — ops/daily.py at 07:00 local (fires on wake if missed)
+# Install (or remove) the two macOS LaunchAgents for n-seo:
+#   n-seo.dashboard  — the dashboard, kept alive, starts at login
+#   n-seo.daily      — ops/daily.py at 07:00 local (fires on wake if missed)
 #
 # Usage:  ops/install-launchd.sh            install / reinstall
 #         ops/install-launchd.sh --uninstall
@@ -12,7 +12,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATES="$REPO/ops/templates"
 AGENTS="$HOME/Library/LaunchAgents"
-LABELS=(com.seo-agent.dashboard com.seo-agent.daily)
+LABELS=(n-seo.dashboard n-seo.daily)
 DOMAIN="gui/$(id -u)"
 
 if [[ "$(uname)" != "Darwin" ]]; then
@@ -37,7 +37,7 @@ if [[ "${1:-}" == "--uninstall" ]]; then
       echo "removed $AGENTS/$label.plist"
     fi
   done
-  echo "done — seo-agent LaunchAgents removed"
+  echo "done — n-seo LaunchAgents removed"
   exit 0
 fi
 
@@ -69,8 +69,8 @@ done
 
 echo
 echo "installed:"
-echo "  $AGENTS/com.seo-agent.dashboard.plist  → dashboard, log: $REPO/data/dashboard.log"
-echo "  $AGENTS/com.seo-agent.daily.plist      → ops/daily.py at 07:00, log: $REPO/data/daily-launchd.log"
+echo "  $AGENTS/n-seo.dashboard.plist  → dashboard, log: $REPO/data/dashboard.log"
+echo "  $AGENTS/n-seo.daily.plist      → ops/daily.py at 07:00, log: $REPO/data/daily-launchd.log"
 echo
 echo "restart the dashboard after code changes:"
-echo "  launchctl kickstart -k $DOMAIN/com.seo-agent.dashboard"
+echo "  launchctl kickstart -k $DOMAIN/n-seo.dashboard"

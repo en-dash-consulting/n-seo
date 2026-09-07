@@ -1,5 +1,5 @@
 /**
- * MCP server over the seo-agent data layer.
+ * MCP server over the n-seo data layer.
  *
  * Read-only by design. The queue is edited in config/backlog.json (or via the
  * dashboard's buttons); an agent reaching this server gets the same view you
@@ -39,7 +39,7 @@ const ranked = (list: Action[]) => [...list].sort((a, b) => score(b) - score(a))
 
 export function createMcpServer(): McpServer {
   const server = new McpServer(
-    { name: "seo-agent", version: "0.1.0" },
+    { name: "n-seo", version: "0.1.0" },
     {
       instructions:
         "Read-only access to a local SEO control plane: the action queue, " +

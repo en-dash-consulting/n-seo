@@ -1,4 +1,6 @@
-# seo-agent
+# n-seo
+
+**An SEO on your machine.** Website: https://en-dash-consulting.github.io/n-seo/ · From the makers of [n-dx](https://n-dx.dev).
 
 A local-first control plane for growing organic traffic to your own sites —
 classic search (SEO), answer engines (AEO) and AI assistants that cite sources
@@ -23,7 +25,7 @@ It runs on your machine, on a schedule, and shows you the result on a dashboard.
 ## Quickstart (5 minutes, no Google setup)
 
 ```sh
-git clone <this repo> seo-agent && cd seo-agent
+git clone <this repo> n-seo && cd n-seo
 npm install
 npm run demo        # writes a synthetic dataset for example.com under data/
 npm start           # dashboard → http://localhost:4600
@@ -36,7 +38,7 @@ can see what the tool does before you connect anything.
 
 1. Copy the config and edit the `sites` list:
    ```sh
-   cp seo-agent.config.example.json seo-agent.config.json
+   cp n-seo.config.example.json n-seo.config.json
    ```
 2. Give the tool read access to Search Console and GA4 — a service account
    with a JSON key, added as a user in both consoles. Follow
@@ -68,7 +70,7 @@ Adding another site later is one entry in the config —
 | `/indexing` | Search Console's verdict on every sitemap URL — indexed, discovered-never-crawled, soft 404 — with stale verdicts flagged |
 | `/probes` | The latest live-site health snapshot for every site |
 | `/logs` | The daily log (one dated entry per run, ALERT lines for regressions) and raw run output |
-| `/settings` | Module switches and digest topics; writes `seo-agent.config.json` |
+| `/settings` | Module switches and digest topics; writes `n-seo.config.json` |
 
 ## The action engine
 
@@ -86,7 +88,7 @@ the data says whether it worked.
 ## Modules
 
 Everything below is off by default except the three data steps. Toggle them
-on the Settings page or in `seo-agent.config.json`.
+on the Settings page or in `n-seo.config.json`.
 
 | Module | What it does | Needs | Default |
 |---|---|---|---|
@@ -114,7 +116,7 @@ gets a fresh session current in four reads.
 ## Repo layout
 
 ```
-seo-agent.config.json   your sites, auth, modules (copy from the .example)
+n-seo.config.json   your sites, auth, modules (copy from the .example)
 config/                 backlog.json (your strategic queue) · insights.json
 content/                drafts/*.md · campaigns/*.json — shown on /content
 src/                    dashboard + MCP (Hono, hono/jsx SSR, tsx runtime, no bundler)

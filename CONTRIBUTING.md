@@ -4,7 +4,7 @@
 
 ```sh
 npm install
-cp seo-agent.config.example.json seo-agent.config.json   # or skip: the example is used as a fallback
+cp n-seo.config.example.json n-seo.config.json   # or skip: the example is used as a fallback
 npm run demo          # synthetic data so every page renders
 npm run dev           # dashboard with reload on :4600
 ```
@@ -31,7 +31,7 @@ python3 ops/doctor.py --offline
 - **Windows is out of scope.** Keep paths and subprocess calls POSIX.
 - **No owner-specific data.** Example values use `example.com`. Anything that
   is one person's site list, username, or key belongs in
-  `seo-agent.config.json` or `.env`, both gitignored.
+  `n-seo.config.json` or `.env`, both gitignored.
 
 ## Adding a rule to the action engine
 
@@ -51,7 +51,7 @@ Rules live in `src/actions.ts`. Each takes a `SiteCfg`, reads from
 
 A module is an opt-in step with a switch. Four places:
 
-1. `seo-agent.config.example.json` — add `"myModule": { "enabled": false, ...options }`
+1. `n-seo.config.example.json` — add `"myModule": { "enabled": false, ...options }`
    under `modules`, with every option it reads.
 2. `src/config.ts` — add an entry to `MODULE_INFO` (key, title, blurb, needs).
    That is what the Settings page renders; the config loader picks up the

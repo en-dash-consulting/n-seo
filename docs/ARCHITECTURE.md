@@ -1,6 +1,6 @@
 # Architecture
 
-seo-agent is a local-first control plane for organic growth across one or
+n-seo is a local-first control plane for organic growth across one or
 more websites: **SEO** (classic search), **AEO** (answer engines: featured
 snippets, AI Overviews) and **GEO** (being cited by ChatGPT, Claude,
 Perplexity). It runs on your machine, keeps all data in local JSON files, and
@@ -29,8 +29,8 @@ turns them into a ranked queue of concrete actions.
 
 ## One config file
 
-`seo-agent.config.json` (copy from `seo-agent.config.example.json`; path
-overridable with `$SEO_AGENT_CONFIG`) is read by the TypeScript app
+`n-seo.config.json` (copy from `n-seo.config.example.json`; path
+overridable with `$N_SEO_CONFIG`) is read by the TypeScript app
 (`src/config.ts`) **and** every Python script (`ingest/seo_config.py`). If
 the file does not exist, both fall back to the example so a fresh checkout
 can run the demo. Nothing else carries a site list.
@@ -113,7 +113,7 @@ the dashboard's accept/watch/retire buttons — show up without a restart.
 | `notifications` | off | macOS notification on step failure |
 
 The dashboard's **Settings** page toggles these and edits the digest topics,
-writing back to `seo-agent.config.json`. Nothing in any module posts, sends,
+writing back to `n-seo.config.json`. Nothing in any module posts, sends,
 or publishes on your behalf: digests produce briefings, the scan produces
 proposals, campaigns produce templates. You act.
 

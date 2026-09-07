@@ -9,7 +9,7 @@ Datasets per property, two windows each:
 and *_90d.json twins for the trailing 90 days — the decision window. The
 16-month window (Search Console's maximum) is for totals and history.
 
-Properties come from seo-agent.config.json (ingest/seo_config.py); a domain
+Properties come from n-seo.config.json (ingest/seo_config.py); a domain
 property covers its subdomains, so several sites can share one pull.
 Stdlib only; HTTP via curl (see http_util.py).
 """

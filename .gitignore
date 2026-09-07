@@ -10,4 +10,4 @@ node_modules/
 service-account*.json
 
 # your live config is yours; the example ships with the repo
-seo-agent.config.json
+n-seo.config.json

@@ -22,13 +22,13 @@ SLUG_CASES = [
 class ConfigTests(unittest.TestCase):
     def setUp(self):
         self._orig = (seo_config.CONFIG_PATH, seo_config.ROOT, seo_config._cache)
-        self.tmp = Path(tempfile.mkdtemp(prefix="seo-agent-cfg-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="n-seo-cfg-"))
 
     def tearDown(self):
         seo_config.CONFIG_PATH, seo_config.ROOT, seo_config._cache = self._orig
 
     def use(self, raw: dict):
-        p = self.tmp / "seo-agent.config.json"
+        p = self.tmp / "n-seo.config.json"
         p.write_text(json.dumps(raw))
         seo_config.CONFIG_PATH = p
         return seo_config.load(force=True)
@@ -53,7 +53,7 @@ class ConfigTests(unittest.TestCase):
             "modules": {"llm": {"enabled": True, "command": "cat"}, "custom": {"x": 1}},
             "conversions": {"site": "", "events": ["x"]},
         })
-        self.assertEqual(cfg["name"], "SEO Agent")
+        self.assertEqual(cfg["name"], "n-seo")
         self.assertEqual(cfg["google"]["auth"], "service-account-key")
         self.assertEqual(len(cfg["sites"]), 1)
         s = cfg["sites"][0]
@@ -119,7 +119,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(seo_config.expand("~/x"), Path.home() / "x")
 
     def test_example_file_is_valid_and_complete(self):
-        raw = json.loads((REPO / "seo-agent.config.example.json").read_text())
+        raw = json.loads((REPO / "n-seo.config.example.json").read_text())
         for k in seo_config.MODULE_KEYS:
             self.assertIn(k, raw["modules"], f"example config should document module {k}")
         self.assertIn("google", raw)

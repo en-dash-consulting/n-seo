@@ -80,7 +80,7 @@ def notify(text: str):
     if not seo_config.enabled("notifications") or platform.system() != "Darwin":
         return
     subprocess.run(["osascript", "-e",
-                    f'display notification "{text}" with title "seo-agent daily run"'],
+                    f'display notification "{text}" with title "n-seo daily run"'],
                    capture_output=True)
 
 
@@ -136,7 +136,7 @@ def main():
 
     log(f"=== daily run {datetime.now():%Y-%m-%d %H:%M} ({len(todo)} steps) ===")
     if seo_config.using_example():
-        log("note: no seo-agent.config.json — running on the example config")
+        log("note: no n-seo.config.json — running on the example config")
     if not args.no_network_wait:
         wait_for_network()
 

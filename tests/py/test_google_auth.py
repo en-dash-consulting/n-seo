@@ -21,7 +21,7 @@ def b64url_decode(s: str) -> bytes:
 @unittest.skipUnless(shutil.which("openssl"), "openssl not on PATH")
 class JwtTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="seo-agent-auth-")).resolve()
+        self.tmp = Path(tempfile.mkdtemp(prefix="n-seo-auth-")).resolve()
         priv = self.tmp / "key.pem"
         subprocess.run(["openssl", "genrsa", "-out", str(priv), "2048"], check=True, capture_output=True)
         self.pub = self.tmp / "pub.pem"

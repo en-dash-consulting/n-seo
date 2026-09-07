@@ -29,7 +29,7 @@ AI_CRAWLERS = [
     "Google-Extended", "CCBot", "Bytespider", "OAI-SearchBot",
 ]
 
-UA = "Mozilla/5.0 (compatible; seo-agent-probe/0.1)"
+UA = "Mozilla/5.0 (compatible; n-seo-probe/0.1)"
 
 
 def fetch(url, timeout=15):

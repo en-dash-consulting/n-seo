@@ -1,0 +1,3 @@
+# n-seo daily run at 07:00 local. Paste into `crontab -e`, fix the path.
+# Cron does not run missed jobs; a machine that is off at 07:00 skips that day.
+0 7 * * * cd /path/to/n-seo && /usr/bin/python3 ops/daily.py >> data/daily-cron.log 2>&1

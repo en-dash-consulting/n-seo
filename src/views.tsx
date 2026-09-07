@@ -35,7 +35,7 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
       </head>
       <body>
         <header class="topbar">
-          <a href="/" class="brand"><Mark /> <span class="brand-name">{cfg.name}</span> <span class="brand-sub">SEO Agent</span></a>
+          <a href="/" class="brand"><Mark /> <span class="brand-name">{cfg.name}</span> <span class="brand-sub">n-seo</span></a>
           <nav>
             <a href="/" class={active === "overview" ? "on" : ""}>Overview</a>
             <a href="/actions" class={active === "actions" ? "on" : ""}>Actions</a>
@@ -59,7 +59,7 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
         </header>
         {USING_EXAMPLE_CONFIG && (
           <div class="notice-bar">
-            Running on the example config — <a href="/settings">open Settings</a> to create yours (or copy <code>seo-agent.config.example.json</code> to <code>seo-agent.config.json</code>).
+            Running on the example config — <a href="/settings">open Settings</a> to create yours (or copy <code>n-seo.config.example.json</code> to <code>n-seo.config.json</code>).
           </div>
         )}
         <main>{children}</main>
@@ -364,7 +364,7 @@ export const Overview: FC = () => {
           })}
         </div>
       ) : (
-        <p class="empty">No sites configured yet — add them to <code>seo-agent.config.json</code> (see <a href="/settings">Settings</a>).</p>
+        <p class="empty">No sites configured yet — add them to <code>n-seo.config.json</code> (see <a href="/settings">Settings</a>).</p>
       )}
 
       {f.configured && (f.instrumented ? (

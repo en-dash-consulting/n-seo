@@ -1,0 +1,26 @@
+# n-seo
+
+> n-seo is an open-source, local-first SEO / AEO / GEO control plane from En Dash Consulting. It pulls Google Search Console and GA4 into local JSON every morning, probes your live sites for regressions (robots.txt, sitemap, soft 404s, blocked AI crawlers, JS-only shells), and turns the data into a ranked queue of concrete actions with the evidence attached. It briefs you; it never posts, publishes, or edits your site for you.
+
+- Repository: https://github.com/en-dash-consulting/n-seo
+- License: MIT
+- Requirements: Node 20+, Python 3.10+, curl, openssl; macOS or Linux
+- Quickstart: `npm install && npm run demo && npm start` (synthetic data, no Google setup)
+- Real data: a Google service-account JSON key added as a user on Search Console and GA4; no gcloud needed
+- Agent access: read-only MCP server (stdio and HTTP) exposing the action queue, per-site metrics, metadata audit, index coverage, trends, and ops status
+- Built-in operating rules: 28-day title freeze after any metadata change, at most ~8 metadata changes per week, decisions on the trailing 90 days, impact numbers order the queue and are not forecasts, shipped work is watched rather than deleted, community participation is written by a human
+
+## Pages
+
+- [n-seo](https://en-dash-consulting.github.io/n-seo/) — marketing overview, what you get, quickstart
+- [README](https://github.com/en-dash-consulting/n-seo#readme) — setup and usage
+- [Google setup](https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md)
+- [Operating rules](https://github.com/en-dash-consulting/n-seo/blob/main/docs/OPERATING-RULES.md)
+- [Playbook](https://github.com/en-dash-consulting/n-seo/blob/main/docs/PLAYBOOK.md) — SEO, AEO, GEO and what moves each
+- [MCP](https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md) — using it from Claude Code or another agent
+
+## Related En Dash open source
+
+- [n-dx](https://n-dx.dev) — spec-driven development, automated
+- [html-in-canvas.dev](https://html-in-canvas.dev) — reference site for the HTML-in-Canvas browser API
+- [learn-pretext.com](https://learn-pretext.com) — interactive tutorials for pretext.js

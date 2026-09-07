@@ -30,9 +30,9 @@ def report(level, name, detail=""):
 def check_config():
     print("config")
     if seo_config.using_example():
-        report("WARN", "seo-agent.config.json missing",
-               "running on the example — copy seo-agent.config.example.json to "
-               "seo-agent.config.json or open /settings in the dashboard")
+        report("WARN", "n-seo.config.json missing",
+               "running on the example — copy n-seo.config.example.json to "
+               "n-seo.config.json or open /settings in the dashboard")
     else:
         report("OK", f"config at {seo_config.CONFIG_PATH}")
     try:

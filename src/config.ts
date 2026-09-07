@@ -1,7 +1,7 @@
 /**
  * Configuration: one JSON file drives everything.
  *
- * seo-agent.config.json (or $SEO_AGENT_CONFIG) is read by BOTH this app and
+ * n-seo.config.json (or $N_SEO_CONFIG) is read by BOTH this app and
  * every Python script (ingest/seo_config.py). One site list, one module
  * switchboard, one auth block — adding a site here adds it to every pull,
  * probe, audit and page. The example file documents every field.
@@ -11,10 +11,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-export const CONFIG_PATH = process.env.SEO_AGENT_CONFIG
-  ? path.resolve(process.env.SEO_AGENT_CONFIG)
-  : path.join(ROOT, "seo-agent.config.json");
-export const EXAMPLE_CONFIG_PATH = path.join(ROOT, "seo-agent.config.example.json");
+export const CONFIG_PATH = process.env.N_SEO_CONFIG
+  ? path.resolve(process.env.N_SEO_CONFIG)
+  : path.join(ROOT, "n-seo.config.json");
+export const EXAMPLE_CONFIG_PATH = path.join(ROOT, "n-seo.config.example.json");
 
 export interface SiteCfg {
   /** canonical hostname — the URL slug in this app and the key in data/ga4/<host>/ */
@@ -83,7 +83,7 @@ function normalize(raw: Partial<Config>): Config {
     brand: s.brand || undefined,
   }));
   return {
-    name: raw.name || "SEO Agent",
+    name: raw.name || "n-seo",
     port: Number(process.env.SEO_PORT ?? raw.port ?? 4600),
     google: { ...(raw.google ?? {}), auth: raw.google?.auth || "service-account-key" } as Config["google"],
     sites,

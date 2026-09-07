@@ -4,7 +4,7 @@
 
   "google": {
     "auth": "service-account-key",
-    "serviceAccountKey": "~/.config/seo-agent/service-account.json",
+    "serviceAccountKey": "~/.config/n-seo/service-account.json",
     "impersonate": ""
   },
 

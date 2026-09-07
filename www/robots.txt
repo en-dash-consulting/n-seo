@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://en-dash-consulting.github.io/n-seo/sitemap.xml

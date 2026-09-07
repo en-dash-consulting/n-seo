@@ -1,5 +1,5 @@
 /**
- * stdio entrypoint for the seo-agent MCP server.
+ * stdio entrypoint for the n-seo MCP server.
  *
  * A local MCP client (Claude Code, Claude Desktop, any MCP host) spawns this
  * as a child process and talks over stdin/stdout. There is no network
@@ -18,4 +18,4 @@ const server = createMcpServer();
 const transport = new StdioServerTransport();
 
 await server.connect(transport);
-console.error("seo-agent MCP server ready on stdio");
+console.error("n-seo MCP server ready on stdio");

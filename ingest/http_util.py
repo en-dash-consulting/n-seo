@@ -71,7 +71,7 @@ def post_json(url, body, token=None, *, label=""):
     return curl_json([*args, "-d", json.dumps(body), url], label=label or url[-60:])
 
 
-def fetch_text(url, *, timeout=15, ua="Mozilla/5.0 (compatible; seo-agent/0.1)", follow=True,
+def fetch_text(url, *, timeout=15, ua="Mozilla/5.0 (compatible; n-seo/0.1)", follow=True,
                byte_range=None):
     """Plain page fetch → (status, body). status is None when curl itself failed."""
     cmd = ["curl", "-s", "-A", ua, "--max-time", str(timeout), "-w", "\n%{http_code}"]
