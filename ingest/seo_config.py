@@ -55,7 +55,8 @@ def load(force: bool = False) -> dict:
     _cache = {
         "name": raw.get("name") or "SEO Agent",
         "port": int(os.environ.get("SEO_PORT") or raw.get("port") or 4600),
-        "google": {"auth": "service-account-key", **(raw.get("google") or {})},
+        "google": {**(raw.get("google") or {}),
+                   "auth": (raw.get("google") or {}).get("auth") or "service-account-key"},
         "sites": sites,
         "watchPages": raw.get("watchPages") or [],
         "conversions": conv if conv.get("site") else None,

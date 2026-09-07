@@ -40,7 +40,7 @@ export interface Action {
   /** set when a fix already shipped and the data is being watched */
   watching?: string;
   /** rule = derived from data each request; backlog = curated in config/backlog.json */
-  source?: "rule" | "backlog";
+  source?: "rule" | "backlog" | "proposal";
 }
 
 interface BacklogFile {

@@ -183,9 +183,11 @@ export function landingPages(site: SiteCfg): { page: string; sessions: number; e
 
 /** Sessions referred from your OTHER configured sites — measures cross-linking. */
 export function crossReferrals(site: SiteCfg): { source: string; sessions: number }[] {
-  const others = config().sites.filter((s) => s.host !== site.host).map((s) => s.host.replace(/^www\./, ""));
+  // Exact host match (www stripped): with a subdomain layout, a substring
+  // test would count docs.example.com's own traffic as a referral from example.com.
+  const others = new Set(config().sites.filter((s) => s.host !== site.host).map((s) => s.host.replace(/^www\./, "")));
   return ga4Rows(site, "sources")
-    .filter(({ dims }) => others.some((h) => dims[0].includes(h)))
+    .filter(({ dims }) => others.has(dims[0].toLowerCase().replace(/^www\./, "")))
     .map(({ dims, mets }) => ({ source: dims[0], sessions: mets[0] }))
     .sort((a, b) => b.sessions - a.sessions);
 }

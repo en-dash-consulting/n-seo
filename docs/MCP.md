@@ -52,8 +52,9 @@ curl -X POST http://localhost:4600/mcp \
 ```
 
 **With no token set the endpoint returns 503 rather than serving.** It fails
-closed because the dashboard binds every interface, and your search data
-should not be readable from the LAN by accident. Rotate by writing a new
+closed so that your search data is never readable by accident: the dashboard
+binds `127.0.0.1` by default, but `SEO_HOST=0.0.0.0` (for a tunnel or a
+container) exposes it to whatever can reach that interface. Rotate by writing a new
 value to the token file and restarting the dashboard.
 
 ## Why local-only

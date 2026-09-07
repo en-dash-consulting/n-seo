@@ -30,11 +30,13 @@ def routes():
     drafts_dir = ROOT / "content" / "drafts"
     camps_dir = ROOT / "content" / "campaigns"
     # Same filter as the dashboard's drafts()/campaigns(): README and _-prefixed files are not content.
-    skip = lambda p: p.name == "README.md" or p.name.startswith("_")
+    skip = lambda p: p.name.lower() == "readme.md" or p.name.startswith("_")
     drafts = sorted(p.stem for p in drafts_dir.glob("*.md") if not skip(p)) if drafts_dir.exists() else []
     camps = sorted(p.stem for p in camps_dir.glob("*.json") if not skip(p)) if camps_dir.exists() else []
     return (["/", "/actions", "/insights", "/trends", "/trends/30", "/trends/60", "/trends/90",
-             "/trends/120", "/trends/180", "/content", "/indexing", "/probes", "/logs", "/settings"]
+             # /settings is deliberately absent: it shows local paths and the
+             # service-account email, and its form cannot work on a static mirror.
+             "/trends/120", "/trends/180", "/content", "/indexing", "/probes", "/logs"]
             + [f"/site/{h}" for h in hosts]
             + [f"/drafts/{s}" for s in drafts]
             + [f"/campaigns/{s}" for s in camps])

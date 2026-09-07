@@ -4,7 +4,9 @@
   "description": "Local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and turns the data into a ranked action queue you can act on without an agency.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.tsx",
     "start": "tsx src/server.tsx",
@@ -13,7 +15,10 @@
     "mcp:smoke": "node ops/mcp-smoke-stdio.mjs",
     "doctor": "python3 ops/doctor.py",
     "demo": "python3 ops/demo_data.py",
-    "daily": "python3 ops/daily.py"
+    "daily": "python3 ops/daily.py",
+    "test": "tsx --test tests/ts/*.test.ts",
+    "test:py": "python3 -m unittest discover -s tests/py -v",
+    "check": "npm run typecheck && npm test && npm run test:py"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

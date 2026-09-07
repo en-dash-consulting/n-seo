@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Python compiles
+        run: python3 -m py_compile $(git ls-files '*.py')
+
+      - name: Demo dataset
+        run: python3 ops/demo_data.py
+
+      - name: TypeScript tests
+        run: npm test
+
+      - name: Python tests
+        run: npm run test:py
+
+      - name: Dashboard serves every page
+        run: |
+          npx tsx src/server.tsx > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4600/api/actions && break
+            sleep 1
+          done
+          fail=0
+          for route in / /actions /settings /api/actions /insights /trends /content /indexing /probes /logs /site/example.com; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4600$route")
+            echo "$code $route"
+            [ "$code" = "200" ] || fail=1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:4600/mcp)
+          echo "$code /mcp (expect 503: fails closed without a token)"
+          [ "$code" = "503" ] || fail=1
+          kill %1 || true
+          if [ "$fail" = "1" ]; then cat server.log; exit 1; fi
+
+      - name: Setup doctor runs offline
+        run: python3 ops/doctor.py --offline || true
+
+  no-private-names:
+    # The project was extracted from a private deployment. Nothing from it
+    # (hosts, account names, IDs) may reappear outside the LICENSE line.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Grep for forbidden words
+        run: |
+          pattern='endash|naniel|beergame|html-in-canvas|spacetrader|stillhouse|hotdogbenchmark'
+          if git grep -n -i -E "$pattern" -- ':!LICENSE' ':!.github/workflows/ci.yml'; then
+            echo "::error::private names found (see above)"; exit 1
+          fi
+          echo "clean"

@@ -205,7 +205,14 @@ export function applySettingsForm(body: Record<string, string | File | (string |
     return typeof v === "string" ? v : Array.isArray(v) && typeof v[0] === "string" ? v[0] : "";
   };
   const splitLines = (s: string) => s.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  const topicLines = (s: string) => splitLines(s).map((l) => l.split("|").map((x) => x.trim()));
+  const topicLines = (s: string, parts: number, label: string) =>
+    splitLines(s).map((l) => {
+      const cols = l.split("|").map((x) => x.trim());
+      if (cols.length < parts || cols.slice(0, parts).some((x) => !x)) {
+        throw new Error(`${label}: each line needs ${parts} parts separated by | — "${l.slice(0, 40)}"`);
+      }
+      return cols.slice(0, parts);
+    });
 
   saveConfig((raw) => {
     const modules = ((raw.modules as Record<string, Record<string, unknown>>) ??= {});
@@ -216,9 +223,9 @@ export function applySettingsForm(body: Record<string, string | File | (string |
     modules.llm.command = get("llm.command") || "claude -p --model sonnet";
     modules.llm.fastCommand = get("llm.fastCommand") || modules.llm.command;
     modules.hackerNews.user = get("hackerNews.user");
-    modules.hackerNews.topics = topicLines(get("hackerNews.topics"));
+    modules.hackerNews.topics = topicLines(get("hackerNews.topics"), 2, "Hacker News topics");
     modules.reddit.user = get("reddit.user");
-    modules.reddit.topics = topicLines(get("reddit.topics"));
+    modules.reddit.topics = topicLines(get("reddit.topics"), 3, "Reddit topics");
     modules.indexNow.keyFile = get("indexNow.keyFile") || "indexnow.key";
 
     const participation = ((raw.participation as Record<string, unknown>) ??= {});

@@ -108,11 +108,13 @@ def main():
         p = DATA / "ga4" / host / "sources.json"
         if not p.exists():
             continue
-        others = [h for h in hosts if h != host]
+        # exact host match (www stripped) — a substring test would count a
+        # subdomain's own traffic as a referral from the apex
+        others = {h.removeprefix("www.") for h in hosts if h != host}
         xref = []
         for r in json.loads(p.read_text()).get("rows", []):
             name = r["dimensionValues"][0]["value"]
-            if any(o in name for o in others):
+            if name.lower().removeprefix("www.") in others:
                 xref.append(f"{name}={float(r['metricValues'][0]['value']):.0f}")
         if xref:
             lines.append(f"cross-referrals into {host} (90d sessions): " + ", ".join(xref))

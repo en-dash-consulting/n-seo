@@ -18,6 +18,22 @@ import {
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
+/* The dashboard has write endpoints (settings, backlog). Two guards keep them
+   local: the server binds 127.0.0.1 unless SEO_HOST says otherwise, and any
+   POST must come from this origin — a form on some other web page can reach
+   http://localhost:PORT without a CORS preflight, and settings include the
+   LLM command that ops/llm.py later executes. curl (no Origin) is allowed. */
+app.use("*", async (c, next) => {
+  if (c.req.method !== "POST" || c.req.path === "/mcp") return next();
+  const origin = c.req.header("origin") ?? c.req.header("referer");
+  if (origin) {
+    let host = "";
+    try { host = new URL(origin).host; } catch { /* malformed → reject below */ }
+    if (host !== c.req.header("host")) return c.text("cross-origin POST rejected", 403);
+  }
+  return next();
+});
+
 app.get("/api/actions", (c) => c.json(allActions()));
 
 /* ---- MCP over streamable HTTP ----
@@ -240,6 +256,7 @@ app.post("/api/backlog/:id/retire", (c) => {
   return c.redirect(`/actions?flash=${encodeURIComponent(ok ? "Retired from the backlog" : "Item not found in the backlog")}`, 303);
 });
 
-serve({ fetch: app.fetch, port: PORT }, (info) => {
-  console.log(`seo-agent → http://localhost:${info.port}`);
+const HOST = process.env.SEO_HOST ?? "127.0.0.1";
+serve({ fetch: app.fetch, port: PORT, hostname: HOST }, (info) => {
+  console.log(`seo-agent → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${info.port}`);
 });

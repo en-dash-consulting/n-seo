@@ -94,8 +94,11 @@ def git_autocommit():
     staged = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode != 0
     if not staged:
         return
-    subprocess.run(["git", "commit", "-q", "-m", f"Daily refresh {date.today().isoformat()}"],
-                   cwd=ROOT, capture_output=True)
+    c = subprocess.run(["git", "commit", "-q", "-m", f"Daily refresh {date.today().isoformat()}"],
+                       cwd=ROOT, capture_output=True, text=True)
+    if c.returncode != 0:
+        log(f"git: commit FAILED — {(c.stderr or c.stdout).strip()[:200]}")
+        return
     log("git: committed daily refresh")
     remotes = subprocess.run(["git", "remote"], cwd=ROOT, capture_output=True, text=True).stdout.split()
     if remotes:
@@ -126,6 +129,10 @@ def main():
             print(f"unknown step {bad!r}; known: {', '.join(known)}")
             return 2
     todo = [(n, s) for n, s in enabled_steps if (not only or n in only) and n not in skip]
+    enabled_names = {n for n, _ in enabled_steps}
+    for name in sorted((only or set()) - enabled_names):
+        if name in dict(STEPS):
+            print(f"note: {name} is disabled by its module in the config — skipped", file=sys.stderr)
 
     log(f"=== daily run {datetime.now():%Y-%m-%d %H:%M} ({len(todo)} steps) ===")
     if seo_config.using_example():

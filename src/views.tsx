@@ -96,7 +96,7 @@ export const ActionModal: FC<{ a: Action; id: string }> = ({ a, id }) => (
       <span class="chip impact" title="estimated clicks/month — orders the queue, not a forecast">≈ +{a.impact} clicks/mo</span>
       <span class={`chip effort e-${a.effort}`}>{effortLabel(a.effort, true)}</span>
       <span class="chip tag">{a.tag}</span>
-      <span class="chip">{a.source === "backlog" ? "curated" : "data-derived"}</span>
+      <span class="chip">{a.source === "backlog" ? "curated" : a.source === "proposal" ? "proposed" : "data-derived"}</span>
     </div>
     {a.watching && <p class="action-watching">⏳ {a.watching}</p>}
     <h4>Why (the data)</h4>
@@ -120,6 +120,8 @@ export const ActionModal: FC<{ a: Action; id: string }> = ({ a, id }) => (
           <button type="submit" class="btn btn-quiet">Retire</button>
         </form>
       </div>
+    ) : a.source === "proposal" ? (
+      <p class="modal-note">Proposed by the opportunity scan. Accept it into your queue with the button on the card, or ignore it — it is replaced on the next scan.</p>
     ) : (
       <p class="modal-note">Data-derived: this card disappears on its own once the numbers move. If the fix shipped, add the page to <code>shippedWatch</code> in <code>config/backlog.json</code> with a dated note and it shows as watching.</p>
     )}
@@ -205,7 +207,7 @@ export const SplitQueue: FC<{ actions: Action[]; idPrefix: string }> = ({ action
 };
 
 const ProposalCard: FC<{ p: data.ScanOutput["proposals"][number]; index: number }> = ({ p, index }) => {
-  const a: Action = { ...p, id: `proposal-${index}`, effort: (["S", "M", "L"].includes(p.effort) ? p.effort : "M") as Action["effort"], spec: p.spec ?? [] };
+  const a: Action = { ...p, id: `proposal-${index}`, source: "proposal", effort: (["S", "M", "L"].includes(p.effort) ? p.effort : "M") as Action["effort"], spec: p.spec ?? [] };
   const id = `prop-${index}`;
   return (
     <div class="proposal">

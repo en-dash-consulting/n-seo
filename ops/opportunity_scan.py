@@ -66,6 +66,34 @@ def portfolio_description():
     return ", ".join(parts)
 
 
+def _host_resolver(prop):
+    """query -> the configured host a riser belongs to.
+
+    A domain property can cover several configured sites, and a url-prefix
+    property's slug is not a host at all, so the trend file's key cannot be
+    used directly. One site on the property: that site. Several: the host of
+    the page with the most impressions for that query in the 90-day
+    query x page pull, falling back to the first configured site.
+    """
+    owners = [s for s in seo_config.sites() if s.get("gscProperty") == prop]
+    if not owners:
+        return lambda q: seo_config.gsc_slug(prop)
+    if len(owners) == 1:
+        return lambda q: owners[0]["host"]
+    by_gsc_host = {s["gscHost"]: s["host"] for s in owners}
+    best = {}
+    qp = seo_config.DATA / "gsc" / seo_config.gsc_slug(prop) / "query_page_90d.json"
+    try:
+        for r in json.loads(qp.read_text()).get("rows", []):
+            q, page = r["keys"][0], r["keys"][1]
+            h = page.split("/")[2] if page.count("/") >= 2 else ""
+            if h in by_gsc_host and r["impressions"] > best.get(q, (0, ""))[0]:
+                best[q] = (r["impressions"], by_gsc_host[h])
+    except (OSError, json.JSONDecodeError, KeyError, IndexError):
+        pass
+    return lambda q: best.get(q, (0, owners[0]["host"]))[1]
+
+
 def main():
     # 1. refresh trends (also keeps the /insights tables current)
     if seo_config.gsc_properties() or seo_config.ga4_properties():
@@ -91,7 +119,7 @@ def main():
     # 2. scripted candidate detection: uncovered risers
     candidates = []
     for site, d in trends.get("sites", {}).items():
-        host = seo_config.gsc_slug(site)
+        host_for = _host_resolver(site)
         for m in d.get("rising", []):
             if m["recent_imps"] < RISE_MIN_IMPS:
                 continue
@@ -99,7 +127,7 @@ def main():
                 continue
             if m["query"].lower() in queue_text:
                 continue  # already covered by an action
-            candidates.append({"host": host, **m})
+            candidates.append({"host": host_for(m["query"]), **m})
     candidates.sort(key=lambda c: -c["recent_imps"])
     candidates = candidates[:12]
 

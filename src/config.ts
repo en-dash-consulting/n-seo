@@ -85,7 +85,7 @@ function normalize(raw: Partial<Config>): Config {
   return {
     name: raw.name || "SEO Agent",
     port: Number(process.env.SEO_PORT ?? raw.port ?? 4600),
-    google: { auth: "service-account-key", ...(raw.google ?? {}) } as Config["google"],
+    google: { ...(raw.google ?? {}), auth: raw.google?.auth || "service-account-key" } as Config["google"],
     sites,
     watchPages: raw.watchPages ?? [],
     conversions: raw.conversions?.site ? raw.conversions : undefined,
