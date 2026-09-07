@@ -1,0 +1,59 @@
+{
+  "name": "My sites",
+  "port": 4600,
+
+  "google": {
+    "auth": "service-account-key",
+    "serviceAccountKey": "~/.config/seo-agent/service-account.json",
+    "impersonate": ""
+  },
+
+  "sites": [
+    {
+      "host": "example.com",
+      "label": "example",
+      "gscProperty": "sc-domain:example.com",
+      "gscHost": "example.com",
+      "ga4Property": "",
+      "brand": "example",
+      "repo": "../example-site",
+      "hosting": "Netlify"
+    },
+    {
+      "host": "docs.example.com",
+      "label": "docs",
+      "gscProperty": "sc-domain:example.com",
+      "gscHost": "docs.example.com",
+      "ga4Property": "",
+      "brand": "example"
+    }
+  ],
+
+  "watchPages": [
+    "https://example.com/",
+    "https://example.com/pricing"
+  ],
+
+  "conversions": {
+    "site": "",
+    "events": ["sign_up", "newsletter_signup"],
+    "sourceDimension": "customEvent:source_app"
+  },
+
+  "participation": {
+    "expertise": "Describe who you are and what you genuinely know first-hand. This is the only context the briefing generator gets, and it is what keeps briefings honest: they point at threads where YOUR experience applies."
+  },
+
+  "modules": {
+    "indexStatus":     { "enabled": true },
+    "metadataAudit":   { "enabled": true },
+    "opportunityScan": { "enabled": true },
+    "llm":             { "enabled": false, "command": "claude -p --model sonnet", "fastCommand": "claude -p --model haiku" },
+    "hackerNews":      { "enabled": false, "user": "", "topics": [["your niche keyword", "why you can speak to this"]] },
+    "reddit":          { "enabled": false, "user": "", "topics": [["subreddit", "search query", "why you can speak to this"]] },
+    "indexNow":        { "enabled": false, "keyFile": "indexnow.key" },
+    "staticExport":    { "enabled": false },
+    "gitAutoCommit":   { "enabled": false },
+    "notifications":   { "enabled": false }
+  }
+}

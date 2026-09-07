@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.seo-agent.daily</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>export PATH="__NODE_BIN__:/usr/local/bin:/usr/bin:/bin"; export HOME="__HOME__"; export USER="${USER:-$(id -un)}"; export TMPDIR="${TMPDIR:-/tmp}"; cd "__REPO__" &amp;&amp; exec python3 ops/daily.py</string>
+  </array>
+  <!-- 07:00 local. A slot missed while asleep fires on wake; the run then
+       waits for the network before it starts. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>7</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>__REPO__/data/daily-launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>__REPO__/data/daily-launchd.log</string>
+</dict>
+</plist>

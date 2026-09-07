@@ -1,0 +1,5 @@
+{
+  "_comment": "Optional hand-written marketer briefing shown on /insights above the live trend tables. verdict: opportunity | warning | momentum | deprioritize. Leave the list empty to show only the live tables.",
+  "date": "",
+  "insights": []
+}

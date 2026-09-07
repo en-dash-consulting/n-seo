@@ -1,0 +1,5 @@
+{
+  "_comment": "Your curated strategic queue. The dashboard merges these with data-derived actions. Add items with evidence (why) and a spec; when something ships, set `watching` to a dated note instead of deleting it. `shippedWatch` maps page URLs to notes so data-derived cards on those pages show as watching too.",
+  "actions": [],
+  "shippedWatch": {}
+}

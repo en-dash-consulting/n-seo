@@ -1,0 +1,11 @@
+[Unit]
+Description=seo-agent daily run (pull, probe, audit, log)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__REPO__
+ExecStart=/usr/bin/python3 ops/daily.py
+StandardOutput=append:__REPO__/data/daily-systemd.log
+StandardError=append:__REPO__/data/daily-systemd.log

@@ -1,0 +1,13 @@
+# machine-refreshed snapshots — regenerable, never committed
+data/
+site/
+__pycache__/
+node_modules/
+
+# secrets
+.env
+*.key.json
+service-account*.json
+
+# your live config is yours; the example ships with the repo
+seo-agent.config.json

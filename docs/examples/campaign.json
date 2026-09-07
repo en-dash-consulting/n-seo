@@ -1,0 +1,59 @@
+{
+  "slug": "docs-listing-outreach",
+  "name": "Docs listing and backlink outreach",
+  "site": "docs.example.com",
+  "summary": "Get docs.example.com listed on the curated resource pages and awesome-lists our audience already reads. Ten ranked targets, three templates, one send plan.",
+  "voice": "Short, specific, no marketing adjectives. Lead with what the reader's audience gets. One ask per message. Disclose that it is our project.",
+  "targets": [
+    {
+      "rank": 1,
+      "name": "awesome-example-tools",
+      "category": "awesome-list",
+      "url": "github.com/someone/awesome-example-tools",
+      "contact": "Pull request following CONTRIBUTING.md — one line, alphabetical, matching the existing entry format",
+      "angle": "The list has no interactive tutorial entry; ours is free and needs no account",
+      "value": "durable backlink from a 4k-star repo; steady referral traffic",
+      "likelihood": "high — the list accepts PRs weekly and has no competing entry",
+      "evidence": "17 open PRs merged in the last 60 days; two comparable tools listed",
+      "status": ""
+    },
+    {
+      "rank": 2,
+      "name": "Example University — course resource page",
+      "category": "education",
+      "url": "cs.example.edu/courses/101/resources",
+      "contact": "Instructor email on the syllabus page",
+      "angle": "The course's week 4 assignment covers exactly what our getting-started guide teaches",
+      "value": ".edu link; seasonal traffic at semester start",
+      "likelihood": "medium — instructors reply in batches at term boundaries",
+      "evidence": "Resource page updated each August; links to two similar tools",
+      "status": "sent 2026-08-14"
+    }
+  ],
+  "templates": [
+    {
+      "id": "A",
+      "audience": "awesome-list maintainers",
+      "subject": "Add docs.example.com (interactive getting-started, no account needed)",
+      "body": "Hi —\n\nPR attached adding docs.example.com under Tutorials. It's our project (disclosure), free, runs in the browser without an account, and covers the same ground as the two guides already listed but interactively.\n\nHappy to trim to one line or move sections if you prefer.\n\nThanks for maintaining the list."
+    },
+    {
+      "id": "B",
+      "audience": "instructors",
+      "subject": "A free interactive companion to your week-4 material",
+      "body": "Hi Professor —\n\nI build docs.example.com, a free interactive guide to <topic>. Your 101 course's week-4 assignment covers the same concepts, and a few students have told us they used the guide alongside it.\n\nIf it would be useful to list on the course resources page, here is the link: https://docs.example.com/getting-started. No account, no tracking beyond standard analytics.\n\nEither way, thank you for teaching this.\n\n— <your name>"
+    }
+  ],
+  "plan": [
+    { "day": "Mon", "action": "Open the awesome-list PR", "template": "A", "notes": "Read CONTRIBUTING.md first; match the entry format exactly" },
+    { "day": "Wed", "action": "Email the two instructors whose fall syllabi are already posted", "template": "B", "notes": "Personalize the week reference for each" },
+    { "day": "Fri", "action": "Check PR feedback; edit the existing PR rather than opening a new one", "template": "", "notes": "" }
+  ],
+  "week2": "Follow up on unanswered instructor emails once, then stop. Move to the next three targets.",
+  "later": "Once the awesome-list entry is merged, cite it in the next two pitches as social proof.",
+  "cautions": [
+    "One follow-up maximum per target.",
+    "Never send the same template to two maintainers of the same list.",
+    "Disclose that it is your project every time."
+  ]
+}

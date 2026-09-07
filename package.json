@@ -1,0 +1,29 @@
+{
+  "name": "seo-agent",
+  "version": "0.1.0",
+  "description": "Local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and turns the data into a ranked action queue you can act on without an agency.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "tsx watch src/server.tsx",
+    "start": "tsx src/server.tsx",
+    "typecheck": "tsc --noEmit",
+    "mcp": "tsx src/mcp-stdio.ts",
+    "mcp:smoke": "node ops/mcp-smoke-stdio.mjs",
+    "doctor": "python3 ops/doctor.py",
+    "demo": "python3 ops/demo_data.py",
+    "daily": "python3 ops/daily.py"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "hono": "^4.6.14",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

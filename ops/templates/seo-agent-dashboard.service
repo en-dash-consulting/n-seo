@@ -1,0 +1,15 @@
+[Unit]
+Description=seo-agent dashboard
+After=network.target
+
+[Service]
+WorkingDirectory=__REPO__
+# npx resolves the tsx pinned in package.json; adjust the path if node is not on PATH for user units.
+ExecStart=/usr/bin/env npx tsx src/server.tsx
+Restart=always
+RestartSec=3
+StandardOutput=append:__REPO__/data/dashboard.log
+StandardError=append:__REPO__/data/dashboard.log
+
+[Install]
+WantedBy=default.target
