@@ -25,6 +25,11 @@ EXPECTED_CTR = {1: .28, 2: .15, 3: .10, 4: .07, 5: .05, 6: .04,
                 7: .035, 8: .03, 9: .026, 10: .022,
                 11: .018, 12: .016, 13: .014, 14: .012, 15: .011}
 
+# A ranged request comes back 206 from a server that honours the Range header
+# and 200 from one that ignores it. Both mean the page serves; treating only
+# 200 as healthy would report every page on such a site as dead.
+SERVING = (200, 206)
+
 MIN_PAGE_IMPS = 15  # 90d window
 TOP_PAGES_PER_SITE = 15
 STOP = set("a an the and or of to in on for with vs what is how why your our "
@@ -89,7 +94,7 @@ def main():
             d["queries"].sort(key=lambda q: -q["imps"])
             top_q = d["queries"][:5]
 
-            if status != 200:
+            if status not in SERVING:
                 # It still earns impressions, so it is worth reporting — but a
                 # title rewrite is the wrong move and would burn one of the
                 # ~8 metadata changes a week on a page that does not serve.

@@ -67,7 +67,9 @@ uses [Semantic Versioning](https://semver.org/).
   step as successful. The pulls now keep the last good file and fail the step.
 - **Wrong advice**: the metadata audit ignored the HTTP status, so a page that
   had started 404ing was audited against its error page and produced a
-  top-ranked "rewrite this title" card. It now reports the dead page instead.
+  top-ranked "rewrite this title" card. It now reports the dead page instead,
+  counting both 200 and 206 as serving because a ranged request returns 206
+  from any server that honours the Range header.
   Descriptions containing an apostrophe were truncated at it and then flagged
   as too short, and HTML entities were blanked rather than decoded.
 - **Inverted GEO signal**: the robots.txt check matched across `User-agent`

@@ -29,6 +29,13 @@ class MetadataParsingTests(unittest.TestCase):
     def test_status_is_reported_so_dead_pages_are_not_audited(self):
         status, title, desc = self.head(404, "<title>Not found</title>")
         self.assertEqual(status, 404)
+        self.assertNotIn(404, analyze_metadata.SERVING)
+
+    def test_a_ranged_206_still_counts_as_serving(self):
+        # curl -r gets 206 from any server that honours Range; a page there is
+        # perfectly healthy and must not be reported as not serving.
+        self.assertIn(206, analyze_metadata.SERVING)
+        self.assertIn(200, analyze_metadata.SERVING)
 
 
 class RobotsGroupTests(unittest.TestCase):

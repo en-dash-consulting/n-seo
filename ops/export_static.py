@@ -60,28 +60,34 @@ def main():
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
+    try:
 
-    stamp = datetime.now(timezone.utc).isoformat(timespec="minutes")
-    staleness = (
-        '<script>(function(){var g=new Date("' + stamp + '");'
-        'var h=(Date.now()-g.getTime())/36e5;'
-        'if(h>36){var b=document.createElement("div");b.className="stale-banner";'
-        'b.textContent="⚠ This mirror is "+Math.round(h)+"h old — the daily run has not published since '
-        + stamp + ' UTC. Check the machine that runs it.";'
-        'document.body.prepend(b);}})();</script>'
-    )
-    rs = routes()
-    for route in rs:
-        html = fetch(route)
-        html = html.replace("<head>", '<head><meta name="robots" content="noindex, nofollow">', 1)
-        html = html.replace("</body>", staleness + "</body>", 1)
-        dest = out / "index.html" if route == "/" else out / route.lstrip("/") / "index.html"
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(html)
+        stamp = datetime.now(timezone.utc).isoformat(timespec="minutes")
+        staleness = (
+            '<script>(function(){var g=new Date("' + stamp + '");'
+            'var h=(Date.now()-g.getTime())/36e5;'
+            'if(h>36){var b=document.createElement("div");b.className="stale-banner";'
+            'b.textContent="⚠ This mirror is "+Math.round(h)+"h old — the daily run has not published since '
+            + stamp + ' UTC. Check the machine that runs it.";'
+            'document.body.prepend(b);}})();</script>'
+        )
+        rs = routes()
+        for route in rs:
+            html = fetch(route)
+            html = html.replace("<head>", '<head><meta name="robots" content="noindex, nofollow">', 1)
+            html = html.replace("</body>", staleness + "</body>", 1)
+            dest = out / "index.html" if route == "/" else out / route.lstrip("/") / "index.html"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(html)
 
-    (out / "styles.css").write_text(fetch("/styles.css"))
-    (out / "favicon.svg").write_text(fetch("/favicon.svg"))
-    (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
+        (out / "styles.css").write_text(fetch("/styles.css"))
+        (out / "favicon.svg").write_text(fetch("/favicon.svg"))
+        (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
+    except BaseException:
+        # Never leave a half-built staging directory behind; the next
+        # run would otherwise start from someone else's leftovers.
+        shutil.rmtree(out, ignore_errors=True)
+        raise
 
     if SITE.exists():
         shutil.rmtree(SITE)
