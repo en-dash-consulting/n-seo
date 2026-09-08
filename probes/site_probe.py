@@ -114,7 +114,7 @@ def probe_site(base):
         robots["sitemap_declared"] = "sitemap:" in body.lower()
         blocked = []
         for bot in AI_CRAWLERS:
-            m = re.search(rf"user-agent:\s*{re.escape(bot)}\s*\n(?:[^\n]*\n)*?\s*disallow:\s*/\s*$",
+            m = re.search(rf"user-agent:\s*{re.escape(bot)}\s*\n(?:(?!user-agent:)[^\n]*\n)*?\s*disallow:\s*/\s*$",
                           body, re.IGNORECASE | re.MULTILINE)
             if m:
                 blocked.append(bot)

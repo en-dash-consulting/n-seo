@@ -68,7 +68,10 @@ class JwtTests(unittest.TestCase):
         self.assertEqual(claims["iss"], "reader@project.iam.gserviceaccount.com")
         self.assertEqual(claims["scope"], google_auth.ANALYTICS_RO)
         self.assertEqual(claims["aud"], "https://oauth2.googleapis.com/token")
-        self.assertTrue(before - 5 <= claims["iat"] <= time.time() + 5)
+        # iat is deliberately backdated so a slightly fast clock cannot make
+        # Google reject the assertion as issued in the future.
+        self.assertTrue(before - 120 <= claims["iat"] <= time.time() - 30,
+                        f"iat should be backdated ~60s, got {claims['iat'] - before}s vs now")
         self.assertEqual(claims["exp"] - claims["iat"], 3600)
 
         sig = self.tmp / "sig.bin"

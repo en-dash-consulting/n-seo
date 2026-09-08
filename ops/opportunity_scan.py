@@ -125,7 +125,10 @@ def main():
                 continue
             if m["prior_imps"] and m["recent_imps"] / max(1, m["prior_imps"]) < RISE_MIN_RATIO:
                 continue
-            if m["query"].lower() in queue_text:
+            # Substring matching dropped genuine risers: a one-word query
+            # ("pricing", "canvas") appears inside some unrelated card's prose
+            # and the riser is written off as already covered.
+            if re.search(rf"\b{re.escape(m['query'].lower())}\b", queue_text):
                 continue  # already covered by an action
             candidates.append({"host": host_for(m["query"]), **m})
     candidates.sort(key=lambda c: -c["recent_imps"])

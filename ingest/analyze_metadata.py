@@ -12,6 +12,7 @@ Writes data/metadata-audit.json — consumed by the dashboard's action queue.
 Stdlib + curl. Runs in the daily batch when modules.metadataAudit is on.
 """
 
+import html
 import json
 import re
 import sys
@@ -31,13 +32,21 @@ STOP = set("a an the and or of to in on for with vs what is how why your our "
 
 
 def fetch_head(url):
-    _, h = fetch_text(url, byte_range="0-40000")
+    """(status, title, description) for a live page.
+
+    The status matters: a page that still ranks but no longer serves must not
+    be audited against whatever its 404 page happens to contain. The quote in
+    the description pattern is back-referenced so an apostrophe inside the
+    text cannot end the match early, and entities are decoded rather than
+    blanked, because both mistakes invent findings that are not there.
+    """
+    status, h = fetch_text(url, byte_range="0-40000")
     title = re.search(r"<title[^>]*>(.*?)</title>", h, re.S | re.I)
-    desc = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']', h, re.S | re.I) \
-        or re.search(r'<meta[^>]+content=["\'](.*?)["\'][^>]+name=["\']description["\']', h, re.S | re.I)
-    unescape = lambda t: re.sub(r"&#?\w+;", " ", t)
-    return (unescape(title.group(1)).strip() if title else "",
-            unescape(desc.group(1)).strip() if desc else "")
+    desc = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=(["\'])(.*?)\1', h, re.S | re.I) \
+        or re.search(r'<meta[^>]+content=(["\'])(.*?)\1[^>]+name=["\']description["\']', h, re.S | re.I)
+    return (status,
+            html.unescape(title.group(1)).strip() if title else "",
+            html.unescape(desc.group(2)).strip() if desc else "")
 
 
 def tokens(text):
@@ -76,9 +85,23 @@ def main():
 
         findings = []
         for url, d in pages:
-            title, desc = fetch_head(url)
+            status, title, desc = fetch_head(url)
             d["queries"].sort(key=lambda q: -q["imps"])
             top_q = d["queries"][:5]
+
+            if status != 200:
+                # It still earns impressions, so it is worth reporting — but a
+                # title rewrite is the wrong move and would burn one of the
+                # ~8 metadata changes a week on a page that does not serve.
+                findings.append({
+                    "page": url, "title": "", "description": "",
+                    "imps": round(d["imps"]), "clicks": round(d["clicks"]),
+                    "issues": [f"page does not serve (HTTP {status or 'no response'}) "
+                               f"but still ranks — fix, redirect or retire it"],
+                    "top_queries": top_q, "missed_clicks_window": 0,
+                })
+                continue
+
             t_tokens = tokens(title)
             issues, missed = [], 0.0
 

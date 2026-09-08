@@ -27,8 +27,9 @@ OUT = seo_config.DATA / "index-status.json"
 INSPECT = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect"
 SITES_API = "https://searchconsole.googleapis.com/webmasters/v3/sites"
 
-# Guard against a runaway sitemap eating the daily quota in one host.
-MAX_PER_HOST = 400
+# The URL Inspection quota is per property (2,000/day), and several hosts can
+# share one domain property, so the budget has to be per property too.
+MAX_PER_PROPERTY = 1500
 WORKERS = 4
 
 # Anything other than this needs a human to look at it.
@@ -60,7 +61,7 @@ def sitemap_urls(host: str) -> list[str]:
             if st == 200:
                 pages.extend(locs(body))
         urls = pages
-    return urls[:MAX_PER_HOST]
+    return urls
 
 
 def inspect(token: str, site_url: str, page_url: str) -> dict:
@@ -129,16 +130,26 @@ def main() -> int:
     out = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "sites": {}}
     total_problems = 0
+    budget: dict[str, int] = {}
 
     for host, site_url in hosts.items():
         if site_url not in available:
             print(f"{host}: {site_url} not accessible — verify it in Search Console "
                   f"and add {who}; skipping")
             continue
+        left = budget.get(site_url, MAX_PER_PROPERTY)
+        if left <= 0:
+            print(f"{host}: today's inspection budget for {site_url} is spent; skipping")
+            continue
         urls = sitemap_urls(host)
         if not urls:
             print(f"{host}: no sitemap URLs, skipping")
             continue
+        if len(urls) > left:
+            print(f"{host}: {len(urls)} sitemap URLs, inspecting {left} "
+                  f"(shared quota for {site_url})")
+            urls = urls[:left]
+        budget[site_url] = left - len(urls)
         with ThreadPoolExecutor(max_workers=WORKERS) as pool:
             rows = list(pool.map(lambda u: inspect(token, site_url, u), urls))
 

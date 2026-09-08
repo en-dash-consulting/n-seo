@@ -57,14 +57,33 @@ export const slug = (s: string) =>
 
 const EMPTY: BacklogFile = { actions: [], shippedWatch: {} };
 
+const EFFORTS = new Set<Effort>(["S", "M", "L"]);
+
+/** config/backlog.json is edited by hand — that is the documented workflow —
+ *  so it is untrusted input. An effort outside S|M|L used to give the whole
+ *  queue a NaN comparator (score = impact / weight), and V8 then leaves the
+ *  order of every other card arbitrary. Coerce here, the same way
+ *  acceptProposal() already does on the write path. */
 function readBacklog(): BacklogFile {
   const raw = JSON.parse(fs.readFileSync(BACKLOG_PATH, "utf8")) as Partial<BacklogFile>;
-  const actions = (raw.actions ?? []).map((a) => ({
-    ...a,
-    id: a.id || slug(`${a.host}-${a.title}`),
-    spec: a.spec ?? [],
-    source: "backlog" as const,
-  }));
+  const seen = new Map<string, number>();
+  const actions = (raw.actions ?? []).map((a) => {
+    const impact = Number(a.impact);
+    const base = a.id || slug(`${a.host}-${a.title}`);
+    // slug() truncates at 80 chars, so two long titles can collide; a shared
+    // id would make retire() delete both and setWatching() annotate whichever
+    // came first. Suffix duplicates so every id addresses exactly one card.
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    return {
+      ...a,
+      id: n === 1 ? base : `${base}-${n}`,
+      spec: a.spec ?? [],
+      impact: Number.isFinite(impact) ? impact : 0,
+      effort: EFFORTS.has(a.effort) ? a.effort : ("M" as Effort),
+      source: "backlog" as const,
+    };
+  });
   return { _comment: raw._comment, actions, shippedWatch: raw.shippedWatch ?? {} };
 }
 
@@ -76,9 +95,11 @@ function reload(): void {
     current = readBacklog();
     loadedMtime = fs.statSync(BACKLOG_PATH).mtimeMs;
   } catch (err) {
-    // Keep serving the last good queue — a syntax error mid-edit must not
-    // take down the dashboard or the MCP server.
-    console.error("[backlog] reload failed, keeping previous:", (err as Error).message);
+    // A missing file is the normal state of an instance before its first
+    // curated item; only a real problem (a syntax error mid-edit) is worth
+    // reporting, and it must not take down the dashboard or the MCP server.
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") current = EMPTY;
+    else console.error("[backlog] keeping the last good queue:", (err as Error).message);
   }
 }
 reload();

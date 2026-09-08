@@ -46,7 +46,17 @@ engine   = ${ROOT}
 function parseArgs(argv) {
   const out = { cmd: argv[0] ?? "help", instance: undefined, rest: [] };
   for (let i = 1; i < argv.length; i++) {
-    if (argv[i] === "--instance") { out.instance = argv[++i]; continue; }
+    if (argv[i] === "--instance") {
+      const value = argv[++i];
+      // Silently falling back to the cwd here would point `daily` — and its
+      // afterRun hooks — at the wrong directory.
+      if (!value || value.startsWith("-")) {
+        console.error("--instance needs a directory, e.g. --instance ~/my-sites");
+        process.exit(2);
+      }
+      out.instance = value;
+      continue;
+    }
     if (argv[i].startsWith("--instance=")) { out.instance = argv[i].slice("--instance=".length); continue; }
     out.rest.push(argv[i]);
   }
@@ -211,7 +221,7 @@ let code = 0;
 
 switch (cmd) {
   case "init":
-    code = init(rest[0]);
+    code = init(rest[0] ?? flag ?? process.cwd());
     break;
   case "start":
   case "dev":

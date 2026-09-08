@@ -183,6 +183,12 @@ def main():
             print(f"unknown step {bad!r}; known: {', '.join(known)}")
             return 2
     todo = [(n, s) for n, s in enabled_steps if (not only or n in only) and n not in skip]
+    if only and run_hooks_flag and (hooks["beforeRun"] or hooks["afterRun"]):
+        # Hooks are run-level, not step-level: --only narrows the steps but
+        # beforeRun/afterRun still fire, which surprises anyone using --only
+        # as a quick smoke test.
+        print("note: beforeRun/afterRun hooks still run under --only "
+              "(pass --skip hooks to suppress them)", file=sys.stderr)
     enabled_names = {n for n, _ in enabled_steps}
     for name in sorted((only or set()) - enabled_names):
         if name in dict(STEPS):
@@ -203,7 +209,10 @@ def main():
         ok = run_step(script)
         if not ok:
             log(f"{name} failed, waiting for network and retrying once")
-            wait_for_network()
+            # --no-network-wait means "do not sit here"; without this the
+            # retry path waits the full timeout for every failing step.
+            if not args.no_network_wait:
+                wait_for_network()
             ok = run_step(script)
             if ok:
                 log(f"{name} recovered on retry")

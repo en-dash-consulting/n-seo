@@ -11,7 +11,13 @@ import { BACKLOG, SHIPPED_WATCH, slug, type Action, type Effort } from "./backlo
 export type { Action, Effort } from "./backlog.js";
 
 const EFFORT_WEIGHT: Record<Effort, number> = { S: 1, M: 2.5, L: 5 };
-export const score = (a: Action) => a.impact / EFFORT_WEIGHT[a.effort];
+
+/** Impact per unit of effort. Never returns NaN: one unrecognised effort or a
+ *  non-numeric impact would otherwise make the sort comparator return NaN and
+ *  leave the order of the entire queue undefined. backlog.ts coerces on load;
+ *  this is the second line of defence for any other producer. */
+export const score = (a: Action) =>
+  (Number.isFinite(a.impact) ? a.impact : 0) / (EFFORT_WEIGHT[a.effort] ?? EFFORT_WEIGHT.M);
 
 const WINDOW_MONTHS = 3; // decision window = trailing 90 days
 
@@ -173,8 +179,14 @@ function trendActions(site: SiteCfg): Action[] {
         `Compare the pages report for the two windows — find which pages lost impressions vs position.`,
         `Check docs/daily-log.md and data/probes/ for regressions in the window.`,
         `Cross-reference deploy dates (git log in the site repo) against the drop start.`,
+        `The impact figure is a capped estimate of monthly traffic that recovering this drop would return — it ranks the card, it is not a forecast.`,
       ],
-      impact: Math.round(t.prior - t.recent),
+      // Every other rule emits recoverable clicks per month; this one starts
+      // from sessions lost across a 28-day window, so normalize before it can
+      // be compared. Discounted because an investigation is not a fix, and
+      // capped: an unbounded loss on effort S would pin this card to the top
+      // of the queue until the traffic came back on its own.
+      impact: Math.min(60, Math.max(1, Math.round(((t.prior - t.recent) / 28) * 30 * 0.3))),
       effort: "S",
       tag: "trend",
       source: "rule",

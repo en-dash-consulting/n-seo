@@ -73,6 +73,7 @@ def main():
 
     out_root = seo_config.DATA / "gsc"
     windows = [("", start_full), ("_90d", start_recent)]
+    had_error = False
     for site_url, slug in props.items():
         if site_url not in available:
             print(f"{slug}: {site_url} is not accessible — verify the property in "
@@ -85,20 +86,25 @@ def main():
                 if suffix and name == "dates":
                     continue  # the daily series is windowable from the full pull
                 result = pull(token, site_url, dims, start, end)
+                if "error" in result:
+                    # Writing zero rows here would read as a traffic collapse
+                    # on the dashboard tomorrow. Keep yesterday's snapshot and
+                    # let the step fail so daily.py records and notifies it.
+                    print(f"{slug:28s} {name}{suffix:5s} ERROR (kept previous): "
+                          f"{result['error'].get('message', '?')[:70]}")
+                    had_error = True
+                    continue
                 payload = {
                     "site": site_url, "dimensions": dims,
                     "startDate": start, "endDate": end,
                     "rowCount": len(result["rows"]),
-                    **({"error": result["error"]} if "error" in result else {}),
                     "rows": result["rows"],
                 }
                 (site_dir / f"{name}{suffix}.json").write_text(json.dumps(payload))
-                status = f"{len(result['rows'])} rows" if "error" not in result \
-                    else f"ERROR: {result['error'].get('message', '?')[:80]}"
-                print(f"{slug:28s} {name}{suffix:5s} {status}")
+                print(f"{slug:28s} {name}{suffix:5s} {len(result['rows'])} rows")
 
     print(f"\nWindows: {start_full} and {start_recent} -> {end}\nSaved under {out_root}")
-    return 0
+    return 1 if had_error else 0
 
 
 if __name__ == "__main__":

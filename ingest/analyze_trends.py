@@ -25,11 +25,23 @@ AI_RE = re.compile(r"chatgpt|chat\.openai|openai\.com|perplexity|claude\.ai|copi
                    r"|edgeservices|you\.com|poe\.com|phind|kagi|mistral|deepseek", re.I)
 
 
+PAGE = 25000
+
+
 def gsc_queries(tok, site, start, end):
+    """Every query in the window, paged — a single request caps out and the
+    truncation would quietly skew the branded/generic split."""
     url = f"https://searchconsole.googleapis.com/webmasters/v3/sites/{quote(site, safe='')}/searchAnalytics/query"
-    r = post_json(url, {"startDate": start, "endDate": end, "dimensions": ["query"],
-                        "rowLimit": 25000, "dataState": "final"}, tok, label=f"trends {site}")
-    return {row["keys"][0]: row for row in r.get("rows", [])}
+    rows, start_row = {}, 0
+    while True:
+        r = post_json(url, {"startDate": start, "endDate": end, "dimensions": ["query"],
+                            "rowLimit": PAGE, "startRow": start_row, "dataState": "final"},
+                      tok, label=f"trends {site}")
+        batch = r.get("rows", [])
+        rows.update({row["keys"][0]: row for row in batch})
+        if len(batch) < PAGE:
+            return rows
+        start_row += PAGE
 
 
 def main():
@@ -41,12 +53,15 @@ def main():
     end = date.today() - timedelta(days=3)
     mid = end - timedelta(days=84)
     start = mid - timedelta(days=84)
+    # The windows must not share their boundary day, or it is counted on both
+    # sides of every rising/falling comparison.
+    prior_end = mid - timedelta(days=1)
 
     if gsc_props:
         gsc_tok = google_auth.access_token(google_auth.WEBMASTERS_RO)
     for site, slug in gsc_props.items():
         recent = gsc_queries(gsc_tok, site, mid.isoformat(), end.isoformat())
-        prior = gsc_queries(gsc_tok, site, start.isoformat(), mid.isoformat())
+        prior = gsc_queries(gsc_tok, site, start.isoformat(), prior_end.isoformat())
         brand = brands.get(site)
         is_brand = (lambda q: bool(brand.search(q))) if brand else (lambda q: False)
 
@@ -93,7 +108,7 @@ def main():
         r = post_json(f"https://analyticsdata.googleapis.com/v1beta/properties/{prop}:runReport", {
             "dateRanges": [{"startDate": "365daysAgo", "endDate": "yesterday"}],
             "dimensions": [{"name": "yearMonth"}, {"name": "sessionSource"}],
-            "metrics": [{"name": "sessions"}], "limit": 5000}, ga_tok, label=f"ga4 monthly {host}")
+            "metrics": [{"name": "sessions"}], "limit": PAGE}, ga_tok, label=f"ga4 monthly {host}")
         ai_by_month, total_by_month = {}, {}
         for row in r.get("rows", []):
             ym, src = row["dimensionValues"][0]["value"], row["dimensionValues"][1]["value"]

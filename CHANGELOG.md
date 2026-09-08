@@ -62,6 +62,34 @@ uses [Semantic Versioning](https://semver.org/).
   PLAYBOOK, MCP, ADDING-A-SITE, FAQ, CONTRIBUTING, SECURITY.
 
 ### Fixed
+- **Data loss**: a Search Console, GA4 or time-series pull that hit an API
+  error overwrote the previous snapshot with zero rows and still reported the
+  step as successful. The pulls now keep the last good file and fail the step.
+- **Wrong advice**: the metadata audit ignored the HTTP status, so a page that
+  had started 404ing was audited against its error page and produced a
+  top-ranked "rewrite this title" card. It now reports the dead page instead.
+  Descriptions containing an apostrophe were truncated at it and then flagged
+  as too short, and HTML entities were blanked rather than decoded.
+- **Inverted GEO signal**: the robots.txt check matched across `User-agent`
+  group boundaries, so a crawler the file explicitly allowed could be reported
+  as blocked, with a hygiene action to match.
+- **Queue ordering**: one unrecognised `effort` in `config/backlog.json` made
+  the sort comparator return NaN, leaving the order of every other card
+  undefined. Values are coerced on load and scoring can no longer produce NaN.
+- Two long titles could share a truncated id, so retiring one deleted both.
+- The traffic-drop card measured 28-day sessions but was ranked and rendered
+  as monthly clicks, so it outranked everything else by roughly fifty times.
+- The static export emptied `site/` before fetching, so a failed export
+  published an empty mirror through the `afterRun` rsync hook.
+- `--no-network-wait` was ignored on the retry path, so an offline run waited
+  the full timeout for every failing step.
+- GA4 time series and trend queries were unpaginated and truncated silently;
+  the URL Inspection budget was per host although the quota is per property.
+- The JWT is backdated 60s so a slightly fast clock cannot fail
+  authentication, and `GOOGLE_APPLICATION_CREDENTIALS` is honoured when the
+  configured key path does not exist.
+- The opportunity scan dropped genuine risers whose query appeared as a
+  substring anywhere in the queue's prose.
 - The test sandbox now seeds its own demo dataset and neutralizes
   `N_SEO_INSTANCE` while importing. Previously the action-engine suite was
   dropped from the run whenever the checkout had no `data/` — which is the

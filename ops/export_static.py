@@ -52,9 +52,14 @@ def fetch(path):
 
 
 def main():
-    if SITE.exists():
-        shutil.rmtree(SITE)
-    SITE.mkdir()
+    # Build into a staging directory and swap only once every page has been
+    # fetched. Emptying site/ first meant that a dashboard which happened to
+    # be down at 07:00 left an empty directory for the afterRun rsync hook to
+    # publish over the live mirror.
+    out = SITE.with_name(SITE.name + ".new")
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
 
     stamp = datetime.now(timezone.utc).isoformat(timespec="minutes")
     staleness = (
@@ -70,14 +75,17 @@ def main():
         html = fetch(route)
         html = html.replace("<head>", '<head><meta name="robots" content="noindex, nofollow">', 1)
         html = html.replace("</body>", staleness + "</body>", 1)
-        dest = SITE / "index.html" if route == "/" else SITE / route.lstrip("/") / "index.html"
+        dest = out / "index.html" if route == "/" else out / route.lstrip("/") / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(html)
 
-    (SITE / "styles.css").write_text(fetch("/styles.css"))
-    (SITE / "favicon.svg").write_text(fetch("/favicon.svg"))
-    (SITE / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
+    (out / "styles.css").write_text(fetch("/styles.css"))
+    (out / "favicon.svg").write_text(fetch("/favicon.svg"))
+    (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
 
+    if SITE.exists():
+        shutil.rmtree(SITE)
+    out.rename(SITE)
     print(f"exported {len(rs)} pages to {SITE}")
     return 0
 

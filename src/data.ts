@@ -103,7 +103,15 @@ export function strikingDistance(site: SiteCfg, minImpressions = 10): GscRow[] {
     .sort((a, b) => b.impressions - a.impressions);
 }
 
-export const EXPECTED_CTR: Record<number, number> = { 1: 0.28, 2: 0.15, 3: 0.1, 4: 0.07, 5: 0.05, 6: 0.04 };
+/** Industry-midpoint CTR by position. Must stay in step with EXPECTED_CTR in
+ *  ingest/analyze_metadata.py: the audit judged positions 1-15 while this
+ *  stopped at 6, so the "CTR gaps" table silently covered nothing past page
+ *  one while claiming to show pages that rank well and are rarely clicked. */
+export const EXPECTED_CTR: Record<number, number> = {
+  1: 0.28, 2: 0.15, 3: 0.1, 4: 0.07, 5: 0.05, 6: 0.04,
+  7: 0.035, 8: 0.03, 9: 0.026, 10: 0.022,
+  11: 0.018, 12: 0.016, 13: 0.014, 14: 0.012, 15: 0.011,
+};
 
 /** Ranking well but rarely clicked — title/snippet problems. */
 export function ctrGaps(site: SiteCfg, minImpressions = 30): (GscRow & { expected: number })[] {

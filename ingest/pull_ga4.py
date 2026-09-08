@@ -76,6 +76,7 @@ def main():
     token = google_auth.access_token(google_auth.ANALYTICS_RO)
     out_root = seo_config.DATA / "ga4"
 
+    had_error = False
     for host, prop in props.items():
         site_dir = out_root / host
         site_dir.mkdir(parents=True, exist_ok=True)
@@ -86,15 +87,20 @@ def main():
             if name == "funnel" and resp.get("error") and len(body["dimensions"]) == 3:
                 fallback = dict(body, dimensions=body["dimensions"][:2])
                 resp = run_report(token, prop, fallback)
+            if resp.get("error"):
+                # Keep the previous report rather than replacing it with an
+                # empty one; the step fails and the run reports it.
+                print(f"{host:28s} {name:8s} ERROR (kept previous): "
+                      f"{resp['error'].get('message', '')[:60]}")
+                had_error = True
+                continue
             (site_dir / f"{name}.json").write_text(json.dumps(
                 {"site": host, "property": f"properties/{prop}",
                  "pulled": date.today().isoformat(), **resp}))
-            n = resp.get("rowCount", 0)
-            err = resp.get("error", {}).get("message", "")
-            print(f"{host:28s} {name:8s} {n} rows {err[:60]}")
+            print(f"{host:28s} {name:8s} {resp.get('rowCount', 0)} rows")
 
     print(f"\nSaved under {out_root}")
-    return 0
+    return 1 if had_error else 0
 
 
 if __name__ == "__main__":

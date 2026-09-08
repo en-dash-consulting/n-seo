@@ -44,9 +44,21 @@ def _b64url(b: bytes) -> str:
 
 
 def key_path() -> str | None:
+    """The service-account key to sign with.
+
+    The configured path wins, but the example config ships a default one, so
+    a key that is not there must not shadow a working
+    GOOGLE_APPLICATION_CREDENTIALS — otherwise the documented env var can
+    never take effect on a fresh install.
+    """
     g = seo_config.load()["google"]
-    p = g.get("serviceAccountKey") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    return str(seo_config.expand(p)) if p else None
+    configured = g.get("serviceAccountKey")
+    env = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if configured:
+        p = str(seo_config.expand(configured))
+        if os.path.exists(p) or not env:
+            return p
+    return str(seo_config.expand(env)) if env else None
 
 
 def _sa_key_token(scope: str) -> str:
@@ -56,11 +68,14 @@ def _sa_key_token(scope: str) -> str:
             "google.auth is service-account-key but no key file was found at "
             f"{kp or '(unset)'} — see docs/SETUP-GOOGLE.md")
     key = json.loads(open(kp).read())
-    now = int(time.time())
+    # Backdate slightly: Google rejects a JWT issued in its future, so a
+    # machine whose clock runs a few seconds fast otherwise fails to
+    # authenticate at all, with an error that names nothing useful.
+    iat = int(time.time()) - 60
     header = _b64url(json.dumps({"alg": "RS256", "typ": "JWT"}).encode())
     claims = _b64url(json.dumps({
         "iss": key["client_email"], "scope": scope, "aud": key["token_uri"],
-        "iat": now, "exp": now + 3600,
+        "iat": iat, "exp": iat + 3600,
     }).encode())
     signing_input = f"{header}.{claims}".encode()
     # openssl needs the private key in a file; keep it 0600 and short-lived.
@@ -81,7 +96,11 @@ def _sa_key_token(scope: str) -> str:
         "-X", "POST", "-d", f"grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion={assertion}",
         key["token_uri"]], label="token")
     if "access_token" not in resp:
-        raise RuntimeError(f"token exchange failed: {json.dumps(resp)[:300]}")
+        hint = ""
+        if resp.get("error") == "invalid_grant":
+            hint = (" — invalid_grant usually means this machine's clock is off, "
+                    "or the key has been disabled or deleted")
+        raise RuntimeError(f"token exchange failed{hint}: {json.dumps(resp)[:300]}")
     return resp["access_token"]
 
 

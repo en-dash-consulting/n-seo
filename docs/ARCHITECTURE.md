@@ -171,6 +171,13 @@ is recorded in `last-run.json` as `hook:before:<i>`, `hook:<step>:<i>` or
 aborts the run. `afterRun` hooks see a complete `last-run.json`. `--skip hooks`
 runs steps only; `--list` shows hooks in order.
 
+Two things worth knowing before you put something destructive in a hook.
+Hooks are run-level, not step-level: `beforeRun` and `afterRun` fire even
+under `--only`, so a one-step smoke test still runs them (the command prints
+a note when it is about to). And `afterStep` fires whether or not its step
+succeeded, so a hook that publishes something should check the step's own
+output rather than assume it ran.
+
 ### `gscExtraProperties`
 
 ```json
