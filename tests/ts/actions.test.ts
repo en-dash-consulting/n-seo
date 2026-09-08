@@ -1,9 +1,9 @@
 /** Action-engine invariants over the demo dataset (ops/demo_data.py). */
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { makeSandbox, hasDemoData, type Sandbox } from "./sandbox.ts";
+import { makeSandbox, hasPython, type Sandbox } from "./sandbox.ts";
 
-describe("action engine", { skip: !hasDemoData() && "run `python3 ops/demo_data.py` first" }, () => {
+describe("action engine", { skip: !hasPython() && "python3 is required to seed the test dataset" }, () => {
   let sb: Sandbox;
   let actions: any, data: any, cfg: any;
   before(async () => {

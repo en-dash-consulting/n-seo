@@ -61,4 +61,12 @@ uses [Semantic Versioning](https://semver.org/).
 - Docs: README, ARCHITECTURE, SETUP-GOOGLE, SCHEDULING, OPERATING-RULES,
   PLAYBOOK, MCP, ADDING-A-SITE, FAQ, CONTRIBUTING, SECURITY.
 
+### Fixed
+- The test sandbox now seeds its own demo dataset and neutralizes
+  `N_SEO_INSTANCE` while importing. Previously the action-engine suite was
+  dropped from the run whenever the checkout had no `data/` — which is the
+  normal state of an engine in instance mode, and therefore of every
+  `n-seo upgrade` gate — without changing the reported test counts, and an
+  in-place install ran those assertions against the owner's live data.
+
 [Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/main...HEAD
