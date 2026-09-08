@@ -25,7 +25,8 @@ It runs on your machine, on a schedule, and shows you the result on a dashboard.
 ## Quickstart (5 minutes, no Google setup)
 
 ```sh
-git clone <this repo> n-seo && cd n-seo
+git clone https://github.com/en-dash-consulting/n-seo.git
+cd n-seo
 npm install
 npm run demo        # writes a synthetic dataset for example.com under data/
 npm start           # dashboard → http://localhost:4600
@@ -127,9 +128,10 @@ create the local analysis caches (they are gitignored).
 ## Repo layout
 
 ```
-n-seo.config.json   your sites, auth, modules (copy from the .example)
+n-seo.config.json       your sites, auth, modules (copy from the .example)
 config/                 backlog.json (your strategic queue) · insights.json
 content/                drafts/*.md · campaigns/*.json — shown on /content
+bin/n-seo.mjs           the CLI: init an instance, run it, upgrade the engine
 src/                    dashboard + MCP (Hono, hono/jsx SSR, tsx runtime, no bundler)
   config.ts   data.ts   actions.ts   backlog.ts   views.tsx   server.tsx   mcp.ts
 ingest/                 pull_gsc.py · pull_ga4.py · pull_timeseries.py · pull_index_status.py
@@ -138,7 +140,11 @@ ingest/                 pull_gsc.py · pull_ga4.py · pull_timeseries.py · pull
 probes/site_probe.py    no-auth live health probe
 ops/                    daily.py · daily_diff.py · opportunity_scan.py · hn_digest.py · reddit_digest.py
                         export_static.py · indexnow.py · doctor.py · demo_data.py · install-launchd.sh · templates/
-docs/                   setup, scheduling, playbook, operating rules, daily-log.md, reports/
+docs/                   setup, scheduling, playbook, operating rules, PRD.md
+                        daily-log.md and reports/ (instance-owned)
+tests/                  TypeScript (node --test via tsx) + Python (unittest)
+.rex/                   n-dx PRD tree, generated from docs/PRD.md
+www/                    the marketing site published to GitHub Pages
 data/                   machine-refreshed snapshots (gitignored, regenerable)
 ```
 

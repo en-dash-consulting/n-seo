@@ -20,6 +20,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # GitHub Pages needs a public repo (or a plan that allows private Pages).
+    # While the repo is private this job is skipped instead of failing every
+    # push; `workflow_dispatch` still forces a run.
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.visibility == 'public'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
