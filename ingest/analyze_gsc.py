@@ -120,10 +120,10 @@ def section(prop, slug, out):
 def main():
     out = [f"# Search Console Findings — {date.today().isoformat()}",
            "\nWindow: trailing 16 months (final data through ~3 days ago)."]
-    for prop, slug in seo_config.gsc_properties().items():
+    for prop, slug in seo_config.gsc_properties(include_extra=False).items():
         section(prop, slug, out)
     text = "\n".join(out) + "\n"
-    dest_dir = seo_config.ROOT / "docs" / "reports"
+    dest_dir = seo_config.INSTANCE / "docs" / "reports"
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"gsc-findings-{date.today():%Y-%m}.md"
     dest.write_text(text)

@@ -57,6 +57,9 @@ can see what the tool does before you connect anything.
 Adding another site later is one entry in the config —
 [docs/ADDING-A-SITE.md](docs/ADDING-A-SITE.md).
 
+Running several people's sites, or want upgrades to be a `git pull`? Keep your
+config in its own directory — see [docs/INSTANCE.md](docs/INSTANCE.md).
+
 ## What you get
 
 | Page | What it shows |
@@ -112,6 +115,14 @@ automatically; Claude Desktop and HTTP clients are covered in
 [docs/MCP.md](docs/MCP.md). It is read-only by design. `CLAUDE.md` holds the
 operating rules an agent should follow in this repo, and `.claude/skills/orient`
 gets a fresh session current in four reads.
+
+## Working with n-dx
+
+The repo is wired for [n-dx](https://n-dx.dev): `docs/PRD.md` is the product
+definition, `.rex/` holds the PRD tree generated from it (`ndx status .` to
+see it, `ndx next .` for the next actionable task), and `.rex/workflow.md`
+carries the project's execution rules. Run `ndx init .` once after cloning to
+create the local analysis caches (they are gitignored).
 
 ## Repo layout
 

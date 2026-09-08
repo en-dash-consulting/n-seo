@@ -17,7 +17,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT } from "./config.js";
+import { INSTANCE } from "./config.js";
 
 export type Effort = "S" | "M" | "L";
 
@@ -49,8 +49,8 @@ interface BacklogFile {
   shippedWatch: Record<string, string>;
 }
 
-export const BACKLOG_PATH = path.join(ROOT, "config", "backlog.json");
-const PROPOSALS_PATH = path.join(ROOT, "data", "opportunity-proposals.json");
+export const BACKLOG_PATH = path.join(INSTANCE, "config", "backlog.json");
+const PROPOSALS_PATH = path.join(INSTANCE, "data", "opportunity-proposals.json");
 
 export const slug = (s: string) =>
   s.toLowerCase().replace(/https?:\/\//, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);

@@ -10,11 +10,49 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { execFileSync } from "node:child_process";
+
+/** The engine checkout: code, public assets, engine docs. */
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+/** The instance: one user's config, queue, content and data. Defaults to the
+ *  engine checkout ("in-place" mode) so a plain clone works unchanged; set
+ *  N_SEO_INSTANCE to keep them apart so upgrading the engine is a git pull. */
+export const INSTANCE = process.env.N_SEO_INSTANCE
+  ? path.resolve(process.env.N_SEO_INSTANCE)
+  : ROOT;
 export const CONFIG_PATH = process.env.N_SEO_CONFIG
   ? path.resolve(process.env.N_SEO_CONFIG)
-  : path.join(ROOT, "n-seo.config.json");
+  : path.join(INSTANCE, "n-seo.config.json");
 export const EXAMPLE_CONFIG_PATH = path.join(ROOT, "n-seo.config.example.json");
+
+export const ENGINE_VERSION: string = (() => {
+  try {
+    return (JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")) as { version?: string }).version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+})();
+
+export interface EngineInfo {
+  version: string;
+  commit: string | null;
+  root: string;
+  instance: string;
+  mode: "in-place" | "instance";
+}
+
+/** What is running: engine version + commit, where the engine and the
+ *  instance live. Shown on Settings, by `n-seo version` and the MCP tool. */
+export function engineInfo(): EngineInfo {
+  let commit: string | null = null;
+  try {
+    commit = execFileSync("git", ["-C", ROOT, "rev-parse", "--short", "HEAD"], { stdio: ["ignore", "pipe", "ignore"] })
+      .toString().trim() || null;
+  } catch {
+    commit = null;
+  }
+  return { version: ENGINE_VERSION, commit, root: ROOT, instance: INSTANCE, mode: INSTANCE === ROOT ? "in-place" : "instance" };
+}
 
 export interface SiteCfg {
   /** canonical hostname — the URL slug in this app and the key in data/ga4/<host>/ */
@@ -37,6 +75,15 @@ export interface ModuleCfg {
   [k: string]: unknown;
 }
 
+export interface Hooks {
+  /** shell commands run in the instance dir before the first step */
+  beforeRun: string[];
+  /** … after the last step (and after last-run.json is written) */
+  afterRun: string[];
+  /** … after a named step, e.g. { "daily-diff": ["python3 my_sync.py"] } */
+  afterStep: Record<string, string[]>;
+}
+
 export interface Config {
   name: string;
   port: number;
@@ -50,6 +97,9 @@ export interface Config {
   conversions?: { site: string; events: string[]; sourceDimension?: string };
   participation?: { expertise?: string };
   modules: Record<string, ModuleCfg>;
+  /** extra Search Console properties pulled into data/gsc/<slug>/ but not shown as sites */
+  gscExtraProperties: string[];
+  hooks: Hooks;
 }
 
 export const MODULE_INFO: { key: string; title: string; blurb: string; needs?: string }[] = [
@@ -82,6 +132,10 @@ function normalize(raw: Partial<Config>): Config {
     ga4Property: s.ga4Property || undefined,
     brand: s.brand || undefined,
   }));
+  const strList = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : []);
+  const rawHooks = (raw.hooks ?? {}) as Partial<Record<string, unknown>>;
+  const afterStep: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries((rawHooks.afterStep as Record<string, unknown>) ?? {})) afterStep[k] = strList(v);
   return {
     name: raw.name || "n-seo",
     port: Number(process.env.SEO_PORT ?? raw.port ?? 4600),
@@ -91,7 +145,22 @@ function normalize(raw: Partial<Config>): Config {
     conversions: raw.conversions?.site ? raw.conversions : undefined,
     participation: raw.participation,
     modules,
+    gscExtraProperties: strList(raw.gscExtraProperties),
+    hooks: { beforeRun: strList(rawHooks.beforeRun), afterRun: strList(rawHooks.afterRun), afterStep },
   };
+}
+
+/** One KEY=value from the instance's .env (quotes stripped). */
+export function dotEnv(key: string): string | undefined {
+  try {
+    for (const line of fs.readFileSync(path.join(INSTANCE, ".env"), "utf8").split("\n")) {
+      const t = line.trim();
+      if (t.startsWith(`${key}=`)) return t.slice(key.length + 1).trim().replace(/^["']|["']$/g, "") || undefined;
+    }
+  } catch {
+    /* no .env */
+  }
+  return undefined;
 }
 
 /** True when the user has not created their own config yet — the app then
@@ -127,6 +196,14 @@ export function gscSlug(property: string): string {
     .replace(/^https?:\/\//, "")
     .replace(/\/+$/, "")
     .replace(/\//g, "_");
+}
+
+/** The data/gsc/ directory for a property. A url-prefix property
+ *  ("https://example.com/") would slug to the same name as the domain
+ *  property ("sc-domain:example.com"), so it gets a "-urlprefix" suffix.
+ *  Must match ingest/seo_config.py gsc_data_slug(). */
+export function gscDataSlug(property: string): string {
+  return /^https?:\/\//i.test(property) ? gscSlug(property) + "-urlprefix" : gscSlug(property);
 }
 
 export const siteByHost = (host: string): SiteCfg | undefined =>

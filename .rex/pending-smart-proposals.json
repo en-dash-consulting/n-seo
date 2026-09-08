@@ -1,0 +1,343 @@
+{
+  "proposals": [
+    {
+      "epic": {
+        "title": "n-seo — Product Requirements",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Product vision, users, and operating principles",
+          "source": "llm",
+          "description": "Consolidates the product's purpose statement, the three user personas (site owner/team, multi-site operator, AI agent acting via MCP), the six non-negotiable principles, and the four non-goals into one documented, verifiable definition of scope so contributors and instances stay aligned on what n-seo is and is not.",
+          "tasks": [
+            {
+              "title": "Document product vision, personas, principles, and non-goals",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Capture the product's purpose (local-first morning loop across SEO/AEO/GEO), its three user personas, its six non-negotiable principles, and its four explicit non-goals in the PRD/README so the scope is unambiguous for owners, operators, AI agents, and future contributors.",
+              "acceptanceCriteria": [
+                "Personas documented: site owner/small team honing their own SEO practice; operator running several sites needing one queue across all of them; AI agent (Claude Code/Desktop/any MCP client) acting for the owner without bypassing approval gates",
+                "Principles documented: local-first with outbound calls limited to authorized Google APIs and a configured local LLM; briefs but never acts (no auto-post/publish/edit, community modules produce briefings only); evidence-before-advice (numbers, then the move, then spec and success criterion); encoded operating rules (28-day metadata freeze, ~8 metadata changes/week, 90-day decision window vs 16-month history, impact orders never forecasts, shipped work becomes watching not deleted, machine proposals never self-promote); upgradeable instance separation from engine; stdlib Python/no-bundler TypeScript/no pip installs",
+                "Non-goals documented: not a rank tracker or keyword-research SaaS; not an auto-publisher, link builder, or comment bot; not a hosted product (no account, no server-side component beyond an optional owner-hosted static mirror); Windows explicitly not a target (WSL untested)"
+              ],
+              "priority": "high",
+              "tags": [
+                "docs",
+                "product"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Configuration and Google access [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Unified config file and service-account auth",
+          "source": "llm",
+          "description": "Merges the single shared config file (read by the TypeScript app and every Python script) with gcloud-free service-account authentication, since both are prerequisites every other ingest/probe/audit step depends on.",
+          "tasks": [
+            {
+              "title": "Implement shared config loader and gcloud-free service-account auth",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Provide one n-seo.config.json (path overridable via N_SEO_CONFIG, falling back to the example file on a fresh checkout) consumed identically by the TypeScript app and Python scripts, plus a service-account auth path that mints tokens without requiring gcloud.",
+              "acceptanceCriteria": [
+                "Adding a site to sites[] makes it appear in every pull, probe, audit, page, and export with no other edit",
+                "Both TS and Python loaders derive the same data/gsc/<slug> path from a property (sc-domain: and url-prefix forms)",
+                "Unknown keys are preserved when the Settings page saves the config",
+                "With only a service-account JSON key and openssl on PATH, python3 ingest/google_auth.py mints a token and lists accessible properties",
+                "gcloud impersonation and gcloud user auth modes remain selectable alongside service-account mode",
+                "ops/doctor.py reports the exact email to add in Search Console and GA4, and flags which configured properties are not yet accessible"
+              ],
+              "priority": "high",
+              "tags": [
+                "config",
+                "auth"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Ingest [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Search Console, GA4, and derived analytics pulls",
+          "source": "llm",
+          "description": "Combines the raw Search Console and GA4 ingest pulls with the derived analytics built on top of them (time series, index coverage, metadata audit, trend analysis), since the derived outputs are directly downstream of the raw pulls and share the same acceptance shape.",
+          "tasks": [
+            {
+              "title": "Implement GSC/GA4 ingest pulls and derived analytics pipelines",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Pull Search Console and GA4 data per configured site/property with retries on transient failures and loud 4xx errors, then derive the cross-cutting analytics (time series, index coverage, metadata audit, trend analysis) that the action engine and dashboard consume.",
+              "acceptanceCriteria": [
+                "Per property: queries, pages, query_page, dates pulled for the 16-month window and a *_90d trailing-90-day cut; transient failures are retried, a 4xx fails loudly",
+                "gscExtraProperties are pulled into data/gsc/<slug> without appearing in the UI",
+                "GA4 daily, sources, landing reports pulled per configured property id; funnel report generated only for conversions.site, falling back gracefully when the custom dimension is unregistered",
+                "Date × page time series produced for 180 days from both GSC and GA4 sources",
+                "URL Inspection verdict recorded for every sitemap URL (sitemap indexes followed one level, ≤400 URLs/host), including sitemap submission state",
+                "Metadata audit flags title/query mismatch, CTR below position expectation, missing/short/duplicate descriptions, and long titles",
+                "Trend file produced with branded/generic query split, rising/falling queries (84-day vs prior 84-day), monthly trajectory, and AI-referral sessions by month"
+              ],
+              "priority": "high",
+              "tags": [
+                "ingest",
+                "gsc",
+                "ga4",
+                "analytics"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Live-site probe [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Live-site probe and regression alerting",
+          "source": "llm",
+          "tasks": [
+            {
+              "title": "Implement live-site probe with daily regression alerting",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Probe each configured host daily for crawl-relevant surfaces and homepage signals, snapshot the results, and alert when a probed value regresses versus the prior snapshot so crawl/indexing issues surface the same day they occur.",
+              "acceptanceCriteria": [
+                "Probe checks robots.txt (including AI-crawler disallows), sitemap.xml, llms.txt and llms-full.txt, homepage metadata/JSON-LD/visible-text byte counts, and a real 404 check, per configured host, written as a timestamped snapshot",
+                "The daily diff raises an ALERT line on any regression versus the previous snapshot"
+              ],
+              "priority": "high",
+              "tags": [
+                "probe",
+                "monitoring"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Action engine [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Rule-based action queue with configurable thresholds",
+          "source": "llm",
+          "description": "Merges the shipped rule engine that turns the 90-day window into ranked, evidence-backed actions with the still-planned work of moving its numeric thresholds into config, since the config change touches the same rule functions.",
+          "tasks": [
+            {
+              "title": "Implement action-generation rules and externalize thresholds to config",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Generate ranked actions from six data-derived rules over the 90-day window, merge them with config/backlog.json without restart, and move each rule's numeric thresholds (min impressions, position band, engagement floor, drop percentage, effort weights) into an optional rules config block so operators can tune behavior without editing code.",
+              "acceptanceCriteria": [
+                "Six rules over the 90-day window (metadata findings, CTR gaps, striking distance, probe hygiene, engagement mismatch, traffic drop) produce actions with id, host, title, kind, why, how, spec[], impact, effort, tag, source",
+                "Ranking is impact / effort weight (S=1, M=2.5, L=5)",
+                "Metadata findings suppress CTR-gap cards on the same page",
+                "Pages in shippedWatch render as watching",
+                "config/backlog.json is merged and hot-reloaded without a restart; a syntax error keeps the last good queue",
+                "Every threshold listed above has a documented default and a config override; tests cover at least one override changing a rule's output"
+              ],
+              "priority": "high",
+              "tags": [
+                "action-engine",
+                "config"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Dashboard [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Dashboard routes, settings, and instance extensibility",
+          "source": "llm",
+          "description": "Combines the shipped dashboard route set and Today board with the shipped Settings page and the still-idea-stage ability for an instance to register extra routes/rules without forking the engine, since all three define the dashboard's surface area.",
+          "tasks": [
+            {
+              "title": "Build dashboard routes, settings page, and instance extension points",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Serve the full set of dashboard routes and the Today board from demo data with no server errors, provide a Settings page that edits and persists the shared config, and let an instance register additional routes/rules without forking the engine.",
+              "acceptanceCriteria": [
+                "Routes /, /actions, /insights, /trends[/N], /content, /drafts/:slug, /campaigns/:slug, /site/:host, /indexing, /probes, /logs, /settings, /api/actions all render from demo data with no server error",
+                "Today board groups Fix / Approve / Publish / Comment / Ship; Comment appears only when a participation module is enabled",
+                "Proposals can be accepted into the backlog; backlog items can be marked watching or retired; rule-derived items expose no write buttons",
+                "The server binds 127.0.0.1 by default and rejects cross-origin POSTs",
+                "Light and dark themes both render correctly; no external fonts loaded",
+                "Settings page toggles every module, edits digest topics/expertise/watch pages/conversions, and writes the config file (creating it from the example on first save); invalid topic lines are rejected with a message",
+                "An instance can register extra routes and rules (e.g. instance/src/extensions.ts) without forking the engine"
+              ],
+              "priority": "medium",
+              "tags": [
+                "dashboard",
+                "ui"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Modules (opt-in) [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Opt-in module framework and additional integrations",
+          "source": "llm",
+          "description": "Combines the shipped opt-in module gating (indexStatus, metadataAudit, opportunityScan, llm, hackerNews, reddit, indexNow, staticExport, gitAutoCommit, notifications) with three not-yet-built integrations (HTTP LLM adapter, Bing Webmaster ingest, CrUX Core Web Vitals) that plug into the same module system.",
+          "tasks": [
+            {
+              "title": "Implement opt-in module gating and add HTTP LLM, Bing, and CrUX modules",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Keep every module behind modules.<key>.enabled with safe no-op behavior when disabled or when a dependency is unavailable, and extend the module set with an HTTP-based LLM adapter, a Bing Webmaster ingest module, and a Core Web Vitals (CrUX) module.",
+              "acceptanceCriteria": [
+                "Each of indexStatus, metadataAudit, opportunityScan, llm, hackerNews, reddit, indexNow, staticExport, gitAutoCommit, notifications is gated by modules.<key>.enabled; a disabled digest exits 0 with a message",
+                "The LLM module runs any command that reads a prompt on stdin; when unavailable, the opportunity scan records candidates only and digests skip briefings",
+                "Briefing prompts forbid generating comment text",
+                "New optional HTTP LLM adapter calls an OpenAI-compatible or Anthropic HTTP endpoint instead of a CLI, reading its key from .env",
+                "New Bing Webmaster ingest module pulls into the same data/ layout as the Google ingest modules, gated by modules.bingWebmaster.enabled",
+                "New Core Web Vitals module pulls CrUX data per configured host, gated by modules.crux.enabled"
+              ],
+              "priority": "medium",
+              "tags": [
+                "modules",
+                "integrations"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: Daily run and scheduling [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Daily orchestration and scheduling templates",
+          "source": "llm",
+          "tasks": [
+            {
+              "title": "Implement daily orchestration script and OS scheduler templates",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Run every enabled daily step in order with retry and logging, and ship ready-to-install scheduler templates so the daily run executes unattended on the owner's machine.",
+              "acceptanceCriteria": [
+                "ops/daily.py waits for the network, runs the enabled steps in order, retries a failed step once, tees output to data/daily-ops.log, writes data/last-run.json with per-step timing, honours --only, --skip, --list, --no-network-wait, and exits 1 on any failure",
+                "Hooks (beforeRun, afterRun, afterStep) run from the instance directory and are logged like steps without aborting the run",
+                "launchd, cron, and systemd templates plus an installer script are provided"
+              ],
+              "priority": "high",
+              "tags": [
+                "ops",
+                "scheduling"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Epic: MCP server [shipped]",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Read-only MCP server with token auth",
+          "source": "llm",
+          "tasks": [
+            {
+              "title": "Implement read-only MCP server with constant-time token auth",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Expose the queue and all derived reports over MCP for AI agents, using a stdio transport for local use and an HTTP transport that requires a token, so an agent can read but never bypass the owner's approval gates.",
+              "acceptanceCriteria": [
+                "stdio transport requires no secret",
+                "HTTP transport returns 503 when no token is configured and compares supplied tokens in constant time",
+                "Every tool is annotated read-only",
+                "Tools cover: the queue, a single action, sites, per-site report, top queries, striking distance, CTR gaps, metadata audit, time series, ops status, daily log, proposals, conversions, campaigns, settings, and engine info",
+                "Documentation is exposed as MCP resources"
+              ],
+              "priority": "high",
+              "tags": [
+                "mcp",
+                "security"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "epic": {
+        "title": "Engine, Instance, and Release Readiness",
+        "source": "llm"
+      },
+      "features": [
+        {
+          "title": "Instance packaging, quality gates, and onboarding/marketing",
+          "source": "llm",
+          "description": "Merges four originally separate epics — Engine and instance, Quality, Onboarding and docs, and Marketing site — because they all gate how the engine is safely released, distributed, and onboarded, and none has enough remaining scope to justify its own slot under the 10-task ceiling.",
+          "tasks": [
+            {
+              "title": "Harden instance separation, packaging, quality gates, and onboarding/marketing surfaces",
+              "source": "llm",
+              "sourceFile": "",
+              "description": "Cover the remaining release-readiness work: keeping an instance's config/queue/content/data separable from the engine (including safe in-place upgrades), publishing the engine to npm, scheduling upgrades with a failure gate, keeping typecheck/tests/CI green, onboarding a fresh checkout via demo data and docs, and shipping the marketing site including a future custom domain.",
+              "acceptanceCriteria": [
+                "N_SEO_INSTANCE relocates every instance-owned path; in-place mode is unchanged when it is unset",
+                "n-seo init|start|dev|daily|doctor|demo|mcp|check|export|upgrade|version behave as documented in docs/INSTANCE.md",
+                "n-seo upgrade refuses to leave the engine on a commit that fails npm run check, without printing the rollback command",
+                "npm i n-seo installs a working engine; npx n-seo init scaffolds an instance; the package's files list excludes tests and the marketing site",
+                "A documented weekly job (n-seo upgrade) exists with notification on failure, so instances exercise the upgrade path routinely",
+                "npm run check runs typecheck, TypeScript tests (sandboxed copy), and Python tests; CI runs both suites plus a demo-data dashboard smoke test, doctor --offline, and a grep that fails on any private name",
+                "npm run demo populates every page with synthetic data before any Google setup is required",
+                "README quickstart, SETUP-GOOGLE, SCHEDULING, ADDING-A-SITE, INSTANCE, MCP, OPERATING-RULES, PLAYBOOK, FAQ, CONTRIBUTING, SECURITY, and CHANGELOG docs exist and match the CLI contracts",
+                "n-seo init --guided asks for hosts, property ids, and the key path, then runs doctor",
+                "www/ is a single static page deployed by the Pages workflow, with an OG image, llms.txt, robots.txt, and sitemap; copy names the three promises (local data, evidence first, briefs-not-acts) and the operating rules",
+                "www/CNAME and URL references are updated once a custom domain is chosen"
+              ],
+              "priority": "medium",
+              "tags": [
+                "engine",
+                "instance",
+                "quality",
+                "docs",
+                "marketing"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "prdHash": "37517e5f3dc6"
+}

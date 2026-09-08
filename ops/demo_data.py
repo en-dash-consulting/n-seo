@@ -457,7 +457,7 @@ def main():
         print("no n-seo.config.json — generating demo data for the example config's sites")
     DATA.mkdir(parents=True, exist_ok=True)
     index_of = {s["host"]: i for i, s in enumerate(sites)}
-    props = seo_config.gsc_properties()
+    props = seo_config.gsc_properties(include_extra=False)
 
     gsc_rows_by_prop, gsc_by_host = {}, {}
     for prop, slug in props.items():
@@ -485,12 +485,16 @@ def main():
     write_proposals(sites, gsc_by_host)
     write_run_files()
 
-    written = sorted(str(p.relative_to(seo_config.ROOT)) for p in DATA.rglob("*") if p.is_file())
+    written = sorted(str(p.relative_to(DATA.parent)) for p in DATA.rglob("*") if p.is_file())
     print(f"wrote {len(written)} files under data/ for {', '.join(s['host'] for s in sites)}:")
     for w in written:
         print("  " + w)
-    print("\nnow run: npm start   (then open the dashboard)")
-    print("remove with: python3 ops/demo_data.py --clean")
+    if DATA.parent == seo_config.ROOT:  # in-place: data lives inside the engine checkout
+        print("\nnow run: npm start   (then open the dashboard)")
+        print("remove with: python3 ops/demo_data.py --clean")
+    else:
+        print("\nnow run: n-seo start   (then open the dashboard)")
+        print("remove with: n-seo demo --clean")
     return 0
 
 

@@ -15,7 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT, SITES, config, siteByHost, MODULE_INFO } from "./config.js";
+import { ROOT, INSTANCE, SITES, config, siteByHost, MODULE_INFO, engineInfo } from "./config.js";
 import { allActions, score, type Action } from "./actions.js";
 import * as data from "./data.js";
 
@@ -447,13 +447,34 @@ export function createMcpServer(): McpServer {
 
   /* ---------- docs as resources ---------- */
 
-  const doc = (name: string, file: string, description: string) =>
+  server.registerTool(
+    "engine_info",
+    {
+      title: "Engine and instance",
+      description:
+        "Which n-seo engine is running (version, commit, path), which instance directory it serves, " +
+        "and which modules are on. Check this before assuming a feature exists.",
+      inputSchema: {},
+      annotations: readOnly,
+    },
+    async () => {
+      const cfg = config();
+      return json({
+        ...engineInfo(),
+        modules: Object.fromEntries(MODULE_INFO.map((m) => [m.key, !!cfg.modules[m.key]?.enabled])),
+      });
+    }
+  );
+
+  /* Engine docs (playbook, rules) ship with the code; the daily log is the
+     instance's own history. */
+  const doc = (name: string, file: string, description: string, base: string = ROOT) =>
     server.registerResource(
       name,
       `seo://docs/${name}`,
       { title: file, description, mimeType: "text/markdown" },
       async (uri) => {
-        const p = path.join(ROOT, "docs", file);
+        const p = path.join(base, "docs", file);
         if (!fs.existsSync(p)) throw new Error(`${file} not found`);
         return {
           contents: [{ uri: uri.href, mimeType: "text/markdown", text: fs.readFileSync(p, "utf8") }],
@@ -462,7 +483,7 @@ export function createMcpServer(): McpServer {
     );
 
   doc("playbook", "PLAYBOOK.md", "The SEO / AEO / GEO strategy this queue implements.");
-  doc("daily-log", "daily-log.md", "Full daily ops log, one entry per day.");
+  doc("daily-log", "daily-log.md", "Full daily ops log, one entry per day.", INSTANCE);
   doc("operating-rules", "OPERATING-RULES.md", "The rules that keep the loop honest: freeze windows, batching, what the numbers mean.");
 
   return server;

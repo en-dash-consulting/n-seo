@@ -27,7 +27,7 @@ def key_file() -> Path:
     m = seo_config.module("indexNow")
     p = m.get("keyFile") or "indexnow.key"
     path = Path(p)
-    return path if path.is_absolute() else seo_config.ROOT / path
+    return path if path.is_absolute() else seo_config.INSTANCE / path
 
 
 def cmd_init() -> int:

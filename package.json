@@ -4,6 +4,24 @@
   "description": "Local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and turns the data into a ranked action queue you can act on without an agency.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "n-seo": "bin/n-seo.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "ingest/",
+    "ops/",
+    "probes/",
+    "public/",
+    "n-seo.config.example.json",
+    ".env.example",
+    "docs/PLAYBOOK.md",
+    "docs/OPERATING-RULES.md",
+    "docs/ARCHITECTURE.md",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -18,7 +36,8 @@
     "daily": "python3 ops/daily.py",
     "test": "tsx --test tests/ts/*.test.ts",
     "test:py": "python3 -m unittest discover -s tests/py -v",
-    "check": "npm run typecheck && npm test && npm run test:py"
+    "check": "npm run typecheck && npm test && npm run test:py",
+    "export": "python3 ops/export_static.py"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT, PORT, siteByHost } from "./config.js";
+import { ROOT, PORT, siteByHost, dotEnv } from "./config.js";
 import { draftBySlug, campaignBySlug } from "./data.js";
 import { allActions } from "./actions.js";
 import { acceptProposal, setWatching, retire } from "./backlog.js";
@@ -44,20 +44,6 @@ app.get("/api/actions", (c) => c.json(allActions()));
    with no token set this refuses to serve rather than exposing your search
    data to the LAN. Stateless — a fresh server and transport per request. */
 const MCP_TOKEN_FILE = path.join(process.env.HOME ?? "", ".config", "n-seo", "mcp-token");
-
-/** One KEY=value from ./.env, so the token can live next to the Reddit
- *  credentials instead of only in the environment. */
-function dotEnv(key: string): string | undefined {
-  try {
-    for (const line of fs.readFileSync(path.join(ROOT, ".env"), "utf8").split("\n")) {
-      const t = line.trim();
-      if (t.startsWith(`${key}=`)) return t.slice(key.length + 1).trim().replace(/^["']|["']$/g, "") || undefined;
-    }
-  } catch {
-    /* no .env */
-  }
-  return undefined;
-}
 
 function resolveMcpToken(): string | undefined {
   const fromEnv = process.env.SEO_MCP_TOKEN?.trim() || dotEnv("SEO_MCP_TOKEN");

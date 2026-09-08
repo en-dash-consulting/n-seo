@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { FC } from "hono/jsx";
-import { CONFIG_PATH, MODULE_INFO, config, saveConfig, USING_EXAMPLE_CONFIG, loadConfig } from "./config.js";
+import { CONFIG_PATH, MODULE_INFO, config, saveConfig, USING_EXAMPLE_CONFIG, loadConfig, engineInfo } from "./config.js";
 import * as data from "./data.js";
 
 const expand = (p: string) => (p.startsWith("~") ? path.join(os.homedir(), p.slice(1)) : p);
@@ -30,6 +30,8 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
   const cfg = config();
   const sa = serviceAccountEmail(cfg.google.serviceAccountKey);
   const lr = data.lastRun();
+  const eng = engineInfo();
+  const hookCount = cfg.hooks.beforeRun.length + cfg.hooks.afterRun.length + Object.values(cfg.hooks.afterStep).reduce((n, l) => n + l.length, 0);
   const str = (v: unknown) => (v == null ? "" : String(v));
   return (
     <>
@@ -45,6 +47,33 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
         Everything runs from one file: <code>{CONFIG_PATH}</code>. This page edits the module switches and the free-text
         fields; sites and Google auth are edited in the file itself (they need care). {USING_EXAMPLE_CONFIG && <b>Saving this form creates the file from the example.</b>}
       </p>
+
+      <h2>Engine <small>— what is running, and where</small></h2>
+      <div class="settings-grid">
+        <div class="s-card">
+          <div class="s-title">n-seo {eng.version}{eng.commit ? ` · ${eng.commit}` : ""}</div>
+          <p class="sub"><span class={`chip ${eng.mode === "instance" ? "good" : ""}`}>{eng.mode}</span> {eng.mode === "instance"
+            ? "the engine and this instance live in separate directories; upgrading the engine does not touch your config, queue or data."
+            : "config, queue and data live inside the engine checkout. Fine for one person; see docs/INSTANCE.md to split them."}</p>
+        </div>
+        <div class="s-card">
+          <div class="s-title">Engine path</div>
+          <div class="mono">{eng.root}</div>
+          <p class="sub">Upgrade: <code>n-seo upgrade</code> (git engine) or <code>npm update n-seo</code> (npm engine).</p>
+        </div>
+        <div class="s-card">
+          <div class="s-title">Instance path</div>
+          <div class="mono">{eng.instance}</div>
+          <p class="sub">{hookCount ? `${hookCount} hook command(s) configured` : "no hooks configured"} — <code>hooks</code> in the config file runs your own commands around the daily run.</p>
+          {hookCount > 0 && (
+            <ul class="spec">
+              {cfg.hooks.beforeRun.map((c) => <li><span class="chip">before run</span> <code>{c}</code></li>)}
+              {Object.entries(cfg.hooks.afterStep).flatMap(([step, cmds]) => cmds.map((c) => <li><span class="chip">after {step}</span> <code>{c}</code></li>))}
+              {cfg.hooks.afterRun.map((c) => <li><span class="chip">after run</span> <code>{c}</code></li>)}
+            </ul>
+          )}
+        </div>
+      </div>
 
       <h2>Sites <small>— edit <code>sites[]</code> in the config file</small></h2>
       {cfg.sites.length ? (

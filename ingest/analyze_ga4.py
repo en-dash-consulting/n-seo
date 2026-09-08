@@ -66,7 +66,7 @@ def main():
                 detail.append(f"- {s}: {v:.0f} sessions")
 
     text = "\n".join(out) + "\n" + "\n".join(detail) + "\n"
-    dest_dir = seo_config.ROOT / "docs" / "reports"
+    dest_dir = seo_config.INSTANCE / "docs" / "reports"
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"ga4-findings-{date.today():%Y-%m}.md"
     dest.write_text(text)

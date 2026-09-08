@@ -36,8 +36,9 @@ class DailyDiffTests(unittest.TestCase):
         self.data = self.tmp / "data"
         (self.data / "probes").mkdir(parents=True)
         (self.data / "gsc" / "example.com").mkdir(parents=True)
-        self._saved = (daily_diff.ROOT, daily_diff.DATA, seo_config._cache)
+        self._saved = (daily_diff.ROOT, daily_diff.INSTANCE, daily_diff.DATA, seo_config._cache)
         daily_diff.ROOT = self.tmp
+        daily_diff.INSTANCE = self.tmp  # the log is instance-owned
         daily_diff.DATA = self.data
         seo_config._cache = {
             "sites": [dict(s, label=s["host"], ga4Property=None, brand=None) for s in SITES],
@@ -55,7 +56,7 @@ class DailyDiffTests(unittest.TestCase):
                                         probe("https://docs.example.com", **{"llms.txt": {"exists": False}})]}))
 
     def tearDown(self):
-        daily_diff.ROOT, daily_diff.DATA, seo_config._cache = self._saved
+        daily_diff.ROOT, daily_diff.INSTANCE, daily_diff.DATA, seo_config._cache = self._saved
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def run_diff(self):

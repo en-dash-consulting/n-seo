@@ -21,14 +21,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ingest"))
 import seo_config  # noqa: E402
 
 ROOT = seo_config.ROOT
-SITE = ROOT / "site"
+INSTANCE = seo_config.INSTANCE
+SITE = INSTANCE / "site"
 BASE = seo_config.dashboard_base()
 
 
 def routes():
     hosts = seo_config.hosts()
-    drafts_dir = ROOT / "content" / "drafts"
-    camps_dir = ROOT / "content" / "campaigns"
+    drafts_dir = INSTANCE / "content" / "drafts"
+    camps_dir = INSTANCE / "content" / "campaigns"
     # Same filter as the dashboard's drafts()/campaigns(): README and _-prefixed files are not content.
     skip = lambda p: p.name.lower() == "readme.md" or p.name.startswith("_")
     drafts = sorted(p.stem for p in drafts_dir.glob("*.md") if not skip(p)) if drafts_dir.exists() else []

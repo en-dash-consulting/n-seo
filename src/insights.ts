@@ -3,7 +3,7 @@
  *  the interpretation. Re-read per request so edits show up immediately. */
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT } from "./config.js";
+import { INSTANCE } from "./config.js";
 
 export interface Insight {
   title: string;
@@ -14,7 +14,7 @@ export interface Insight {
 
 export function insights(): { date: string; insights: Insight[] } {
   try {
-    const raw = JSON.parse(fs.readFileSync(path.join(ROOT, "config", "insights.json"), "utf8"));
+    const raw = JSON.parse(fs.readFileSync(path.join(INSTANCE, "config", "insights.json"), "utf8"));
     return { date: raw.date || "", insights: Array.isArray(raw.insights) ? raw.insights : [] };
   } catch {
     return { date: "", insights: [] };

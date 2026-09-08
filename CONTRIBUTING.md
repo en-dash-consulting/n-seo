@@ -69,6 +69,14 @@ file shape in `docs/ARCHITECTURE.md`, add a reader in `src/data.ts`, and add
 a step to `ops/daily.py`. Keep the raw API response where practical so a
 future reader is not blocked on a re-pull.
 
+## Scope and the PRD
+
+`docs/PRD.md` states what n-seo is for and what it deliberately is not; the
+`.rex/` tree mirrors it item by item. A change that adds or removes a
+capability should update both — edit `docs/PRD.md`, then reflect it in the
+tree (`ndx add`, `ndx update <id>`, or edit the markdown under
+`.rex/prd_tree/` directly; `ndx validate .` must pass).
+
 ## Pull requests
 
 - One change per PR, with the reasoning in the description — what you

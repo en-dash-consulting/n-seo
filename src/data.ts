@@ -4,10 +4,10 @@
  *  long-lived process (dashboard, MCP server) honest about what is on disk. */
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT, config, gscSlug, type SiteCfg } from "./config.js";
+import { ROOT, INSTANCE, config, gscDataSlug, type SiteCfg } from "./config.js";
 import { BACKLOG_PATH } from "./backlog.js";
 
-const DATA = path.join(ROOT, "data");
+const DATA = path.join(INSTANCE, "data");
 
 // ---------- GSC ----------
 
@@ -28,7 +28,7 @@ function readJson<T>(p: string): T | null {
 }
 
 const gscDir = (site: SiteCfg): string | undefined =>
-  site.gscProperty ? gscSlug(site.gscProperty) : undefined;
+  site.gscProperty ? gscDataSlug(site.gscProperty) : undefined;
 
 function gscRows(dir: string | undefined, dataset: string): GscRow[] {
   if (!dir) return [];
@@ -422,7 +422,7 @@ export interface Draft {
  *  hand-curated and versioned — a draft leaves by being deleted or
  *  status-flipped. Files starting with "_" and README.md are ignored. */
 export function drafts(): Draft[] {
-  const dir = path.join(ROOT, "content", "drafts");
+  const dir = path.join(INSTANCE, "content", "drafts");
   let files: string[] = [];
   try {
     files = fs
@@ -494,7 +494,7 @@ export interface Campaign {
 }
 
 export function campaigns(): Campaign[] {
-  const dir = path.join(ROOT, "content", "campaigns");
+  const dir = path.join(INSTANCE, "content", "campaigns");
   let files: string[] = [];
   try {
     files = fs.readdirSync(dir).filter((f) => f.endsWith(".json") && !f.startsWith("_")).sort();
@@ -673,7 +673,7 @@ export function styleVersion(): string {
 export function dailyLogSections(): { heading: string; lines: string[] }[] {
   let text = "";
   try {
-    text = fs.readFileSync(path.join(ROOT, "docs", "daily-log.md"), "utf8");
+    text = fs.readFileSync(path.join(INSTANCE, "docs", "daily-log.md"), "utf8");
   } catch {
     return [];
   }

@@ -14,6 +14,19 @@ uses [Semantic Versioning](https://semver.org/).
   email do not belong on a mirror).
 
 ### Added
+- **Engine / instance split**: `N_SEO_INSTANCE` points the engine at a separate
+  directory holding your config, queue, content and data, so upgrading the
+  engine is a `git pull` (or `npm update`) that never touches your files.
+  In-place mode (no env var) is unchanged.
+- **`n-seo` CLI** (`bin/n-seo.mjs`): `init` scaffolds an instance;
+  `start`/`dev`/`daily`/`doctor`/`demo`/`mcp`/`check`/`export` run the engine
+  against it; `upgrade` pulls, reinstalls and re-checks the engine with a
+  printed rollback; `version` shows engine + instance.
+- **Hooks** (`hooks.beforeRun` / `hooks.afterStep.<step>` / `hooks.afterRun`):
+  your own shell commands around the daily run, logged and recorded like steps.
+- **`gscExtraProperties`**: extra Search Console properties pulled for their
+  data without appearing as sites.
+- `engine_info` MCP tool; Engine card on Settings; `doctor` engine block.
 - **One config file** (`n-seo.config.json`) read by the dashboard and every
   Python script: sites, Google auth, watch pages, conversions, module switches.
   Falls back to the example so a fresh checkout runs.

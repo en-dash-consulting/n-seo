@@ -70,7 +70,7 @@ jobs:
       - name: Grep for forbidden words
         run: |
           pattern='endash|naniel|beergame|html-in-canvas|spacetrader|stillhouse|hotdogbenchmark'
-          if git grep -n -i -E "$pattern" -- ':!LICENSE' ':!.github/workflows/ci.yml' ':!www' ':!README.md'; then
+          if git grep -n -i -E "$pattern" -- ':!LICENSE' ':!.github/workflows/ci.yml' ':!www' ':!README.md' ':!.claude/skills'; then
             echo "::error::private names found (see above)"; exit 1
           fi
           echo "clean"

@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "ingest"))
 import seo_config  # noqa: E402
 
 ROOT = seo_config.ROOT
+INSTANCE = seo_config.INSTANCE
 DATA = seo_config.DATA
 
 PROBE_KEYS = [
@@ -39,7 +40,7 @@ def watch_groups():
     by_host = {}
     for s in seo_config.sites():
         if s.get("gscProperty"):
-            slug = seo_config.gsc_slug(s["gscProperty"])
+            slug = seo_config.gsc_data_slug(s["gscProperty"])
             by_host[s["host"]] = slug
             by_host[s["gscHost"]] = slug
     groups = {}
@@ -119,7 +120,7 @@ def main():
         if xref:
             lines.append(f"cross-referrals into {host} (90d sessions): " + ", ".join(xref))
 
-    log = ROOT / "docs" / "daily-log.md"
+    log = INSTANCE / "docs" / "daily-log.md"
     log.parent.mkdir(parents=True, exist_ok=True)
     if not log.exists():
         log.write_text("# Daily ops log\n\nAppended by ops/daily.py — newest entries last.\n")

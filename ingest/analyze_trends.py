@@ -34,7 +34,7 @@ def gsc_queries(tok, site, start, end):
 
 def main():
     out = {"generated": date.today().isoformat(), "sites": {}}
-    gsc_props = seo_config.gsc_properties()
+    gsc_props = seo_config.gsc_properties(include_extra=False)
     brands = {p: re.compile(rx, re.I) for p, rx in seo_config.brand_patterns().items()}
     ga4_props = seo_config.ga4_properties()
 

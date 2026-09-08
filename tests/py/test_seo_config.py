@@ -37,6 +37,12 @@ class ConfigTests(unittest.TestCase):
         for prop, want in SLUG_CASES:
             self.assertEqual(seo_config.gsc_slug(prop), want, prop)
 
+    def test_gsc_data_slug_separates_url_prefix_properties(self):
+        self.assertEqual(seo_config.gsc_data_slug("sc-domain:example.com"), "example.com")
+        self.assertEqual(seo_config.gsc_data_slug("https://www.example.com/"), "www.example.com-urlprefix")
+        self.assertEqual(seo_config.gsc_data_slug("https://example.com/"), "example.com-urlprefix")
+        self.assertEqual(seo_config.gsc_data_slug("http://example.com/blog/"), "example.com_blog-urlprefix")
+
     def test_example_fallback(self):
         seo_config.CONFIG_PATH = self.tmp / "missing.json"
         cfg = seo_config.load(force=True)
@@ -90,7 +96,7 @@ class ConfigTests(unittest.TestCase):
             {"host": "nogsc.example.com"},
         ]})
         self.assertEqual(seo_config.gsc_properties(),
-                         {"sc-domain:example.com": "example.com", "https://www.other.org/": "www.other.org"})
+                         {"sc-domain:example.com": "example.com", "https://www.other.org/": "www.other.org-urlprefix"})
         self.assertEqual(seo_config.ga4_properties(), {"example.com": "1", "www.other.org": "2"})
         self.assertEqual(seo_config.index_hosts(),
                          {"example.com": "sc-domain:example.com", "docs.example.com": "sc-domain:example.com",
@@ -104,6 +110,9 @@ class ConfigTests(unittest.TestCase):
 
     def test_env_reads_process_then_dotenv(self):
         seo_config.ROOT = self.tmp
+        saved_instance = seo_config.INSTANCE
+        seo_config.INSTANCE = self.tmp  # .env is instance-owned
+        self.addCleanup(setattr, seo_config, "INSTANCE", saved_instance)
         (self.tmp / ".env").write_text('REDDIT_CLIENT_ID=abc\nQUOTED="q v"\n# comment\nEMPTY=\n')
         self.assertEqual(seo_config.env("REDDIT_CLIENT_ID"), "abc")
         self.assertEqual(seo_config.env("QUOTED"), "q v")

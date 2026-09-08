@@ -48,9 +48,13 @@ can run the demo. Nothing else carries a site list.
 | `participation.expertise` | Who you are / what you know first-hand. The only context the digest briefings get |
 | `modules.<key>.enabled` | See "Modules" |
 
-Derived helpers (identical in both languages): `gscSlug(property)` → the
-`data/gsc/<slug>/` directory name: strip `sc-domain:` / scheme, strip the
-trailing slash, `/`→`_`.
+Derived helpers (identical in both languages): `gscSlug(property)` strips
+`sc-domain:` / the scheme and the trailing slash and maps `/`→`_`;
+`gscDataSlug(property)` is the `data/gsc/<slug>/` directory name — the same,
+plus a `-urlprefix` suffix for url-prefix (`https://…`) properties so they
+never share a directory with the domain property of the same host
+(`sc-domain:example.com` → `example.com`, `https://www.example.com/` →
+`www.example.com-urlprefix`).
 
 ## Data files (all under `data/`, gitignored, regenerable)
 
@@ -126,6 +130,68 @@ proposals, campaigns produce templates. You act.
 MCP, bearer token) · write endpoints: `POST /api/backlog/accept`,
 `POST /api/backlog/:id/watch`, `POST /api/backlog/:id/retire`,
 `POST /settings`.
+
+## Engine and instance
+
+The checkout is the **engine**: code, public assets, engine docs. An
+**instance** is one user's config, queue, content and data. By default they
+are the same directory ("in-place" mode — a plain clone works unchanged).
+Set `N_SEO_INSTANCE=/path/to/instance` (or use the `n-seo` CLI, which sets it
+for you) to keep them apart; upgrading the engine is then a `git pull` or
+`npm update` that never touches instance files.
+
+| Owned by | Paths |
+|---|---|
+| engine (`ROOT`) | `src/`, `ingest/`, `ops/`, `probes/`, `public/`, `bin/`, `tests/`, `n-seo.config.example.json`, `docs/PLAYBOOK.md`, `docs/OPERATING-RULES.md`, `docs/ARCHITECTURE.md` |
+| instance (`INSTANCE`) | `n-seo.config.json` (`N_SEO_CONFIG` still overrides), `.env`, `config/backlog.json`, `config/insights.json`, `content/drafts/`, `content/campaigns/`, `data/`, `site/`, `docs/daily-log.md`, `docs/reports/`, the IndexNow key file (`modules.indexNow.keyFile`, relative to the instance) |
+
+Both loaders expose the split: `src/config.ts` → `ROOT`, `INSTANCE`,
+`engineInfo()`; `ingest/seo_config.py` → `ROOT`, `INSTANCE`, `DATA`,
+`engine_info()`. Engine scripts always run with `cwd=ROOT` and find the
+instance through the environment, never through the working directory.
+Git auto-commit commits in the instance. `engine_info` (MCP), the Engine
+card on `/settings`, `n-seo version` and the first block of `doctor` all
+report version · commit · mode · engine path · instance path.
+
+### Hooks
+
+```json
+"hooks": {
+  "beforeRun": ["python3 my/prep.py"],
+  "afterStep": { "daily-diff": ["python3 my/sync.py"] },
+  "afterRun":  ["rsync -a site/ user@host:/srv/mirror/"]
+}
+```
+
+Each entry is a shell string run by `ops/daily.py` with `cwd=INSTANCE` and
+`N_SEO_ROOT`, `N_SEO_INSTANCE`, `N_SEO_STEP` (afterStep only) in the
+environment. Output is teed to `data/daily-ops.log` like a step and each hook
+is recorded in `last-run.json` as `hook:before:<i>`, `hook:<step>:<i>` or
+`hook:after:<i>`. A failing hook counts as a failure (and notifies) but never
+aborts the run. `afterRun` hooks see a complete `last-run.json`. `--skip hooks`
+runs steps only; `--list` shows hooks in order.
+
+### `gscExtraProperties`
+
+```json
+"gscExtraProperties": ["https://example.com/"]
+```
+
+Extra Search Console properties (for example a url-prefix property that
+duplicates a domain property) pulled by `pull_gsc.py` and `pull_timeseries.py`
+into `data/gsc/<gscDataSlug>/` with the same windows and datasets (a url-prefix
+property lands in `<host>-urlprefix/`, never colliding with the domain
+property's directory), and checked by `doctor`. They are not sites: nothing in the dashboard, the trend analysis or
+the reports shows them.
+
+### The `n-seo` CLI (`bin/n-seo.mjs`)
+
+| Command | Does |
+|---|---|
+| `n-seo init [dir]` | Scaffold an instance: config from the example, empty `config/`, `content/`, `.env`, `.gitignore`, `.mcp.json` pointing at this engine, README. Never overwrites |
+| `n-seo start` · `dev` · `daily` · `doctor` · `demo` · `mcp` · `check` · `export` | Run the engine's command against the instance (`--instance <path>`, else `$N_SEO_INSTANCE`, else cwd); remaining args pass through |
+| `n-seo upgrade` | Git engine: `git pull --ff-only`, `npm ci` if the lockfile changed, `npm run check`; prints the exact `git reset --hard <sha>` if the check fails. npm engine: says to `npm update n-seo` |
+| `n-seo version` | engine version, commit, engine path, instance path, mode |
 
 ## Operating rules the tooling encodes
 

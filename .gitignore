@@ -11,3 +11,11 @@ service-account*.json
 
 # your live config is yours; the example ships with the repo
 n-seo.config.json
+
+# n-dx tool artifacts: regenerated caches and run logs, not source
+.hench/
+.sourcevision/
+.rex/n-dx_workflow.md
+.rex/execution-log*.jsonl
+.n-dx.local.json
+claude_commands.log

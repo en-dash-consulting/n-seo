@@ -27,6 +27,16 @@ def report(level, name, detail=""):
     print(f"  {level:4s} {name}" + (f" — {detail}" if detail else ""))
 
 
+def check_engine():
+    e = seo_config.engine_info()
+    print("engine")
+    report("OK", f"n-seo {e['version']}" + (f" · {e['commit']}" if e["commit"] else ""))
+    report("OK", f"mode: {e['mode']}", "" if e["mode"] == "instance"
+           else "config, queue and data live inside the engine checkout (see docs/INSTANCE.md to split them)")
+    report("OK", f"engine: {e['root']}")
+    report("OK", f"instance: {e['instance']}")
+
+
 def check_config():
     print("config")
     if seo_config.using_example():
@@ -209,11 +219,12 @@ def check_modules(cfg):
                "" if ok else "REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET missing from .env")
     if cfg["modules"].get("indexNow", {}).get("enabled"):
         kf = cfg["modules"]["indexNow"].get("keyFile") or "indexnow.key"
-        p = Path(kf) if Path(kf).is_absolute() else seo_config.ROOT / kf
+        p = Path(kf) if Path(kf).is_absolute() else seo_config.INSTANCE / kf
         report("OK" if p.exists() else "WARN", f"indexNow key {kf}", "" if p.exists() else "run: python3 ops/indexnow.py init")
 
 
 def main():
+    check_engine()
     cfg = check_config()
     check_tools()
     if cfg is None:

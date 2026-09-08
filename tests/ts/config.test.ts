@@ -24,6 +24,13 @@ describe("config", () => {
     for (const [input, want] of cases) assert.equal(cfg.gscSlug(input), want, input);
   });
 
+  test("gscDataSlug keeps domain and url-prefix properties in separate data dirs", () => {
+    assert.equal(cfg.gscDataSlug("sc-domain:example.com"), "example.com");
+    assert.equal(cfg.gscDataSlug("https://www.example.com/"), "www.example.com-urlprefix");
+    assert.equal(cfg.gscDataSlug("https://example.com/"), "example.com-urlprefix");
+    assert.equal(cfg.gscDataSlug("http://example.com/blog/"), "example.com_blog-urlprefix");
+  });
+
   test("falls back to the example config and flags it", () => {
     const c = cfg.loadConfig();
     assert.equal(cfg.USING_EXAMPLE_CONFIG, true);

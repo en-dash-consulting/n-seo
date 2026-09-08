@@ -8,11 +8,17 @@ and export. Stdlib only.
 
 import json
 import os
+import subprocess
 from pathlib import Path
 
+# The engine checkout: code, engine docs, public assets.
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
-CONFIG_PATH = Path(os.environ.get("N_SEO_CONFIG") or ROOT / "n-seo.config.json")
+# The instance: one user's config, queue, content and data. Defaults to the
+# engine checkout ("in-place" mode); N_SEO_INSTANCE separates them so that
+# upgrading the engine is a git pull that never touches your files.
+INSTANCE = Path(os.environ["N_SEO_INSTANCE"]).resolve() if os.environ.get("N_SEO_INSTANCE") else ROOT
+DATA = INSTANCE / "data"
+CONFIG_PATH = Path(os.environ.get("N_SEO_CONFIG") or INSTANCE / "n-seo.config.json")
 EXAMPLE_PATH = ROOT / "n-seo.config.example.json"
 
 MODULE_KEYS = [
@@ -52,6 +58,16 @@ def load(force: bool = False) -> dict:
             "brand": s.get("brand") or None,
         })
     conv = raw.get("conversions") or {}
+
+    def str_list(v):
+        return [x for x in (v or []) if isinstance(x, str) and x.strip()] if isinstance(v, list) else []
+
+    raw_hooks = raw.get("hooks") or {}
+    hooks = {
+        "beforeRun": str_list(raw_hooks.get("beforeRun")),
+        "afterRun": str_list(raw_hooks.get("afterRun")),
+        "afterStep": {k: str_list(v) for k, v in (raw_hooks.get("afterStep") or {}).items()},
+    }
     _cache = {
         "name": raw.get("name") or "n-seo",
         "port": int(os.environ.get("SEO_PORT") or raw.get("port") or 4600),
@@ -62,8 +78,30 @@ def load(force: bool = False) -> dict:
         "conversions": conv if conv.get("site") else None,
         "participation": raw.get("participation") or {},
         "modules": modules,
+        "gscExtraProperties": str_list(raw.get("gscExtraProperties")),
+        "hooks": hooks,
     }
     return _cache
+
+
+def engine_info() -> dict:
+    """Mirrors src/config.ts engineInfo(): what engine is running, for which instance."""
+    try:
+        version = json.loads((ROOT / "package.json").read_text()).get("version", "0.0.0")
+    except (OSError, json.JSONDecodeError):
+        version = "0.0.0"
+    try:
+        p = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
+                           capture_output=True, text=True)
+        commit = p.stdout.strip() or None if p.returncode == 0 else None
+    except OSError:
+        commit = None
+    return {"version": version, "commit": commit, "root": str(ROOT), "instance": str(INSTANCE),
+            "mode": "in-place" if INSTANCE == ROOT else "instance"}
+
+
+def hooks() -> dict:
+    return load()["hooks"]
 
 
 def sites() -> list[dict]:
@@ -101,18 +139,32 @@ def gsc_slug(prop: str) -> str:
     return s.rstrip("/").replace("/", "_")
 
 
-def gsc_properties() -> dict[str, str]:
+def gsc_data_slug(prop: str) -> str:
+    """The data/gsc/ directory for a property. A url-prefix property
+    ("https://example.com/") would slug to the same name as the domain
+    property ("sc-domain:example.com"), so it gets a "-urlprefix" suffix.
+    Must match src/config.ts gscDataSlug()."""
+    s = gsc_slug(prop)
+    return s + "-urlprefix" if prop.lower().startswith(("http://", "https://")) else s
+
+
+def gsc_properties(include_extra: bool = True) -> dict[str, str]:
     """{GSC property -> data/gsc subdirectory}, deduplicated. A domain
-    property covers its subdomains, so several hosts can share one."""
+    property covers its subdomains, so several hosts can share one.
+    gscExtraProperties (pulled for their data, never shown as sites) are
+    appended unless include_extra is False."""
     out = {}
     for s in sites():
         if s["gscProperty"]:
-            out[s["gscProperty"]] = gsc_slug(s["gscProperty"])
+            out[s["gscProperty"]] = gsc_data_slug(s["gscProperty"])
+    if include_extra:
+        for prop in load()["gscExtraProperties"]:
+            out.setdefault(prop, gsc_data_slug(prop))
     return out
 
 
 def gsc_dir_for(site: dict) -> Path | None:
-    return DATA / "gsc" / gsc_slug(site["gscProperty"]) if site.get("gscProperty") else None
+    return DATA / "gsc" / gsc_data_slug(site["gscProperty"]) if site.get("gscProperty") else None
 
 
 def ga4_properties() -> dict[str, str]:
@@ -139,11 +191,11 @@ def expand(path_str: str) -> Path:
 
 
 def env(key: str, default: str = "") -> str:
-    """Read one key from the environment, then from ./.env (KEY=value lines)."""
+    """Read one key from the environment, then from the instance's .env (KEY=value lines)."""
     if os.environ.get(key):
         return os.environ[key]
     try:
-        for line in (ROOT / ".env").read_text().splitlines():
+        for line in (INSTANCE / ".env").read_text().splitlines():
             line = line.strip()
             if line.startswith(f"{key}="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")

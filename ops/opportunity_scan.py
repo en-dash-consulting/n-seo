@@ -51,7 +51,7 @@ def queue():
     except json.JSONDecodeError:
         pass
     try:
-        return json.loads((ROOT / "config" / "backlog.json").read_text()).get("actions", [])
+        return json.loads((seo_config.INSTANCE / "config" / "backlog.json").read_text()).get("actions", [])
     except (OSError, json.JSONDecodeError):
         return []
 
@@ -77,12 +77,12 @@ def _host_resolver(prop):
     """
     owners = [s for s in seo_config.sites() if s.get("gscProperty") == prop]
     if not owners:
-        return lambda q: seo_config.gsc_slug(prop)
+        return lambda q: seo_config.gsc_slug(prop)  # a bare host is the best we have
     if len(owners) == 1:
         return lambda q: owners[0]["host"]
     by_gsc_host = {s["gscHost"]: s["host"] for s in owners}
     best = {}
-    qp = seo_config.DATA / "gsc" / seo_config.gsc_slug(prop) / "query_page_90d.json"
+    qp = seo_config.DATA / "gsc" / seo_config.gsc_data_slug(prop) / "query_page_90d.json"
     try:
         for r in json.loads(qp.read_text()).get("rows", []):
             q, page = r["keys"][0], r["keys"][1]
