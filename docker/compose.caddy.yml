@@ -1,0 +1,41 @@
+# Overlay: put Caddy in front with TLS and basic auth, and stop publishing the
+# dashboard directly.
+#
+#   export N_SEO_SITE_ADDRESS=seo.example.com
+#   export N_SEO_BASIC_USER=you
+#   export N_SEO_BASIC_HASH="$(docker run --rm caddy:2 caddy hash-password --plaintext 'your-password')"
+#   docker compose -f docker/compose.yml -f docker/compose.caddy.yml up -d
+#
+# Caddy gets a real certificate automatically once the address is a public
+# hostname pointed at this host. Use `localhost` to try it locally.
+#
+# `!reset` needs Compose v2.24+ (docker compose version). On anything older,
+# delete the `ports:` block from docker/compose.yml by hand instead.
+
+services:
+  dashboard:
+    # Reachable only over the proxy network now.
+    ports: !reset []
+    expose:
+      - "4600"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    environment:
+      N_SEO_SITE_ADDRESS: ${N_SEO_SITE_ADDRESS:-localhost}
+      N_SEO_BASIC_USER: ${N_SEO_BASIC_USER:?set N_SEO_BASIC_USER}
+      N_SEO_BASIC_HASH: ${N_SEO_BASIC_HASH:?set N_SEO_BASIC_HASH — see the header of this file}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

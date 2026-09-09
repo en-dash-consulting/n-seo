@@ -58,17 +58,19 @@
     "test": "tsx --test tests/ts/*.test.ts",
     "test:py": "python3 -m unittest discover -s tests/py -v",
     "check": "npm run typecheck && npm test && npm run test:py",
-    "export": "python3 ops/export_static.py"
+    "export": "python3 ops/export_static.py",
+    "docker:build": "docker build -t n-seo:latest .",
+    "docker:up": "docker compose -f docker/compose.yml up -d"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "hono": "^4.6.14",
+    "tsx": "^4.19.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }

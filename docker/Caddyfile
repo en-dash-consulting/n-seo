@@ -1,0 +1,21 @@
+# Fronts the n-seo dashboard with TLS and a password.
+#
+# Basic auth is the least you should put here. If you already run an identity
+# proxy — Cloudflare Access, Tailscale, oauth2-proxy, Google IAP — send the
+# dashboard through that instead and delete the basic_auth block.
+
+{$N_SEO_SITE_ADDRESS:localhost} {
+	basic_auth {
+		# hash: docker run --rm caddy:2 caddy hash-password --plaintext 'secret'
+		{$N_SEO_BASIC_USER} {$N_SEO_BASIC_HASH}
+	}
+
+	# Caddy forwards the original Host header, which the dashboard's
+	# same-origin POST check compares against Origin. Do not override it.
+	reverse_proxy dashboard:4600
+
+	encode gzip
+	log {
+		output stderr
+	}
+}

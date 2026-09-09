@@ -74,6 +74,25 @@ uses [Semantic Versioning](https://semver.org/).
   when its key resolves, so one config file works on both a laptop and a
   server.
 
+- **Deployment**: a container image (`Dockerfile`, 328 MB, Node + stdlib
+  Python + curl + openssl) whose entrypoint takes `serve`, `daily`, `doctor`,
+  `demo`, `init` or `cron`, with the instance as a volume at `/instance`.
+  `docker/compose.yml` runs the dashboard and a scheduler on one volume and
+  binds the dashboard to loopback, so a bare `docker compose up` is not an
+  open dashboard; `docker/compose.caddy.yml` adds TLS and basic auth and
+  refuses to start without credentials configured.
+- **GCP scaffolding**: `deploy/gcp/setup.sh` (idempotent, `--dry-run`)
+  provisions a service account with the Token Creator self-binding, a private
+  mirror bucket, a data disk, a VM with no external IP reachable only over
+  IAP, and the Cloud Run mirror; `deploy/vm/startup.sh` brings the same stack
+  up on any Debian or Ubuntu host, so a VPS or a NAS works the same way.
+  `docs/DEPLOY.md` is the narrative and says plainly why the engine does not
+  belong on Cloud Run: the static export finishes with a directory rename,
+  which GCS FUSE cannot do atomically.
+- **`n-seo-deploy` skill** walks an agent through choosing a host, running the
+  scaffolding, verifying with `doctor` and a probe-only run, and handing back
+  the console steps that cannot be scripted.
+
 ### Fixed
 - **Data loss**: a Search Console, GA4 or time-series pull that hit an API
   error overwrote the previous snapshot with zero rows and still reported the
@@ -105,6 +124,10 @@ uses [Semantic Versioning](https://semver.org/).
   configured key path does not exist.
 - The opportunity scan dropped genuine risers whose query appeared as a
   substring anywhere in the queue's prose.
+- `tsx` moved from devDependencies to dependencies. The engine runs
+  TypeScript directly with no build step, so `npm ci --omit=dev` — and
+  therefore any published `npm i n-seo` — produced an install whose dashboard
+  could not start.
 - The test sandbox now seeds its own demo dataset and neutralizes
   `N_SEO_INSTANCE` while importing. Previously the action-engine suite was
   dropped from the run whenever the checkout had no `data/` — which is the

@@ -1,0 +1,15 @@
+# Keep the build context small: the image needs the engine and its lockfile,
+# nothing else.
+.git
+.github
+.rex
+.claude
+node_modules
+data
+site
+www
+tests
+docs/screenshots
+*.log
+.env
+n-seo.config.json

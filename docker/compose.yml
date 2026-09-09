@@ -1,0 +1,53 @@
+# n-seo: the dashboard and the scheduled daily run, sharing one instance volume.
+#
+#   docker compose -f docker/compose.yml run --rm dashboard init   # once
+#   $EDITOR  (see docker/README.md for editing the config in the volume)
+#   docker compose -f docker/compose.yml up -d
+#
+# The dashboard is published on 127.0.0.1 only. It writes config, and config
+# sets the command the daily run executes, so it must never be reachable from
+# an untrusted network without auth in front. To expose it properly, add the
+# Caddy overlay:
+#
+#   docker compose -f docker/compose.yml -f docker/compose.caddy.yml up -d
+
+name: n-seo
+
+x-n-seo: &n-seo
+  image: n-seo:latest
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment:
+    # Set TZ so the daily run happens at your local morning, not UTC's.
+    TZ: ${TZ:-UTC}
+  volumes:
+    - instance:/instance
+    # Google service-account key, if you use the key-file auth mode. Mount it
+    # read-only and point google.serviceAccountKey at the container path.
+    # On GCP prefer google.auth "metadata" and mount nothing.
+    # - ${N_SEO_SA_KEY:-./service-account.json}:/run/secrets/google-sa.json:ro
+
+services:
+  dashboard:
+    <<: *n-seo
+    command: ["serve"]
+    ports:
+      # host:container — bound to loopback on purpose. Changing this to
+      # "4600:4600" publishes an unauthenticated write API to your network.
+      - "127.0.0.1:4600:4600"
+
+  scheduler:
+    <<: *n-seo
+    command: ["cron"]
+    environment:
+      TZ: ${TZ:-UTC}
+      N_SEO_DAILY_AT: ${N_SEO_DAILY_AT:-07:00}
+    # Nothing listens in this container, so the image's HTTP healthcheck
+    # would report it unhealthy forever.
+    healthcheck:
+      disable: true
+
+volumes:
+  instance:
