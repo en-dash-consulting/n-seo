@@ -107,6 +107,8 @@
   .hero .wrap { position: relative; }
   .badge { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px 12px; line-height: 1.5; font-family: var(--font-mono); font-size: 0.8rem; color: var(--teal); border: 1px solid rgba(0,255,179,0.35); background: rgba(0,255,179,0.08); border-radius: 999px; padding: 6px 14px; }
   .badge b { font-weight: 500; color: var(--white); }
+  .badge a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.4); }
+  .badge a:hover { text-decoration-color: var(--teal); color: var(--teal); }
   .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); font-weight: 900; margin: 26px 0 18px; }
   .hero h1 span { color: var(--teal); }
   .hero .sub { color: var(--muted); font-size: 1.2rem; font-weight: 300; max-width: 62ch; }
@@ -224,7 +226,7 @@
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="wrap">
-    <div class="badge"><span>● open source · MIT · your infrastructure</span><span>·</span><b>from the makers of n-dx</b></div>
+    <div class="badge"><span>● open source · MIT · your infrastructure</span><span>·</span><b>from the makers of <a href="https://n-dx.dev">n-dx</a></b></div>
     <h1>An SEO, self-hosted<span>.</span></h1>
     <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and hands you a ranked queue of concrete moves — with the numbers attached. No account, no SaaS. It briefs you; it never posts for you.</p>
     <div class="hero-actions">

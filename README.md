@@ -129,7 +129,7 @@ than merely documented:
 | `n-seo-review` | The weekly pass: judge watching items, retire what is done, refresh insights |
 
 `.claude/skills/README.md` explains which skills operate an instance and which
-are contributor tooling for developing the engine with n-dx.
+are contributor tooling for developing the engine with [n-dx](https://n-dx.dev).
 
 ## Working with n-dx
 
