@@ -8,11 +8,14 @@ import { insights as loadInsights } from "./insights.js";
 const pct = (x: number, digits = 1) => `${(100 * x).toFixed(digits)}%`;
 const num = (x: number) => Math.round(x).toLocaleString("en-US");
 
+/** The n-seo mark: the rising line breaking out of the plot, on brand teal.
+ *  Kept in step with public/favicon.svg and the marketing site. */
 export const Mark: FC<{ size?: number }> = ({ size = 22 }) => (
-  <svg class="brand-mark" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="1" y="1" width="22" height="22" rx="6" fill="currentColor" opacity="0.16" />
-    <polyline points="5,16 10,11 13,14 19,7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-    <polyline points="15,7 19,7 19,11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <svg class="brand-mark" width={size} height={size} viewBox="0 0 300 300" fill="none" aria-hidden="true">
+    <path d="M300 0H0V300H300V0Z" fill="#00E5B9" />
+    <path d="M300 239.902H32.0074V255.489H300V239.902Z" fill="#00FFCE" />
+    <path d="M55.7684 202.351L118.59 139.53L160.47 181.41L244.232 97.6489" stroke="#001769" stroke-width="27.4428" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M181.411 97.6489H244.232V160.47" stroke="#001769" stroke-width="27.4428" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
 );
 

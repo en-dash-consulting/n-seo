@@ -71,7 +71,7 @@ a { color: var(--accent); }
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: -0.01em; }
-.brand-mark { color: #8da2ff; flex-shrink: 0; }
+.brand-mark { flex-shrink: 0; display: block; }   /* the mark carries its own brand colors */
 .brand-name { max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brand-sub { color: var(--topbar-ink); font-weight: 500; font-size: 0.8rem; }
 .topbar nav { display: flex; gap: 4px; flex-wrap: wrap; }
