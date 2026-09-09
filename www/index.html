@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>n-seo — An SEO on your machine</title>
-<meta name="description" content="n-seo is an open-source, local-first SEO / AEO / GEO control plane. It reads Search Console and GA4 every morning, probes your sites, and hands you a ranked queue of concrete moves with the numbers attached. Your data stays on your machine. It briefs you; it never posts for you.">
-<meta name="keywords" content="n-seo, open source SEO tool, Search Console dashboard, GA4, local-first SEO, AEO, GEO, AI crawlers, llms.txt, MCP, Claude Code, striking distance, CTR gaps">
+<title>n-seo — An SEO, self-hosted</title>
+<meta name="description" content="n-seo is an open-source, self-hosted SEO / AEO / GEO control plane. It reads Search Console and GA4 every morning, probes your sites, and hands you a ranked queue of concrete moves with the numbers attached. Run it on your laptop, a VPS or your own cloud. It briefs you; it never posts for you.">
+<meta name="keywords" content="n-seo, open source SEO tool, Search Console dashboard, GA4, self-hosted SEO, AEO, GEO, AI crawlers, llms.txt, MCP, Claude Code, striking distance, CTR gaps">
 <meta name="author" content="En Dash Consulting">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://en-dash-consulting.github.io/n-seo/">
@@ -13,15 +13,15 @@
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://en-dash-consulting.github.io/n-seo/">
-<meta property="og:title" content="n-seo — An SEO on your machine">
-<meta property="og:description" content="Open-source, local-first SEO control plane. Reads Search Console and GA4, probes your sites, hands you a ranked queue of moves — with the numbers. It briefs you; it never posts for you.">
+<meta property="og:title" content="n-seo — An SEO, self-hosted">
+<meta property="og:description" content="Open-source, self-hosted SEO control plane. Reads Search Console and GA4, probes your sites, hands you a ranked queue of moves — with the numbers. It briefs you; it never posts for you.">
 <meta property="og:image" content="https://en-dash-consulting.github.io/n-seo/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="n-seo">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="n-seo — An SEO on your machine">
-<meta name="twitter:description" content="Open-source, local-first SEO control plane from the makers of n-dx. Reads Search Console and GA4, probes your sites, ranks the moves. It briefs you; it never posts for you.">
+<meta name="twitter:title" content="n-seo — An SEO, self-hosted">
+<meta name="twitter:description" content="Open-source, self-hosted SEO control plane from the makers of n-dx. Reads Search Console and GA4, probes your sites, ranks the moves. It briefs you; it never posts for you.">
 <meta name="twitter:image" content="https://en-dash-consulting.github.io/n-seo/assets/og.png">
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -36,7 +36,7 @@
   "name": "n-seo",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "macOS, Linux",
-  "description": "Open-source, local-first SEO / AEO / GEO control plane. Pulls Search Console and GA4, probes live sites, and produces a ranked action queue with evidence. Read-only MCP server for AI agents.",
+  "description": "Open-source, self-hosted SEO / AEO / GEO control plane. Pulls Search Console and GA4, probes live sites, and produces a ranked action queue with evidence. Read-only MCP server for AI agents.",
   "url": "https://en-dash-consulting.github.io/n-seo/",
   "codeRepository": "https://github.com/en-dash-consulting/n-seo",
   "license": "https://opensource.org/licenses/MIT",
@@ -224,9 +224,9 @@
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="wrap">
-    <div class="badge"><span>● open source · MIT · self-hosted</span><span>·</span><b>from the makers of n-dx</b></div>
-    <h1>An SEO on your machine<span>.</span></h1>
-    <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and hands you a ranked queue of concrete moves — with the numbers attached. Your data stays on your machine. It briefs you; it never posts for you.</p>
+    <div class="badge"><span>● open source · MIT · your infrastructure</span><span>·</span><b>from the makers of n-dx</b></div>
+    <h1>An SEO, self-hosted<span>.</span></h1>
+    <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and hands you a ranked queue of concrete moves — with the numbers attached. No account, no SaaS. It briefs you; it never posts for you.</p>
     <div class="hero-actions">
       <a class="btn primary" href="#start">Run it in 5 minutes</a>
       <a class="btn" href="https://github.com/en-dash-consulting/n-seo">View on GitHub ↗</a>
@@ -238,7 +238,7 @@
     <p class="shot-caption">The overview on demo data. Every row is a link; every number is derived live from files on your disk.</p>
 
     <div class="promises">
-      <div class="promise"><div class="k">Data</div><h3>Yours, on your disk</h3><p>Nothing leaves your machine except calls to the Google APIs you authorize. No account, no SaaS, no telemetry.</p></div>
+      <div class="promise"><div class="k">Data</div><h3>Yours, on your hardware</h3><p>Laptop, VPS, NAS or a VM in your own cloud. Nothing leaves the host except calls to the Google APIs you authorize. No account, no SaaS, no telemetry.</p></div>
       <div class="promise"><div class="k">Judgment</div><h3>Evidence first</h3><p>Every card shows the queries, positions and impressions behind it, then the move, then a spec. You learn what actually moves the numbers.</p></div>
       <div class="promise"><div class="k">Hands</div><h3>It briefs; you act</h3><p>No module edits your site, sends an email or posts a comment. Community modules write briefings. The words are always yours.</p></div>
     </div>
@@ -370,7 +370,7 @@ python3 ops/daily.py    <span class="c"># the morning run, by hand</span></pre>
     <div class="free">
       <div><b>No SaaS, no account, no seat price.</b> MIT licensed. Clone it, run it, fork it, ship it inside your company.</div>
       <div><b>Google's APIs are free within quota.</b> Search Console and GA4 reporting cost nothing at this scale; the index sweep is capped well under the daily limit.</div>
-      <div><b>Bring the LLM you already have — or none.</b> The core loop needs no model at all. The inference module runs whatever command you give it, on your machine, with your prompt.</div>
+      <div><b>Bring the LLM you already have — or none.</b> The core loop needs no model at all. The inference module runs whatever command you give it, or calls an endpoint you choose, with your prompt.</div>
       <div><b>We run our own sites on it.</b> n-seo is the generalized version of the control plane En Dash uses for its own portfolio every morning. When it breaks, we notice first.</div>
     </div>
   </div>

@@ -1,6 +1,6 @@
 # n-seo
 
-**An SEO on your machine.** Website: https://en-dash-consulting.github.io/n-seo/ · From the makers of [n-dx](https://n-dx.dev).
+**An SEO, self-hosted.** Website: https://en-dash-consulting.github.io/n-seo/ · From the makers of [n-dx](https://n-dx.dev).
 
 A local-first control plane for growing organic traffic to your own sites —
 classic search (SEO), answer engines (AEO) and AI assistants that cite sources
@@ -10,9 +10,9 @@ It pulls Search Console and GA4 into local JSON, probes your live sites for the
 things that quietly break (robots, sitemap, soft 404s, blocked AI crawlers,
 JS-only shells), and turns all of it into a **ranked queue of concrete actions**:
 which page to retitle, which query to answer, which page never got crawled.
-It runs on your machine, on a schedule, and shows you the result on a dashboard.
+It runs on hardware you control, on a schedule, and shows you the result on a dashboard.
 
-- **Your data stays on your machine.** Nothing is sent anywhere except the
+- **Your data stays on your own hardware.** Nothing is sent anywhere except the
   Google APIs you authorize and, optionally, a local LLM command you choose.
 - **It briefs you; it never posts for you.** Community modules find threads
   and write a briefing. The words are always yours.

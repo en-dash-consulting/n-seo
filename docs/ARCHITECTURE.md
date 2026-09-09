@@ -3,7 +3,7 @@
 n-seo is a local-first control plane for organic growth across one or
 more websites: **SEO** (classic search), **AEO** (answer engines: featured
 snippets, AI Overviews) and **GEO** (being cited by ChatGPT, Claude,
-Perplexity). It runs on your machine, keeps all data in local JSON files, and
+Perplexity). It runs on a machine you control, keeps all data in local JSON files, and
 turns them into a ranked queue of concrete actions.
 
 ```

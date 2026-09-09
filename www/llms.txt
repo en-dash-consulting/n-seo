@@ -1,6 +1,6 @@
 # n-seo
 
-> n-seo is an open-source, local-first SEO / AEO / GEO control plane from En Dash Consulting. It pulls Google Search Console and GA4 into local JSON every morning, probes your live sites for regressions (robots.txt, sitemap, soft 404s, blocked AI crawlers, JS-only shells), and turns the data into a ranked queue of concrete actions with the evidence attached. It briefs you; it never posts, publishes, or edits your site for you.
+> n-seo is an open-source, self-hosted SEO / AEO / GEO control plane from En Dash Consulting. It pulls Google Search Console and GA4 into local JSON every morning, probes your live sites for regressions (robots.txt, sitemap, soft 404s, blocked AI crawlers, JS-only shells), and turns the data into a ranked queue of concrete actions with the evidence attached. It briefs you; it never posts, publishes, or edits your site for you.
 
 - Repository: https://github.com/en-dash-consulting/n-seo
 - License: MIT

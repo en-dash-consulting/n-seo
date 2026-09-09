@@ -2,7 +2,7 @@
 
 ## Model
 
-n-seo is a **local-only** tool. It runs on your machine, reads your Google
+n-seo is a **self-hosted** tool. It runs on a machine you control, reads your Google
 data with credentials you control, and writes JSON files under `data/`. There
 is no hosted service, no telemetry, and no outbound traffic other than:
 
