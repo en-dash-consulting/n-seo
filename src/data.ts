@@ -143,6 +143,32 @@ function ga4Rows(site: SiteCfg, report: string): { dims: string[]; mets: number[
 
 export const AI_SOURCE = /chatgpt|chat\.openai|openai\.com|perplexity|claude\.ai|copilot|gemini\.google|edgeservices|you\.com|poe\.com|phind|kagi|mistral|deepseek/i;
 export const SEARCH_SOURCE = /google|bing|duckduckgo|yahoo|ecosia|brave|yandex|baidu/i;
+const SOCIAL_SOURCE = /facebook|instagram|linkedin|^t\.co$|twitter|x\.com|reddit|youtube|tiktok|pinterest|mastodon|bsky|bluesky|threads/i;
+
+/** The traffic buckets the charts use, in stacking order. */
+export const SOURCE_GROUPS = ["AI assistants", "Search", "Direct", "Referral", "Social", "Other"] as const;
+export type SourceGroup = (typeof SOURCE_GROUPS)[number];
+
+/**
+ * One classifier, shared by the site page and the trends page, so the two can
+ * never disagree about what counts as an AI referral.
+ *
+ * AI wins outright: an assistant arrives as `chatgpt.com / referral`, and
+ * `gemini.google.com` would otherwise be swallowed by the search pattern —
+ * counting either anywhere else would hide the number this tool exists to
+ * surface. Search is next, because a search engine is a search engine
+ * whatever medium GA4 attaches. Only then does medium decide.
+ */
+export function classifySource(source: string, medium: string): SourceGroup {
+  const s = (source ?? "").trim();
+  const m = (medium ?? "").trim().toLowerCase();
+  if (AI_SOURCE.test(s)) return "AI assistants";
+  if (SEARCH_SOURCE.test(s)) return "Search";
+  if (m === "(none)" || m === "none" || m === "direct" || s === "(direct)") return "Direct";
+  if (m.includes("social") || SOCIAL_SOURCE.test(s)) return "Social";
+  if (m === "referral") return "Referral";
+  return "Other";
+}
 
 export interface TrafficMix {
   sessions: number;
@@ -740,6 +766,55 @@ export function ga4Timeseries(site: SiteCfg): { date: string; page: string; sess
     page: r.page,
     sessions: r.sessions,
   }));
+}
+
+export interface SourceMixDay {
+  date: string;
+  total: number;
+  /** sessions per group, every group present (0 when none) */
+  groups: Record<SourceGroup, number>;
+}
+
+/**
+ * Daily sessions per traffic group, from data/timeseries/ga4-sources-<host>.json.
+ * Returns [] when the site has no GA4 property or the pull has not run — the
+ * caller says so rather than drawing an empty chart that reads as zero traffic.
+ */
+/** Every configured site's source mix, summed per day.
+ *  The per-site tiles on /trends are collapsed by default, so without this the
+ *  page answers "where is my traffic coming from" only after a click. */
+export function portfolioSourceMix(): SourceMixDay[] {
+  const byDate = new Map<string, SourceMixDay>();
+  for (const site of config().sites) {
+    for (const d of sourceMixTimeseries(site)) {
+      let day = byDate.get(d.date);
+      if (!day) {
+        day = { date: d.date, total: 0, groups: Object.fromEntries(SOURCE_GROUPS.map((g) => [g, 0])) as Record<SourceGroup, number> };
+        byDate.set(d.date, day);
+      }
+      for (const g of SOURCE_GROUPS) day.groups[g] += d.groups[g];
+      day.total += d.total;
+    }
+  }
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function sourceMixTimeseries(site: SiteCfg): SourceMixDay[] {
+  const d = readJson<{ rows?: { date: string; source: string; medium: string; sessions: number }[] }>(
+    path.join(DATA, "timeseries", `ga4-sources-${site.host}.json`));
+  const byDate = new Map<string, SourceMixDay>();
+  for (const r of d?.rows ?? []) {
+    const date = `${r.date.slice(0, 4)}-${r.date.slice(4, 6)}-${r.date.slice(6, 8)}`;
+    let day = byDate.get(date);
+    if (!day) {
+      day = { date, total: 0, groups: Object.fromEntries(SOURCE_GROUPS.map((g) => [g, 0])) as Record<SourceGroup, number> };
+      byDate.set(date, day);
+    }
+    const n = Number(r.sessions) || 0;
+    day.groups[classifySource(r.source, r.medium)] += n;
+    day.total += n;
+  }
+  return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export function lastNDates(n: number, endOffsetDays = 3): string[] {

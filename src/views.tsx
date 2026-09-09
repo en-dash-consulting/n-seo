@@ -19,6 +19,14 @@ export const Mark: FC<{ size?: number }> = ({ size = 22 }) => (
   </svg>
 );
 
+/** The rarely-visited diagnostics, folded behind one nav item. */
+const SYSTEM_NAV = [
+  { key: "indexing", href: "/indexing", label: "Indexing" },
+  { key: "probes", href: "/probes", label: "Probes" },
+  { key: "logs", href: "/logs", label: "Logs" },
+  { key: "settings", href: "/settings", label: "Settings" },
+];
+
 export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = ({
   title,
   active,
@@ -54,10 +62,17 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
                 {sites.length === 0 && <span class="nav-empty">no sites configured</span>}
               </div>
             </details>
-            <a href="/indexing" class={active === "indexing" ? "on" : ""}>Indexing</a>
-            <a href="/probes" class={active === "probes" ? "on" : ""}>Probes</a>
-            <a href="/logs" class={active === "logs" ? "on" : ""}>Logs</a>
-            <a href="/settings" class={active === "settings" ? "on" : ""}>Settings</a>
+            {/* Indexing, Probes, Logs and Settings are all "how is the machine
+                doing" pages you visit rarely. Ten top-level items read as a
+                wall; these four fold into one. */}
+            <details class="nav-menu">
+              <summary class={SYSTEM_NAV.some((s) => s.key === active) ? "on" : ""}>System ▾</summary>
+              <div class="nav-panel">
+                {SYSTEM_NAV.map((s) => (
+                  <a href={s.href} class={active === s.key ? "on" : ""}>{s.label}</a>
+                ))}
+              </div>
+            </details>
           </nav>
           {/* Empty here on purpose. ops/export_static.py replaces this span
               with a sign-out link when the mirror sits behind an auth proxy
@@ -433,7 +448,7 @@ const QueryTable: FC<{ rows: data.GscRow[] }> = ({ rows }) => (
   </div>
 );
 
-export const SiteDetail: FC<{ site: SiteCfg }> = ({ site }) => {
+export const SiteDetail: FC<{ site: SiteCfg; days?: number }> = ({ site, days = 90 }) => {
   const mix = data.trafficMix(site);
   const trend = data.sessionTrend(site);
   const gsc = data.gscSummary(site);
@@ -445,6 +460,17 @@ export const SiteDetail: FC<{ site: SiteCfg }> = ({ site }) => {
   const probe = data.probeFor(site);
   const xref = data.crossReferrals(site);
   const siteActions = actionsFor(site);
+
+  const dates = data.lastNDates(days);
+  const ts = data.gscTimeseries(site);
+  const ga = data.ga4Timeseries(site);
+  const srcMix = data.sourceMixTimeseries(site);
+  const clicksByDate = new Map<string, number>();
+  for (const r of ts) clicksByDate.set(r.date, (clicksByDate.get(r.date) ?? 0) + r.clicks);
+  const sessByDate = new Map<string, number>();
+  for (const r of ga) sessByDate.set(r.date, (sessByDate.get(r.date) ?? 0) + r.sessions);
+  const hasTrends = ts.length > 0 || ga.length > 0 || srcMix.length > 0;
+
   return (
     <>
       <h1>{site.host}</h1>
@@ -476,47 +502,79 @@ export const SiteDetail: FC<{ site: SiteCfg }> = ({ site }) => {
         </div>
       )}
 
+      <div class="strip-head gap">
+        <h2>Trends <small>· last {days} days</small></h2>
+        <div class="range-picker">
+          {TREND_RANGES.map((r) => (
+            <a href={`/site/${site.host}/${r}`} class={r === days ? "on" : ""}>{r}d</a>
+          ))}
+        </div>
+      </div>
+      {hasTrends ? (
+        <div class="trend-grid" style={`--n:${days}`}>
+          <div class="tg-label"></div>
+          <div class="tg-months">
+            {dates.map((d, i) => (
+              <span>{i === 0 || d.slice(8) === "01" ? d.slice(5, 7) : ""}</span>
+            ))}
+          </div>
+          {ts.length > 0 && <BandChart dates={dates} values={dates.map((d) => clicksByDate.get(d) ?? 0)} title="Google clicks / day" unit="clicks" />}
+          {ga.length > 0 && <BandChart dates={dates} values={dates.map((d) => sessByDate.get(d) ?? 0)} title="GA4 sessions / day" unit="sessions" />}
+          {srcMix.length > 0 && <SourceStackChart dates={dates} mix={srcMix} />}
+          {srcMix.length > 0 && <AiReferralChart dates={dates} mix={srcMix} />}
+        </div>
+      ) : (
+        <p class="empty">
+          {site.ga4Property || site.gscProperty
+            ? <>no time series yet — run <code>python3 ingest/pull_timeseries.py</code></>
+            : "no Search Console or GA4 property configured for this site"}
+        </p>
+      )}
+
       {siteActions.length > 0 && (
         <>
-          <h2>Do next</h2>
-          <ActionQueue actions={siteActions.slice(0, 8)} idPrefix="site" />
+          <div class="strip-head gap">
+            <h2>Do next</h2>
+            <a class="strip-more" href="/actions">full queue →</a>
+          </div>
+          <ActionQueue actions={siteActions.slice(0, 6)} idPrefix="site" />
         </>
       )}
 
-      {mix.aiSources.length > 0 && (
-        <>
-          <h2>AI referral sources · 90d</h2>
-          <div class="tbl-wrap"><table>
-            <tbody>
+      <div class="site-cols">
+        <div class="site-col-main">
+          <h2>Striking distance <small>(pos 5–15, the cheapest wins)</small></h2>
+          {striking.length ? <QueryTable rows={striking} /> : <p class="empty">none at threshold</p>}
+
+          <h2>CTR gaps <small>(ranking well, clicked rarely — title/snippet problems)</small></h2>
+          {gaps.length ? <QueryTable rows={gaps} /> : <p class="empty">none at threshold</p>}
+
+          <h2>Top queries · 16mo</h2>
+          {topQueries.length ? <QueryTable rows={topQueries} /> : <p class="empty">no Search Console data yet</p>}
+        </div>
+
+        <div class="site-col-side">
+          <h2>AI referral sources <small>· 90d</small></h2>
+          {mix.aiSources.length ? (
+            <div class="mini-list">
               {mix.aiSources.map((s) => (
-                <tr><td class="mono">{s.source}</td><td>{num(s.sessions)} sessions</td></tr>
+                <div class="mini-row"><span class="mono trunc">{s.source}</span><b>{num(s.sessions)}</b></div>
               ))}
-            </tbody>
-          </table></div>
-        </>
-      )}
+            </div>
+          ) : <p class="empty">none in the window</p>}
 
-      {xref.length > 0 && (
-        <>
-          <h2>Referrals from your other sites · 90d</h2>
-          <div class="tbl-wrap"><table>
-            <tbody>
-              {xref.map((s) => (
-                <tr><td class="mono">{s.source}</td><td>{num(s.sessions)} sessions</td></tr>
-              ))}
-            </tbody>
-          </table></div>
-        </>
-      )}
-
-      <h2>Striking distance <small>(pos 5–15, the cheapest wins)</small></h2>
-      {striking.length ? <QueryTable rows={striking} /> : <p class="empty">none at threshold</p>}
-
-      <h2>CTR gaps <small>(ranking well, clicked rarely — title/snippet problems)</small></h2>
-      {gaps.length ? <QueryTable rows={gaps} /> : <p class="empty">none at threshold</p>}
-
-      <h2>Top queries · 16mo</h2>
-      {topQueries.length ? <QueryTable rows={topQueries} /> : <p class="empty">no Search Console data yet</p>}
+          {xref.length > 0 && (
+            <>
+              <h2>From your other sites <small>· 90d</small></h2>
+              <div class="mini-list">
+                {xref.map((s) => (
+                  <div class="mini-row"><span class="mono trunc">{s.source}</span><b>{num(s.sessions)}</b></div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       <h2>Top pages (Google clicks)</h2>
       <div class="tbl-wrap"><table>
@@ -1169,7 +1227,7 @@ export const LogsPage: FC = () => {
 /** Unified trends: one window drives charts + heatmap on identical geometry. */
 export const TREND_RANGES = [30, 60, 90, 120, 180];
 
-const BandChart: FC<{ dates: string[]; values: number[]; title: string; unit: string }> = ({ dates, values, title, unit }) => {
+const BandChart: FC<{ dates: string[]; values: number[]; title: string; unit: string; note?: string; tone?: string }> = ({ dates, values, title, unit, note, tone }) => {
   const N = dates.length, W = N * 10, H = 100;
   const max = Math.max(1, ...values);
   const x = (i: number) => i * 10 + 5;
@@ -1182,8 +1240,9 @@ const BandChart: FC<{ dates: string[]; values: number[]; title: string; unit: st
       <div class="tg-label">
         <div class="chart-title">{title}</div>
         <div class="chart-stats">peak {Math.round(peak).toLocaleString()} · latest <b>{Math.round(last).toLocaleString()}</b></div>
+        {note && <div class="chart-note">{note}</div>}
       </div>
-      <div class="tg-plot">
+      <div class={`tg-plot${tone ? ` tone-${tone}` : ""}`}>
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={title}>
           <line x1="0" x2={W} y1={y(max)} y2={y(max)} class="grid" vector-effect="non-scaling-stroke" />
           <line x1="0" x2={W} y1={y(max / 2)} y2={y(max / 2)} class="grid" vector-effect="non-scaling-stroke" />
@@ -1198,6 +1257,92 @@ const BandChart: FC<{ dates: string[]; values: number[]; title: string; unit: st
         </svg>
       </div>
     </>
+  );
+};
+
+/** css-safe suffix for a group name, e.g. "AI assistants" -> "ai-assistants" */
+const groupSlug = (g: string) => g.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+/**
+ * Sessions per traffic group, stacked. Shares BandChart's geometry so the
+ * shared hover highlight lines up with every other row in the grid.
+ */
+const SourceStackChart: FC<{ dates: string[]; mix: data.SourceMixDay[] }> = ({ dates, mix }) => {
+  const N = dates.length, W = N * 10, H = 100;
+  const byDate = new Map(mix.map((d) => [d.date, d]));
+  const at = (date: string, g: data.SourceGroup) => byDate.get(date)?.groups[g] ?? 0;
+  const totals = dates.map((d) => byDate.get(d)?.total ?? 0);
+  const max = Math.max(1, ...totals);
+  const x = (i: number) => i * 10 + 5;
+  const y = (v: number) => 4 + (H - 8) - (v / max) * (H - 8);
+
+  // Cumulative bands, drawn bottom-up: each group's ribbon runs along its own
+  // top edge and back along the running total beneath it.
+  let below = dates.map(() => 0);
+  const bands = data.SOURCE_GROUPS.map((g) => {
+    const top = dates.map((d, i) => below[i] + at(d, g));
+    const up = top.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v).toFixed(1)}`).join(" ");
+    const back = below.map((v, i) => `L${x(N - 1 - i)},${y(below[N - 1 - i]).toFixed(1)}`).join(" ");
+    const total = dates.reduce((s, d) => s + at(d, g), 0);
+    below = top;
+    return { group: g, d: `${up} ${back} Z`, total };
+  });
+  const windowTotal = totals.reduce((s, v) => s + v, 0);
+
+  return (
+    <>
+      <div class="tg-label">
+        <div class="chart-title">Sessions by source</div>
+        <div class="chart-stats">{Math.round(windowTotal).toLocaleString()} sessions in window</div>
+        <div class="src-legend">
+          {bands.filter((b) => b.total > 0).map((b) => (
+            <span class="src-key">
+              <i class={`swatch grp-${groupSlug(b.group)}`} />
+              {b.group} <b>{pct(b.total / Math.max(1, windowTotal), 0)}</b>
+            </span>
+          ))}
+        </div>
+      </div>
+      <div class="tg-plot">
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="Sessions by traffic source">
+          <line x1="0" x2={W} y1={y(max)} y2={y(max)} class="grid" vector-effect="non-scaling-stroke" />
+          <line x1="0" x2={W} y1={y(max / 2)} y2={y(max / 2)} class="grid" vector-effect="non-scaling-stroke" />
+          <line x1="0" x2={W} y1={H - 4} y2={H - 4} class="axis" vector-effect="non-scaling-stroke" />
+          {bands.map((b) => <path d={b.d} class={`stack-band grp-${groupSlug(b.group)}`} />)}
+          {dates.map((d, i) => (
+            <rect x={i * 10} y="0" width="10" height={H} class="hover-col" data-date={d}>
+              <title>{d}: {Math.round(byDate.get(d)?.total ?? 0).toLocaleString()} sessions
+                {data.SOURCE_GROUPS.filter((g) => at(d, g) > 0).map((g) => `\n  ${g}: ${Math.round(at(d, g)).toLocaleString()}`).join("")}</title>
+            </rect>
+          ))}
+        </svg>
+      </div>
+    </>
+  );
+};
+
+/**
+ * AI assistants on their own axis. In the stack it is a sliver — a couple of
+ * percent of sessions on most sites — so the trend that matters is invisible
+ * there. This is the same series, scaled to itself.
+ */
+const AiReferralChart: FC<{ dates: string[]; mix: data.SourceMixDay[] }> = ({ dates, mix }) => {
+  const byDate = new Map(mix.map((d) => [d.date, d]));
+  const values = dates.map((d) => byDate.get(d)?.groups["AI assistants"] ?? 0);
+  const share = (() => {
+    const ai = values.reduce((s, v) => s + v, 0);
+    const all = dates.reduce((s, d) => s + (byDate.get(d)?.total ?? 0), 0);
+    return all ? pct(ai / all, 1) : "—";
+  })();
+  return (
+    <BandChart
+      dates={dates}
+      values={values}
+      title="AI assistants / day"
+      unit="sessions"
+      note={`own scale · ${share} of sessions`}
+      tone="ai"
+    />
   );
 };
 
@@ -1223,12 +1368,36 @@ export const TrendsPage: FC<{ days: number }> = ({ days }) => {
       </div>
       <p class="sub">One window drives everything: daily Google clicks, GA4 sessions, and which pages were hit on which days — hover any day to highlight it across all rows. The window ends {data.lastNDates(1).at(-1)} because Search Console finalizes daily data about three days behind real time (GA4 runs a day behind); the last few days always fill in as Google publishes them.</p>
       {sites.length === 0 && <p class="empty">No sites configured.</p>}
+      {(() => {
+        // Always-visible portfolio answer. The per-site tiles below are
+        // collapsed, and "where is the traffic coming from" should not need
+        // a click to answer.
+        const mix = data.portfolioSourceMix();
+        if (!mix.length) return null;
+        const withGa4 = sites.filter((s) => data.sourceMixTimeseries(s).length).length;
+        return (
+          <div class="trend-grid trend-portfolio" style={`--n:${days}`}>
+            <div class="tg-label">
+              <div class="chart-title">All sites</div>
+              <div class="chart-stats">{withGa4} of {sites.length} with GA4</div>
+            </div>
+            <div class="tg-months">
+              {dates.map((d, i) => (
+                <span>{i === 0 || d.slice(8) === "01" ? d.slice(5, 7) : ""}</span>
+              ))}
+            </div>
+            <SourceStackChart dates={dates} mix={mix} />
+            <AiReferralChart dates={dates} mix={mix} />
+          </div>
+        );
+      })()}
       {sites.map((site) => {
         const ts = data.gscTimeseries(site);
         const ga = data.ga4Timeseries(site);
+        const srcMix = data.sourceMixTimeseries(site);
         // A configured site with no data yet gets a flat row rather than
         // disappearing. Silent omission reads as "the pipeline missed it".
-        if (!ts.length && !ga.length) {
+        if (!ts.length && !ga.length && !srcMix.length) {
           return (
             <div class="trend-tile trend-empty">
               <span class="domain">{site.host}</span>
@@ -1284,6 +1453,8 @@ export const TrendsPage: FC<{ days: number }> = ({ days }) => {
               </div>
               {ts.length > 0 && <BandChart dates={dates} values={dates.map((d) => clicksByDate.get(d) ?? 0)} title="Google clicks / day" unit="clicks" />}
               {ga.length > 0 && <BandChart dates={dates} values={dates.map((d) => sessByDate.get(d) ?? 0)} title="GA4 sessions / day" unit="sessions" />}
+              {srcMix.length > 0 && <SourceStackChart dates={dates} mix={srcMix} />}
+              {srcMix.length > 0 && <AiReferralChart dates={dates} mix={srcMix} />}
               {top.map(([page, v]) => (
                 <>
                   <div class="tg-label hm-label" title={page}>{pagePath(page)}</div>

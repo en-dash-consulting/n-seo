@@ -21,6 +21,17 @@
   --topbar-ink: rgba(255, 255, 255, 0.78);
   --heat: 55, 87, 214;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Traffic-source groups. Okabe-Ito derived: vermillion / indigo / green /
+     pink stay separable under deuteranopia and protanopia, and no pair of
+     adjacent bands is red-against-green. AI is the vivid one on purpose —
+     it is the series people open this chart to read. */
+  --grp-ai: #d55e00;
+  --grp-search: #3757d6;
+  --grp-direct: #7a8194;
+  --grp-referral: #009e73;
+  --grp-social: #cc79a7;
+  --grp-other: #b6bcc8;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -42,6 +53,12 @@
     --purple: #b9a3ff;
     --code-bg: rgba(255, 255, 255, 0.08);
     --heat: 141, 162, 255;
+    --grp-ai: #ff9d5c;
+    --grp-search: #8da2ff;
+    --grp-direct: #8a93a6;
+    --grp-referral: #4cc48a;
+    --grp-social: #e79fc8;
+    --grp-other: #5b6272;
   }
 }
 
@@ -295,6 +312,10 @@ footer { max-width: 1480px; margin: 0 auto; padding: 16px 24px 40px; color: var(
 .range-picker { display: flex; gap: 4px; }
 .range-picker a { font-size: 0.8rem; font-weight: 700; text-decoration: none; color: var(--muted); padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); }
 .range-picker a.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+/* The portfolio summary sits above the per-site tiles and is never collapsed. */
+.trend-portfolio { margin-bottom: 18px; }
+.trend-portfolio > .tg-label .chart-title { font-size: 0.8rem; color: var(--ink); }
+
 .trend-tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
 .trend-tile > summary { display: flex; align-items: center; gap: 14px; padding: 13px 18px; cursor: pointer; list-style: none; }
 .trend-tile > summary::-webkit-details-marker { display: none; }
@@ -320,6 +341,30 @@ footer { max-width: 1480px; margin: 0 auto; padding: 16px 24px 40px; color: var(
 .tg-plot .area-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
 .tg-plot .hover-col { fill: transparent; }
 .tg-plot .hover-col:hover, .tg-plot .hover-col.day-hi { fill: rgba(var(--heat), 0.16); }
+.chart-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+/* stacked source bands + legend */
+.stack-band { stroke: none; }
+.stack-band.grp-ai-assistants { fill: var(--grp-ai); }
+.stack-band.grp-search { fill: var(--grp-search); }
+.stack-band.grp-direct { fill: var(--grp-direct); }
+.stack-band.grp-referral { fill: var(--grp-referral); }
+.stack-band.grp-social { fill: var(--grp-social); }
+.stack-band.grp-other { fill: var(--grp-other); }
+.src-legend { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 6px; }
+.src-key { font-size: 0.7rem; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.src-key b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+.swatch.grp-ai-assistants { background: var(--grp-ai); }
+.swatch.grp-search { background: var(--grp-search); }
+.swatch.grp-direct { background: var(--grp-direct); }
+.swatch.grp-referral { background: var(--grp-referral); }
+.swatch.grp-social { background: var(--grp-social); }
+.swatch.grp-other { background: var(--grp-other); }
+/* the AI line runs on its own axis, in the AI group's colour */
+.tg-plot.tone-ai .area-line { stroke: var(--grp-ai); }
+.tg-plot.tone-ai .area-fill { fill: var(--grp-ai); opacity: 0.16; }
+
 .tg-months { display: grid; grid-template-columns: repeat(var(--n), 1fr); }
 .tg-months span { font-size: 9px; color: var(--muted); font-family: var(--mono); overflow: visible; white-space: nowrap; }
 .tg-cells { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; }
@@ -337,6 +382,18 @@ footer { max-width: 1480px; margin: 0 auto; padding: 16px 24px 40px; color: var(
 .hm-cell:nth-last-child(-n+10) .hm-tip { left: auto; right: 0; transform: none; }
 .trend-empty { display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--muted); flex-wrap: wrap; }
 .trend-empty-note { font-size: 0.8rem; }
+
+/* ---- site page: wide tables beside narrow lists ----
+   The query tables need room for five numeric columns; AI sources are a name
+   and a number. Giving both the full width wasted most of the screen. */
+.site-cols { display: grid; grid-template-columns: 2fr 1fr; gap: 0 28px; align-items: start; }
+.site-cols > * { min-width: 0; }
+.site-col-side .mini-list { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.mini-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 7px 12px; border-bottom: 1px solid var(--line); font-size: 0.83rem; }
+.mini-row:last-child { border-bottom: 0; }
+.mini-row b { font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.mini-row .trunc { max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1100px) { .site-cols { grid-template-columns: 1fr; gap: 0; } }
 
 /* ---- in-app markdown docs ---- */
 .doc-body h3 { font-size: 1rem; margin: 1.4em 0 0.4em; text-transform: none; letter-spacing: 0; }
@@ -530,6 +587,12 @@ footer { max-width: 1480px; margin: 0 auto; padding: 16px 24px 40px; color: var(
   .action-foot, .action-head { flex-wrap: wrap; }
   .tg-cells { gap: 1px; }
   .hm-cell { min-width: 2px; }
+  /* the summary row squeezed its chips down to "~2…" at phone widths */
+  .trend-tile > summary { flex-wrap: wrap; gap: 6px 10px; padding: 11px 12px; }
+  .trend-tile > summary .domain { width: 100%; }
+  .trend-tile > summary .spacer { display: none; }
+  .trend-spark { width: 96px; }
+  .src-legend { gap: 2px 8px; }
   .trend-grid { grid-template-columns: 1fr; gap: 0; padding: 12px 12px; }
   .trend-grid > .tg-label:empty { display: none; }
   .trend-grid > .tg-label { padding: 10px 0 4px; }

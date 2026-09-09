@@ -14,6 +14,16 @@ uses [Semantic Versioning](https://semver.org/).
   email do not belong on a mirror).
 
 ### Added
+- **Traffic sources over time.** `pull_timeseries.py` also pulls GA4
+  `date × source/medium` for 180 days into
+  `data/timeseries/ga4-sources-<host>.json`, and `classifySource` buckets it
+  into AI assistants, Search, Direct, Referral, Social and Other. Trends and
+  every site page get a stacked "sessions by source" chart, plus a dedicated
+  **AI assistants / day** chart on its own axis — inside the stack AI is a
+  percent or two, so the trend worth watching is invisible there.
+- **Site pages show trends**, with the same window picker `/trends` has
+  (`/site/<host>/<days>`).
+
 - **`modules.publish`**: getting `site/` to wherever people read it is now a
   pipeline step rather than a hook you write yourself, so it is logged,
   retried once and recorded in `last-run.json`. Targets: `gcs`
@@ -106,6 +116,17 @@ uses [Semantic Versioning](https://semver.org/).
 - **`n-seo-deploy` skill** walks an agent through choosing a host, running the
   scaffolding, verifying with `doctor` and a probe-only run, and handing back
   the console steps that cannot be scripted.
+
+### Changed
+- **The site page stops wasting the screen.** Query tables and the narrow
+  source lists sit in a 2:1 split instead of every table spanning the full
+  width, and "Do next" caps at six cards with a link to the full queue.
+- **Seven nav items instead of ten.** Indexing, Probes, Logs and Settings
+  fold into one **System** menu.
+
+- The Trends page opens with a portfolio source mix and an AI-assistants
+  chart for every site combined, so "where is the traffic coming from" is
+  answered without expanding a tile.
 
 ### Fixed
 - **Data loss**: a Search Console, GA4 or time-series pull that hit an API

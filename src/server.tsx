@@ -163,6 +163,18 @@ app.get("/site/:host", (c) => {
   );
 });
 
+/* The same window picker /trends has, scoped to one site. */
+app.get("/site/:host/:days", (c) => {
+  const site = siteByHost(c.req.param("host"));
+  const days = Number(c.req.param("days"));
+  if (!site || !TREND_RANGES.includes(days)) return c.notFound();
+  return c.html(
+    <Layout title={`${site.host} · n-seo`} active={site.host}>
+      <SiteDetail site={site} days={days} />
+    </Layout>
+  );
+});
+
 app.get("/indexing", (c) =>
   c.html(
     <Layout title="Indexing · n-seo" active="indexing">

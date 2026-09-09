@@ -118,4 +118,64 @@ describe("data helpers", () => {
     assert.deepEqual(data.drafts().filter((d: any) => d.slug.startsWith("x-none")), []);
     assert.equal(data.opsLogTail().includes("no daily-ops.log"), true);
   });
+
+  test("classifySource: one bucket per source, AI ahead of everything", () => {
+    const c = data.classifySource;
+    // AI wins over medium and over the search pattern: an assistant arrives
+    // as a referral, and gemini.google.com would otherwise read as Search.
+    assert.equal(c("chatgpt.com", "referral"), "AI assistants");
+    assert.equal(c("gemini.google.com", "organic"), "AI assistants");
+    assert.equal(c("perplexity.ai", "referral"), "AI assistants");
+    assert.equal(c("claude.ai", "referral"), "AI assistants");
+
+    assert.equal(c("google", "organic"), "Search");
+    assert.equal(c("bing", "cpc"), "Search");
+    assert.equal(c("duckduckgo", "organic"), "Search");
+
+    assert.equal(c("(direct)", "(none)"), "Direct");
+    assert.equal(c("anything", "direct"), "Direct");
+
+    assert.equal(c("t.co", "referral"), "Social");
+    assert.equal(c("linkedin.com", "referral"), "Social");
+    assert.equal(c("somewhere", "social"), "Social");
+
+    assert.equal(c("news.ycombinator.com", "referral"), "Referral");
+    assert.equal(c("github.com", "referral"), "Referral");
+
+    assert.equal(c("mailchimp", "email"), "Other");
+    assert.equal(c("", ""), "Other");
+  });
+
+  test("sourceMixTimeseries: a row per day, every group present, totals add up", () => {
+    const site = { host: "example.com", gscHost: "example.com", label: "x" } as any;
+    assert.deepEqual(data.sourceMixTimeseries(site), [], "a missing file is empty, not a crash");
+
+    sb.write("data/timeseries/ga4-sources-example.com.json", JSON.stringify({
+      site: "example.com",
+      rows: [
+        { date: "20260902", source: "google", medium: "organic", sessions: 10 },
+        { date: "20260902", source: "chatgpt.com", medium: "referral", sessions: 3 },
+        { date: "20260902", source: "(direct)", medium: "(none)", sessions: 5 },
+        { date: "20260901", source: "github.com", medium: "referral", sessions: 2 },
+      ],
+    }));
+    const series = data.sourceMixTimeseries(site);
+    assert.equal(series.length, 2);
+    assert.deepEqual(series.map((d: any) => d.date), ["2026-09-01", "2026-09-02"], "sorted ascending");
+
+    const day = series[1];
+    assert.equal(day.total, 18);
+    assert.equal(day.groups["Search"], 10);
+    assert.equal(day.groups["AI assistants"], 3);
+    assert.equal(day.groups["Direct"], 5);
+    for (const g of data.SOURCE_GROUPS) {
+      assert.equal(typeof day.groups[g], "number", `${g} always present`);
+    }
+    assert.equal(
+      data.SOURCE_GROUPS.reduce((s: number, g: string) => s + day.groups[g], 0),
+      day.total,
+      "groups sum to the day's total",
+    );
+    assert.equal(series[0].groups["Referral"], 2);
+  });
 });

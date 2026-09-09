@@ -28,6 +28,8 @@ CONTRACT_KEYS = {
     "timeseries/gsc-example.com.json": ["site", "startDate", "endDate", "rows"],
     "timeseries/ga4-example.com.json": ["site", "rows"],
     "timeseries/ga4-docs.example.com.json": ["site", "rows"],
+    "timeseries/ga4-sources-example.com.json": ["site", "rows"],
+    "timeseries/ga4-sources-docs.example.com.json": ["site", "rows"],
     "metadata-audit.json": ["generated", "window", "sites"],
     "index-status.json": ["generated", "sites"],
     "opportunity-proposals.json": ["generated", "candidates", "proposals", "verdicts", "inference_ran"],
@@ -104,6 +106,16 @@ class DemoDataTests(unittest.TestCase):
         ga_ts = self.load("timeseries/ga4-example.com.json")["rows"][0]
         self.assertEqual(set(ga_ts), {"date", "page", "sessions"})
         self.assertEqual(len(ga_ts["date"]), 8, "YYYYMMDD")
+
+        src_ts = self.load("timeseries/ga4-sources-example.com.json")["rows"]
+        self.assertEqual(set(src_ts[0]), {"date", "source", "medium", "sessions"})
+        self.assertEqual(len(src_ts[0]["date"]), 8, "YYYYMMDD")
+        # The AI charts are only worth shipping if the demo exercises them.
+        days = sorted({r["date"] for r in src_ts})
+        self.assertGreater(len(days), 150, "a real window, not a handful of days")
+        ai = lambda d: sum(r["sessions"] for r in src_ts
+                           if r["date"] == d and "chatgpt" in r["source"])
+        self.assertGreater(ai(days[-1]), ai(days[0]), "AI referrals grow across the demo window")
 
     def test_probe_index_audit_shapes(self):
         probe = self.load(next((self.data / "probes").glob("probe-*.json")).relative_to(self.data))

@@ -44,6 +44,22 @@ QUERY_SHAPES = [
 PAGE_SHAPES = ["/", "/docs/", "/docs/getting-started/", "/blog/{s}/", "/guides/{s}/", "/pricing/",
                "/examples/", "/about/", "/blog/{s}-explained/", "/compare/{s}-vs-alternatives/"]
 
+# (source, medium, share of sessions, is an AI assistant). Shared by the 90-day
+# sources aggregate and the daily source series so the two agree. The AI rows
+# are the ones that grow across the window in the series.
+SOURCE_MIX = [
+    ("google", "organic", 0.58, False),
+    ("(direct)", "(none)", 0.20, False),
+    ("bing", "organic", 0.05, False),
+    ("chatgpt.com", "referral", 0.045, True),
+    ("perplexity.ai", "referral", 0.015, True),
+    ("github.com", "referral", 0.03, False),
+    ("duckduckgo", "organic", 0.02, False),
+    ("t.co", "referral", 0.015, False),
+    ("news.ycombinator.com", "referral", 0.02, False),
+    ("claude.ai", "referral", 0.01, True),
+]
+
 
 def slugify(s):
     return s.lower().replace(" ", "-")
@@ -185,11 +201,7 @@ def write_ga4(site, idx, conv, gsc_rows):
             "pulled": TODAY.isoformat()}
     (d / "daily.json").write_text(json.dumps({**meta, **ga4_report(["date"], ["sessions", "totalUsers"], daily)}))
 
-    mix = [("google", "organic", 0.58), ("(direct)", "(none)", 0.2), ("bing", "organic", 0.05),
-           ("chatgpt.com", "referral", 0.045), ("perplexity.ai", "referral", 0.015),
-           ("github.com", "referral", 0.03), ("duckduckgo", "organic", 0.02),
-           ("t.co", "referral", 0.015), ("news.ycombinator.com", "referral", 0.02),
-           ("claude.ai", "referral", 0.01)]
+    mix = [(src, med, w) for src, med, w, _ai in SOURCE_MIX]
     others = [h for h in seo_config.hosts() if h != host]
     if others:
         mix.append((others[0], "referral", 0.015))
@@ -252,6 +264,21 @@ def write_timeseries(prop, slug, sites_in_prop, gsc_rows, ga4_paths):
                 if round(v):
                     rows.append({"date": day.strftime("%Y%m%d"), "page": p, "sessions": round(v)})
         (d / f"ga4-{s['host']}.json").write_text(json.dumps({"site": s["host"], "rows": rows}))
+
+        # date x source/medium. AI assistants grow over the window and the
+        # rest hold roughly flat, so the demo actually shows the thing the
+        # AI chart exists to show.
+        rows = []
+        for i in range(180):
+            day = ga0 + timedelta(days=i)
+            ramp = 0.3 + 1.7 * (i / 179)
+            for src, med, w, g in SOURCE_MIX:
+                v = weekly(day, (total / 90) * w * (ramp if g else 1.0), day0=ga0)
+                if round(v):
+                    rows.append({"date": day.strftime("%Y%m%d"), "source": src,
+                                 "medium": med, "sessions": round(v)})
+        (d / f"ga4-sources-{s['host']}.json").write_text(
+            json.dumps({"site": s["host"], "rows": rows}))
 
 
 def write_probe(sites):
