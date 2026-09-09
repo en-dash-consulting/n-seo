@@ -113,9 +113,23 @@ The repo ships an MCP server over the same data the dashboard reads, so an
 agent can answer "what should I do first this week?" from the actual queue
 instead of scraping pages. `.mcp.json` registers it for Claude Code
 automatically; Claude Desktop and HTTP clients are covered in
-[docs/MCP.md](docs/MCP.md). It is read-only by design. `CLAUDE.md` holds the
-operating rules an agent should follow in this repo, and `.claude/skills/orient`
-gets a fresh session current in four reads.
+[docs/MCP.md](docs/MCP.md). It is read-only by design, and `CLAUDE.md` holds
+the operating rules an agent working here has to follow.
+
+It also ships skills for the work itself, so the rules are enforced rather
+than merely documented:
+
+| Skill | Use it when |
+|---|---|
+| `orient` | First thing in a fresh session — get current in a few reads |
+| `n-seo-setup` | Fresh clone to first real daily run, including Google access |
+| `n-seo-add-site` | Adding a site: property form, `gscHost`, GA4 id, brand regex, grants |
+| `n-seo-triage` | "What should I work on today" from the queue and the last run |
+| `n-seo-ship` | Implement one queue card in the site's repo, then record it as watching |
+| `n-seo-review` | The weekly pass: judge watching items, retire what is done, refresh insights |
+
+`.claude/skills/README.md` explains which skills operate an instance and which
+are contributor tooling for developing the engine with n-dx.
 
 ## Working with n-dx
 

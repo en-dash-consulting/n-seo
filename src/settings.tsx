@@ -106,18 +106,22 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
           <div class="mono">{cfg.google.auth}</div>
           <p class="sub">{cfg.google.auth === "service-account-key"
             ? "A service-account JSON key, signed locally with openssl. No gcloud needed."
-            : cfg.google.auth === "gcloud-impersonate"
-              ? `gcloud impersonates ${cfg.google.impersonate || "(impersonate not set)"} — your login needs Token Creator on it.`
-              : "gcloud user login — only works if that login already carries the Search Console / Analytics scopes."}</p>
+            : cfg.google.auth === "metadata"
+              ? "The runtime service account from the GCE / Cloud Run / GKE metadata server — no key file. It mints its own scoped tokens, which needs Token Creator on itself."
+              : cfg.google.auth === "gcloud-impersonate"
+                ? `gcloud impersonates ${cfg.google.impersonate || "(impersonate not set)"} — your login needs Token Creator on it.`
+                : "gcloud user login — only works if that login already carries the Search Console / Analytics scopes."}</p>
         </div>
-        <div class="s-card">
-          <div class="s-title">Key file</div>
-          <div class="mono">{sa.path ?? "(not set)"}</div>
-          <p class="sub">{sa.exists ? <span class="chip good">found</span> : <span class="chip bad">not found</span>}</p>
-        </div>
+        {cfg.google.auth === "service-account-key" && (
+          <div class="s-card">
+            <div class="s-title">Key file</div>
+            <div class="mono">{sa.path ?? "(not set)"}</div>
+            <p class="sub">{sa.exists ? <span class="chip good">found</span> : <span class="chip bad">not found</span>}</p>
+          </div>
+        )}
         <div class="s-card">
           <div class="s-title">Grant access to</div>
-          <div class="mono">{sa.email ?? cfg.google.impersonate ?? "—"}</div>
+          <div class="mono">{sa.email ?? cfg.google.impersonate ?? (cfg.google.auth === "metadata" ? "the runtime service account" : "—")}</div>
           <p class="sub">Add this email as a <b>Full</b> user on each Search Console property and a <b>Viewer</b> on each GA4 property. Then <code>python3 ops/doctor.py</code> confirms it can see them.</p>
         </div>
       </div>
@@ -140,6 +144,19 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
                     <label class="s-field">command <input type="text" name="llm.command" value={str(mod.command)} placeholder="claude -p --model sonnet" /></label>
                     <label class="s-field">fast command <input type="text" name="llm.fastCommand" value={str(mod.fastCommand)} placeholder="claude -p --model haiku" /></label>
                     <p class="s-help">Any CLI that reads the prompt on stdin and prints the reply: <code>claude -p</code>, <code>llm</code>, <code>ollama run llama3</code>.</p>
+                    {(() => {
+                      // A server has no CLI signed in, so it uses the http
+                      // block instead. Edited in the config file, shown here
+                      // so it is obvious which path is actually live.
+                      const h = mod.http as Record<string, unknown> | undefined;
+                      if (!h || typeof h !== "object" || !h.provider) return null;
+                      return (
+                        <p class="s-help">
+                          <b>http overrides the command</b> when its key resolves: {str(h.provider)} · {str(h.model)}
+                          {h.fastModel ? ` (fast: ${str(h.fastModel)})` : ""} · key from <code>{str(h.apiKeyEnv)}</code>
+                        </p>
+                      );
+                    })()}
                   </>
                 )}
                 {m.key === "hackerNews" && (

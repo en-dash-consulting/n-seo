@@ -1,4 +1,4 @@
-"""Access tokens for the Google APIs (Search Console, GA4), three ways.
+"""Access tokens for the Google APIs (Search Console, GA4), four ways.
 
   service-account-key (default, recommended)
       A service-account JSON key on disk (config google.serviceAccountKey,
@@ -19,6 +19,14 @@
       default gcloud client does not — kept for completeness, not
       recommended.
 
+  metadata (for GCE / Cloud Run / GKE — no key file at all)
+      The runtime service account, taken from the metadata server. Its token
+      is `cloud-platform` scoped and Search Console rejects that, so the
+      account mints a correctly scoped token for itself through IAM
+      Credentials. That self-impersonation needs
+      `roles/iam.serviceAccountTokenCreator` on itself; the error says so if
+      it is missing. Prefer this over shipping a key file into a container.
+
 Scopes are requested per call, minimal: webmasters.readonly for pulls and
 inspection, analytics.readonly for GA4.
 """
@@ -35,6 +43,13 @@ from http_util import curl_json
 WEBMASTERS_RO = "https://www.googleapis.com/auth/webmasters.readonly"
 WEBMASTERS = "https://www.googleapis.com/auth/webmasters"
 ANALYTICS_RO = "https://www.googleapis.com/auth/analytics.readonly"
+
+METADATA_ROOT = "http://metadata.google.internal/computeMetadata/v1"
+IAM_CREDENTIALS = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts"
+# Off GCP the hostname does not resolve, so the probe fails on curl's DNS
+# error rather than waiting; the short timeouts bound the case where some
+# network resolves it to something that then hangs.
+_MD_ARGS = ["--connect-timeout", "1", "-H", "Metadata-Flavor: Google"]
 
 _cache: dict[str, tuple[str, float]] = {}
 
@@ -104,6 +119,66 @@ def _sa_key_token(scope: str) -> str:
     return resp["access_token"]
 
 
+def _metadata_json(path: str, *, timeout: int = 2, attempts: int = 1):
+    return curl_json([*_MD_ARGS, f"{METADATA_ROOT}{path}"],
+                     timeout=timeout, attempts=attempts, label=f"metadata {path}")
+
+
+def metadata_service_account() -> str | None:
+    """The runtime service account's email, or None when not on GCP."""
+    try:
+        sa = _metadata_json("/instance/service-accounts/default/?recursive=true")
+    except (RuntimeError, OSError):
+        return None
+    return sa.get("email") if isinstance(sa, dict) else None
+
+
+def metadata_available() -> bool:
+    """True on GCE, Cloud Run and GKE. Safe (and quick) to call anywhere."""
+    return metadata_service_account() is not None
+
+
+def _metadata_token(scope: str) -> str:
+    """Runtime service account -> a token carrying `scope`.
+
+    Two steps, because the metadata server only issues `cloud-platform`
+    tokens and the Search Console API checks for its own scope: take the
+    metadata token, then ask IAM Credentials for a scoped one for the same
+    account.
+    """
+    g = seo_config.load()["google"]
+    email = g.get("impersonate") or metadata_service_account()
+    if not email:
+        raise RuntimeError(
+            "google.auth is metadata, but the metadata server did not answer. "
+            "That mode only works on GCE, Cloud Run or GKE. Off GCP, use "
+            "service-account-key; see docs/SETUP-GOOGLE.md")
+    md = _metadata_json("/instance/service-accounts/default/token", timeout=5, attempts=2)
+    base = md.get("access_token") if isinstance(md, dict) else None
+    if not base:
+        raise RuntimeError(f"metadata server returned no access_token: {json.dumps(md)[:200]}")
+    resp = curl_json([
+        "-X", "POST",
+        "-H", f"Authorization: Bearer {base}",
+        "-H", "Content-Type: application/json",
+        "-d", json.dumps({"scope": [scope], "lifetime": "3600s"}),
+        f"{IAM_CREDENTIALS}/{email}:generateAccessToken",
+    ], label="generateAccessToken")
+    if isinstance(resp, dict) and resp.get("accessToken"):
+        return resp["accessToken"]
+    err = resp.get("error") if isinstance(resp, dict) else None
+    code = int(err.get("code", 0)) if isinstance(err, dict) else 0
+    if code in (401, 403):
+        raise RuntimeError(
+            f"{email} is not allowed to mint tokens for itself. Grant it Token "
+            f"Creator on itself:\n"
+            f"  gcloud iam service-accounts add-iam-policy-binding {email} \\\n"
+            f"    --member=serviceAccount:{email} \\\n"
+            f"    --role=roles/iam.serviceAccountTokenCreator\n"
+            f"({json.dumps(resp)[:200]})")
+    raise RuntimeError(f"generateAccessToken failed: {json.dumps(resp)[:300]}")
+
+
 def _gcloud_token(scope: str, impersonate: str | None) -> str:
     cmd = ["gcloud", "auth", "print-access-token"]
     if impersonate:
@@ -129,6 +204,8 @@ def access_token(scope: str = WEBMASTERS_RO) -> str:
         tok = _gcloud_token(scope, g["impersonate"])
     elif mode == "gcloud-user":
         tok = _gcloud_token(scope, None)
+    elif mode == "metadata":
+        tok = _metadata_token(scope)
     else:
         raise RuntimeError(f"unknown google.auth mode {mode!r}")
     _cache[scope] = (tok, time.time() + 50 * 60)
@@ -140,6 +217,8 @@ def service_account_email() -> str | None:
     g = seo_config.load()["google"]
     if g.get("auth") == "gcloud-impersonate":
         return g.get("impersonate") or None
+    if g.get("auth") == "metadata":
+        return g.get("impersonate") or metadata_service_account()
     kp = key_path()
     if kp and os.path.exists(kp):
         try:

@@ -61,6 +61,19 @@ uses [Semantic Versioning](https://semver.org/).
 - Docs: README, ARCHITECTURE, SETUP-GOOGLE, SCHEDULING, OPERATING-RULES,
   PLAYBOOK, MCP, ADDING-A-SITE, FAQ, CONTRIBUTING, SECURITY.
 
+- **Deployment off a laptop**: `google.auth: "metadata"` uses the GCE /
+  Cloud Run / GKE runtime service account, so a hosted install needs no key
+  file at all. The metadata token is `cloud-platform` scoped and Search
+  Console rejects that, so the account mints a correctly scoped token for
+  itself through IAM Credentials; a missing Token Creator binding is
+  reported with the exact `gcloud` command that fixes it.
+- **LLM over HTTP**: `modules.llm.http` calls an Anthropic or
+  OpenAI-compatible endpoint instead of a local CLI, with the key read from
+  the environment or `.env`. Without it the opportunity scan and the digests
+  are silently inert on any machine you did not sign a CLI into. `http` wins
+  when its key resolves, so one config file works on both a laptop and a
+  server.
+
 ### Fixed
 - **Data loss**: a Search Console, GA4 or time-series pull that hit an API
   error overwrote the previous snapshot with zero rows and still reported the

@@ -123,6 +123,68 @@ Set `google.auth` to one of:
 | `service-account-key` | Signs an OAuth JWT with the key file using `openssl` | Default. No extra tools |
 | `gcloud-impersonate` | `gcloud auth print-access-token --impersonate-service-account=<google.impersonate>` | You already use gcloud and would rather grant your user *Service Account Token Creator* on the SA than keep a key file. Still add the SA to the consoles as above |
 | `gcloud-user` | `gcloud auth print-access-token` for your own login | Rarely works: gcloud's default client does not carry the Search Console or Analytics scopes for user credentials, and Google blocks `application-default login` with those scopes. Kept for completeness |
+| `metadata` | The runtime service account from the GCE / Cloud Run / GKE metadata server, exchanged for a scoped token | Running on Google Cloud. No key file exists, so none can leak |
+
+## Running it somewhere other than your laptop
+
+A key file is a secret you have to mount, rotate and keep out of the image.
+On Google Cloud you can skip it: give the workload a service account and set
+
+```json
+"google": { "auth": "metadata" }
+```
+
+There is one wrinkle worth knowing, because the failure is otherwise
+baffling. The metadata server hands out a token scoped to `cloud-platform`,
+and the Search Console API checks for its own scope, so it rejects that
+token. n-seo therefore does what the `gcloud-impersonate` mode does, without
+gcloud: it takes the metadata token and asks IAM Credentials for a properly
+scoped one **for the same account**. That self-impersonation needs the
+account to hold Token Creator *on itself*:
+
+```sh
+SA=n-seo-runtime@PROJECT.iam.gserviceaccount.com
+gcloud iam service-accounts add-iam-policy-binding "$SA" \
+  --member="serviceAccount:$SA" \
+  --role=roles/iam.serviceAccountTokenCreator
+```
+
+Without it the first pull fails with a 403, and the error prints that exact
+command. Everything else is unchanged: the same service account still has to
+be added as a **Full** user in Search Console and a **Viewer** in GA4.
+
+Set `google.impersonate` as well if the workload should borrow a *different*
+account than the one it runs as; then that account needs Token Creator for
+the runtime account.
+
+`python3 ops/doctor.py` reports the detected account and whether the
+exchange works, so run it once on the box before trusting a schedule.
+
+### The LLM module on a server
+
+`modules.llm.command` shells out to a CLI, and a container has none signed
+in — so the opportunity scan produces no proposals and the digests no
+briefings. Point it at an HTTP endpoint instead:
+
+```json
+"llm": {
+  "enabled": true,
+  "http": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "fastModel": "claude-haiku-4-5-20251001",
+    "apiKeyEnv": "ANTHROPIC_API_KEY"
+  }
+}
+```
+
+The key is read from the environment or the instance's `.env` under the name
+you give in `apiKeyEnv`; it never goes in the config file. `provider` may
+also be `openai`, which speaks the chat-completions shape and therefore also
+covers gateways and local servers that emulate it — add `baseUrl` to point
+somewhere other than the vendor. When `http` is set and its key resolves it
+wins; otherwise the `command` path still runs, so a laptop and a server can
+share one config file.
 
 ## Troubleshooting
 

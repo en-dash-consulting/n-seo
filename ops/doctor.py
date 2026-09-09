@@ -94,6 +94,16 @@ def check_auth(cfg):
             report("FAIL", "key file lacks client_email/private_key", "download a fresh JSON key for the service account")
             return None
         report("OK", f"key for {key['client_email']}")
+    elif mode == "metadata":
+        # Only meaningful on GCE / Cloud Run / GKE; say so plainly elsewhere
+        # rather than leaving a confusing token failure as the only clue.
+        email = g.get("impersonate") or google_auth.metadata_service_account()
+        if not email:
+            report("FAIL", "no metadata server on this machine",
+                   "google.auth is metadata, which needs GCE, Cloud Run or GKE — "
+                   "use service-account-key elsewhere; see docs/SETUP-GOOGLE.md")
+            return None
+        report("OK", f"runtime service account {email}")
     else:
         if not shutil.which("gcloud"):
             report("FAIL", "gcloud not on PATH", "install the Google Cloud SDK or switch to service-account-key")
@@ -188,11 +198,25 @@ def check_modules(cfg):
     llm = cfg["modules"].get("llm", {})
     if llm.get("enabled"):
         import shlex
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import llm as llm_mod
+        http = llm_mod.http_config()
+        if http:
+            report("OK", f"llm over http: {http['provider']} {http['model']}")
+            fast = llm_mod.http_config(fast=True)
+            if fast and fast["model"] != http["model"]:
+                report("OK", f"llm fast model: {fast['model']}")
+        elif isinstance(llm.get("http"), dict) and llm["http"]:
+            report("FAIL", "llm.http is configured but unusable",
+                   f"check provider/model and that {llm['http'].get('apiKeyEnv') or 'apiKeyEnv'} "
+                   "is set in the environment or .env")
         for key in ("command", "fastCommand"):
             cmd = shlex.split(str(llm.get(key) or ""))
             if not cmd:
-                if key == "command":
-                    report("FAIL", "llm.command is empty")
+                # Only complain about a missing command when there is no http
+                # block at all; a broken one already reported itself.
+                if key == "command" and not http and not llm.get("http"):
+                    report("FAIL", "llm has neither http nor command configured")
                 continue
             report("OK" if shutil.which(cmd[0]) else "FAIL", f"llm.{key}: {cmd[0]}",
                    "" if shutil.which(cmd[0]) else "not on PATH")

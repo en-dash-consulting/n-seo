@@ -34,9 +34,18 @@ Queue edits only through accept/watch/retire or explicit approval · never
 generate comment text · 28-day title freeze + ≤8 metadata changes/week ·
 decisions ride the 90-day window · proposals never self-promote.
 
+## Then hand off to the right skill
+
+`n-seo-triage` for "what should I do today", `n-seo-ship` to implement one
+card, `n-seo-review` for the weekly pass, `n-seo-setup` and `n-seo-add-site`
+for configuration. `.claude/skills/README.md` says which skills are for
+operating an instance and which are for developing the engine.
+
 ## If something is broken
 
-- Dashboard down: `npm start`, or if it runs as a service,
+- Dashboard down: `npm start` in-place, or
+  `node <engine>/bin/n-seo.mjs start --instance <dir>` in engine+instance
+  mode, or if it runs as a service,
   `launchctl kickstart -k gui/$(id -u)/n-seo.dashboard`.
 - Daily run failing: the Logs page (`/logs`) or `data/daily-ops.log`, then
   `python3 ops/doctor.py`. 401/403 from Google means the service account

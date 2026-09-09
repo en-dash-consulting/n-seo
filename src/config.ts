@@ -88,7 +88,9 @@ export interface Config {
   name: string;
   port: number;
   google: {
-    auth: "service-account-key" | "gcloud-impersonate" | "gcloud-user";
+    /** `metadata` is the GCE / Cloud Run / GKE runtime service account: no
+     *  key file anywhere. See docs/SETUP-GOOGLE.md. */
+    auth: "service-account-key" | "gcloud-impersonate" | "gcloud-user" | "metadata";
     serviceAccountKey?: string;
     impersonate?: string;
   };
@@ -106,7 +108,7 @@ export const MODULE_INFO: { key: string; title: string; blurb: string; needs?: s
   { key: "indexStatus", title: "Index coverage sweep", blurb: "Ask Search Console's URL Inspection API whether each sitemap URL is actually indexed. ~1 call per URL, 2,000/day quota per property." },
   { key: "metadataAudit", title: "Metadata audit", blurb: "Fetch each ranking page's live title/description and judge them against the queries it ranks for." },
   { key: "opportunityScan", title: "Opportunity scan", blurb: "Refresh the 84-day trend analysis and detect rising queries no queue item covers. With the LLM module on, also drafts proposals and verdicts." },
-  { key: "llm", title: "LLM inference", blurb: "Runs a local command (default: the claude CLI) for briefings and proposals. Nothing is auto-applied — output lands as proposals you accept or ignore.", needs: "a CLI that reads a prompt on stdin and prints a reply" },
+  { key: "llm", title: "LLM inference", blurb: "Drafts briefings and proposals, either through a local command or an HTTP endpoint. Nothing is auto-applied — output lands as proposals you accept or ignore.", needs: "a CLI that reads a prompt on stdin, or an `http` block with an API key (the only option on a server)" },
   { key: "hackerNews", title: "Hacker News digest", blurb: "Find fresh HN threads in your expertise areas and brief you on each. Briefings only — no comment text is ever generated.", needs: "your HN username (to mark threads you already joined)" },
   { key: "reddit", title: "Reddit digest", blurb: "Same idea for subreddits. Reddit blocks anonymous API reads, so this needs a free 'script' app's credentials in .env.", needs: "REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET" },
   { key: "indexNow", title: "IndexNow", blurb: "Generate a key and ping Bing/Copilot/Yandex with changed URLs on publish. Free and instant; does nothing for Google." },
