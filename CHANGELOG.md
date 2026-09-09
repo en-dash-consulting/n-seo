@@ -128,6 +128,13 @@ uses [Semantic Versioning](https://semver.org/).
   chart for every site combined, so "where is the traffic coming from" is
   answered without expanding a tile.
 
+- `npm i n-seo` produced an install that could not serve a page. The CLI
+  refused to start because it looked for `node_modules` inside the engine,
+  which npm hoists to the consumer instead; and `tsconfig.json` was not in the
+  published files, so tsx fell back to the React JSX transform and every
+  server-rendered route answered 500. Both found by installing the packed
+  tarball and running it, which is now the release check.
+
 ### Fixed
 - **Data loss**: a Search Console, GA4 or time-series pull that hit an API
   error overwrote the previous snapshot with zero rows and still reported the

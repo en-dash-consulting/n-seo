@@ -33,6 +33,7 @@
   "files": [
     "bin/",
     "src/",
+    "tsconfig.json",
     "ingest/",
     "ops/",
     "probes/",

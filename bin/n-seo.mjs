@@ -17,6 +17,7 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -91,10 +92,42 @@ function run(cmd, args, instance, opts = {}) {
   return r.status ?? 1;
 }
 
-function needsNodeModules(cmd) {
-  if (fs.existsSync(path.join(ROOT, "node_modules"))) return true;
-  console.error(`${cmd} needs the engine's dependencies — run: npm ci   (in ${ROOT})`);
-  return false;
+/* Resolve the engine's own dependencies.
+ *
+ * A git checkout has them in <engine>/node_modules; an npm install has them
+ * hoisted into the CONSUMER's node_modules, and <engine>/node_modules does not
+ * exist at all. Testing for that directory therefore refused to start a
+ * perfectly good `npm i n-seo` install. Resolution works for both layouts. */
+const engineRequire = createRequire(path.join(ROOT, "package.json"));
+
+function resolvePkgDir(name) {
+  try {
+    return path.dirname(engineRequire.resolve(`${name}/package.json`));
+  } catch {
+    return null;
+  }
+}
+
+/** The engine runs TypeScript through tsx, with no build step. */
+function tsxBin() {
+  const dir = resolvePkgDir("tsx");
+  if (!dir) return null;
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+    const rel = typeof pkg.bin === "string" ? pkg.bin : pkg.bin?.tsx;
+    return rel ? path.join(dir, rel) : null;
+  } catch {
+    return null;
+  }
+}
+
+function missingDeps(cmd, what) {
+  const installed = ROOT.includes(`${path.sep}node_modules${path.sep}`);
+  console.error(`${cmd} needs ${what}.`);
+  console.error(installed
+    ? `  the package looks incomplete — reinstall it: npm i n-seo`
+    : `  run: npm ci   (in ${ROOT})`);
+  return 1;
 }
 
 /* ---------- init ---------- */
@@ -225,9 +258,24 @@ switch (cmd) {
     break;
   case "start":
   case "dev":
-  case "mcp":
+  case "mcp": {
+    // Spawn tsx directly rather than through `npm run`, so the command does
+    // not depend on npm resolving a bin from inside node_modules/n-seo.
+    const bin = tsxBin();
+    if (!bin) {
+      code = missingDeps(cmd, "the engine's dependencies");
+      break;
+    }
+    const entry = cmd === "mcp" ? "src/mcp-stdio.ts" : "src/server.tsx";
+    const args = cmd === "dev" ? ["watch", entry] : [entry];
+    code = run(process.execPath, [bin, ...args, ...rest], instance);
+    break;
+  }
   case "check":
-    code = needsNodeModules(cmd) ? run("npm", ["run", cmd, "--silent", "--", ...rest], instance) : 1;
+    // The self-test needs devDependencies, which an npm install omits.
+    code = resolvePkgDir("typescript")
+      ? run("npm", ["run", "check", "--silent", "--", ...rest], instance)
+      : missingDeps(cmd, "the engine's dev dependencies (it is the engine's own test suite)");
     break;
   case "daily":
     code = run(py, [path.join(ROOT, "ops", "daily.py"), ...rest], instance);
