@@ -14,6 +14,20 @@ uses [Semantic Versioning](https://semver.org/).
   email do not belong on a mirror).
 
 ### Added
+- **`modules.publish`**: getting `site/` to wherever people read it is now a
+  pipeline step rather than a hook you write yourself, so it is logged,
+  retried once and recorded in `last-run.json`. Targets: `gcs`
+  (`gcloud storage rsync`), `s3` (`aws s3 sync`), `rsync`, and `command` for
+  anything else. `delete` makes the mirror match the export; `dryRun` prints
+  the exact command without running it, which is how you rehearse a cutover
+  against a bucket that is already serving something; `env` is merged into
+  that command's environment only, with key names logged and values never.
+  It refuses clearly when the destination is empty, the tool is missing from
+  `PATH`, or there is no `site/` to publish.
+- **`modules.staticExport.signOutUrl`** (with `signOutLabel`) adds a sign-out
+  link to every exported page, for a mirror behind IAP, oauth2-proxy,
+  Cloudflare Access or anything else with a sign-out URL. The live dashboard
+  renders nothing for it.
 - **Engine / instance split**: `N_SEO_INSTANCE` points the engine at a separate
   directory holding your config, queue, content and data, so upgrading the
   engine is a `git pull` (or `npm update`) that never touches your files.

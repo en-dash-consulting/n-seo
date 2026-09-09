@@ -59,6 +59,11 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
             <a href="/logs" class={active === "logs" ? "on" : ""}>Logs</a>
             <a href="/settings" class={active === "settings" ? "on" : ""}>Settings</a>
           </nav>
+          {/* Empty here on purpose. ops/export_static.py replaces this span
+              with a sign-out link when the mirror sits behind an auth proxy
+              (modules.staticExport.signOutUrl); the live dashboard has
+              nothing to sign out of. */}
+          <span id="export-slot"></span>
         </header>
         {USING_EXAMPLE_CONFIG && (
           <div class="notice-bar">

@@ -20,7 +20,7 @@ only state.
     │    scheduler   ──┴──►  /instance   config, queue,        │
     │      (daily at 07:00)              content, data, logs   │
     └──────────────────────────────────────────────────────────┘
-              │ tunnel (IAP / SSH / Tailscale)     │ afterRun hook
+              │ tunnel (IAP / SSH / Tailscale)     │ publish step
               ▼                                    ▼
         you, on :4600                     a bucket, served read-only
                                           behind IAP — the mirror
@@ -133,20 +133,78 @@ Off GCP, keep a key file mounted read-only and point
 
 ### Publishing the mirror
 
-In the instance config:
+`staticExport` builds `site/`; `publish` copies it wherever people read it.
+Both are steps in the daily run, so they are logged, retried once and
+recorded in `last-run.json` like everything else.
 
 ```json
-"modules": { "staticExport": { "enabled": true } },
-"hooks": {
-  "afterRun": [
-    "gcloud storage rsync site gs://YOUR_PROJECT-n-seo-mirror --recursive --delete-unmatched-destination-objects"
-  ]
+"modules": {
+  "staticExport": { "enabled": true, "signOutUrl": "/_gcp_iap/clear_login_cookie" },
+  "publish": {
+    "enabled": true,
+    "target": "gcs",
+    "destination": "gs://YOUR_PROJECT-n-seo-mirror",
+    "delete": true,
+    "dryRun": false,
+    "env": {}
+  }
 }
 ```
 
-The VM's service account already has write access to that bucket, so the hook
-carries no credentials. `deploy/gcp/cloud-run-mirror/README.md` has the
+The VM's service account already has write access to that bucket, so nothing
+here carries a credential. `deploy/gcp/cloud-run-mirror/README.md` has the
 serving side.
+
+**Four targets.** Each needs its own tool on `PATH`, and the step says so
+plainly when one is missing.
+
+| `target` | Runs | `delete` adds |
+|---|---|---|
+| `gcs` | `gcloud storage rsync site <destination> --recursive` | `--delete-unmatched-destination-objects` |
+| `s3` | `aws s3 sync site <destination>` | `--delete` |
+| `rsync` | `rsync -a site/ <destination>` | `--delete` |
+| `command` | `modules.publish.command`, as a shell string | nothing — your command decides |
+
+`delete` is what makes the mirror match the export instead of accumulating
+pages you have since removed. It also means a broken export would delete a
+working mirror, which is why `ops/export_static.py` builds into a staging
+directory and only swaps it in on success.
+
+**Rehearse first.** Set `dryRun` and the step prints the exact command
+without running it:
+
+```
+publish: env CLOUDSDK_CONFIG
+publish: DRY RUN — would run:
+  gcloud storage rsync /srv/n-seo/site gs://acme-n-seo-mirror --recursive --delete-unmatched-destination-objects
+publish: set modules.publish.dryRun to false to publish for real
+```
+
+Read that line before you clear `dryRun`, especially with `delete` on and a
+bucket that is already serving something.
+
+**Credentials.** `env` is merged into the publish command's environment only,
+so a deployment that keeps its cloud config somewhere specific can point at
+it without exporting that for the whole run:
+
+```json
+"env": { "CLOUDSDK_CONFIG": "~/.config/acme/gcloud" }
+```
+
+`~` and `$VARS` are expanded. Only the key names are ever logged.
+
+### A sign-out link on the mirror
+
+The mirror sits behind an auth proxy, and a proxy needs a way out. Set the
+URL yours uses and every exported page gets a sign-out link in the topbar:
+
+```json
+"staticExport": { "enabled": true, "signOutUrl": "/oauth2/sign_out", "signOutLabel": "Sign out" }
+```
+
+IAP uses `/_gcp_iap/clear_login_cookie`, oauth2-proxy `/oauth2/sign_out`,
+Cloudflare Access `/cdn-cgi/access/logout`. The live dashboard renders
+nothing for it — there is nothing to sign out of on your own machine.
 
 ### Reaching the dashboard on GCP
 

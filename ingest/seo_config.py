@@ -23,8 +23,17 @@ EXAMPLE_PATH = ROOT / "n-seo.config.example.json"
 
 MODULE_KEYS = [
     "indexStatus", "metadataAudit", "opportunityScan", "llm", "hackerNews",
-    "reddit", "indexNow", "staticExport", "gitAutoCommit", "notifications",
+    "reddit", "indexNow", "staticExport", "publish", "gitAutoCommit",
+    "notifications",
 ]
+
+# Per-module defaults, so a half-written block cannot make a step guess.
+# Mirrors MODULE_DEFAULTS in src/config.ts.
+MODULE_DEFAULTS = {
+    "staticExport": {"signOutUrl": "", "signOutLabel": "Sign out"},
+    "publish": {"target": "gcs", "destination": "", "command": "",
+                "delete": False, "dryRun": False, "env": {}},
+}
 
 _cache = None
 
@@ -42,9 +51,9 @@ def load(force: bool = False) -> dict:
         return _cache
     path = CONFIG_PATH if CONFIG_PATH.exists() else EXAMPLE_PATH
     raw = json.loads(path.read_text())
-    modules = {k: {"enabled": False} for k in MODULE_KEYS}
+    modules = {k: {"enabled": False, **MODULE_DEFAULTS.get(k, {})} for k in MODULE_KEYS}
     for k, v in (raw.get("modules") or {}).items():
-        modules[k] = {"enabled": False, **(v or {})}
+        modules[k] = {"enabled": False, **MODULE_DEFAULTS.get(k, {}), **(v or {})}
     sites = []
     for s in raw.get("sites") or []:
         if not s.get("host"):

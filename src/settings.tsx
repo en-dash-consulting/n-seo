@@ -178,6 +178,38 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
                 {m.key === "indexNow" && (
                   <label class="s-field">key file <input type="text" name="indexNow.keyFile" value={str(mod.keyFile) || "indexnow.key"} /></label>
                 )}
+                {m.key === "staticExport" && (
+                  <>
+                    <label class="s-field">sign-out URL <small>added to every exported page when the mirror sits behind an auth proxy</small>
+                      <input type="text" name="staticExport.signOutUrl" value={str(mod.signOutUrl)} placeholder="/oauth2/sign_out" />
+                    </label>
+                    <label class="s-field">sign-out label <input type="text" name="staticExport.signOutLabel" value={str(mod.signOutLabel) || "Sign out"} /></label>
+                  </>
+                )}
+                {m.key === "publish" && (
+                  <>
+                    <label class="s-field">target
+                      <select name="publish.target">
+                        {["gcs", "s3", "rsync", "command"].map((t) => (
+                          <option value={t} selected={str(mod.target) === t}>{t}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label class="s-field">destination <input type="text" name="publish.destination" value={str(mod.destination)} placeholder="gs://your-bucket" /></label>
+                    <label class="s-check"><input type="checkbox" name="publish.delete" value="1" checked={!!mod.delete} /> delete what is no longer in the export</label>
+                    <label class="s-check"><input type="checkbox" name="publish.dryRun" value="1" checked={!!mod.dryRun} /> dry run — print the command, publish nothing</label>
+                    {str(mod.command) && (
+                      <p class="s-help"><b>command</b> (target <code>command</code>, edited in the config file): <code>{str(mod.command)}</code></p>
+                    )}
+                    {(() => {
+                      // Names only: a publish env is where credential paths live.
+                      const keys = Object.keys((mod.env as Record<string, unknown>) ?? {});
+                      return keys.length
+                        ? <p class="s-help">extra environment for the publish command: <code>{keys.join(", ")}</code> <small>(values are edited in the config file and never shown here)</small></p>
+                        : null;
+                    })()}
+                  </>
+                )}
               </div>
             );
           })}
@@ -273,6 +305,15 @@ export function applySettingsForm(body: Record<string, string | File | (string |
     modules.reddit.user = get("reddit.user");
     modules.reddit.topics = topicLines(get("reddit.topics"), 3, "Reddit topics");
     modules.indexNow.keyFile = get("indexNow.keyFile") || "indexnow.key";
+    modules.staticExport.signOutUrl = get("staticExport.signOutUrl").trim();
+    modules.staticExport.signOutLabel = get("staticExport.signOutLabel").trim() || "Sign out";
+    // `command` and `env` are deliberately not settable here: one runs a
+    // shell string, the other holds credential paths. Both live in the file.
+    const target = get("publish.target").trim();
+    modules.publish.target = ["gcs", "s3", "rsync", "command"].includes(target) ? target : "gcs";
+    modules.publish.destination = get("publish.destination").trim();
+    modules.publish.delete = get("publish.delete") === "1";
+    modules.publish.dryRun = get("publish.dryRun") === "1";
 
     const participation = ((raw.participation as Record<string, unknown>) ??= {});
     participation.expertise = get("participation.expertise");

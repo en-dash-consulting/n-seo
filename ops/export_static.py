@@ -11,6 +11,8 @@ carry a small script that shows a banner when the mirror is more than 36
 hours old, so a stalled daily job is visible from the mirror itself.
 """
 
+import html as html_mod
+import re
 import shutil
 import subprocess
 import sys
@@ -43,6 +45,26 @@ def routes():
             + [f"/campaigns/{s}" for s in camps])
 
 
+# hono/jsx renders the slot without whitespace, but match loosely so a
+# future formatting change cannot silently drop the sign-out link.
+EXPORT_SLOT = re.compile(r'<span id="export-slot"\s*>\s*</span>')
+
+
+def sign_out_link() -> str:
+    """The <a> that replaces the export slot, or "" when unconfigured.
+
+    Any auth proxy will do — IAP, Cloudflare Access, oauth2-proxy — so this
+    is just a URL the operator supplies.
+    """
+    m = seo_config.module("staticExport")
+    url = (m.get("signOutUrl") or "").strip()
+    if not url:
+        return ""
+    label = (m.get("signOutLabel") or "Sign out").strip() or "Sign out"
+    return (f'<a class="signout" href="{html_mod.escape(url, quote=True)}">'
+            f'{html_mod.escape(label)}</a>')
+
+
 def fetch(path):
     p = subprocess.run(["curl", "-sf", "--max-time", "30", BASE + path],
                        capture_output=True, text=True)
@@ -71,10 +93,13 @@ def main():
             + stamp + ' UTC. Check the machine that runs it.";'
             'document.body.prepend(b);}})();</script>'
         )
+        signout = sign_out_link()
         rs = routes()
         for route in rs:
             html = fetch(route)
             html = html.replace("<head>", '<head><meta name="robots" content="noindex, nofollow">', 1)
+            if signout:
+                html = EXPORT_SLOT.sub(signout, html, count=1)
             html = html.replace("</body>", staleness + "</body>", 1)
             dest = out / "index.html" if route == "/" else out / route.lstrip("/") / "index.html"
             dest.parent.mkdir(parents=True, exist_ok=True)

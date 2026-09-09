@@ -50,6 +50,7 @@ STEPS = [
     ("hn-digest",        "ops/hn_digest.py",              "hackerNews"),
     ("reddit-digest",    "ops/reddit_digest.py",          "reddit"),
     ("static-export",    "ops/export_static.py",          "staticExport"),
+    ("publish",          "ops/publish.py",                "publish"),
 ]
 
 

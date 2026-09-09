@@ -19,6 +19,7 @@ turns them into a ranked queue of concrete actions.
                     │ ops/hn_digest.py (opt-in)  → data/hn-digest.json │
                     │ ops/reddit_digest.py (opt) → data/reddit-digest.json
                     │ ops/export_static.py (opt) → site/               │
+                    │ ops/publish.py (opt)       → your bucket/host    │
                     └─────────────────────────────────────────────────┘
                                           │
                        dashboard (src/server.tsx, Hono + hono/jsx SSR)
@@ -112,7 +113,8 @@ the dashboard's accept/watch/retire buttons — show up without a restart.
 | `hackerNews` | off | HN thread digest (`user`, `topics:[[query, why]]`) |
 | `reddit` | off | Reddit thread digest (`user`, `topics:[[sub, query, why]]`; creds in `.env`) |
 | `indexNow` | off | key generation + pings (`keyFile`) |
-| `staticExport` | off | dashboard → `site/` after each run |
+| `staticExport` | off | dashboard → `site/` after each run (`signOutUrl`, `signOutLabel` add a sign-out link to every exported page) |
+| `publish` | off | copy `site/` to `destination` (`target`: `gcs` \| `s3` \| `rsync` \| `command`; `delete`, `dryRun`, `env`) |
 | `gitAutoCommit` | off | commit (+push) log/export after each run |
 | `notifications` | off | macOS notification on step failure |
 

@@ -83,7 +83,17 @@
       "keyFile": "indexnow.key"
     },
     "staticExport": {
-      "enabled": false
+      "enabled": false,
+      "signOutUrl": "",
+      "signOutLabel": "Sign out"
+    },
+    "publish": {
+      "enabled": false,
+      "target": "gcs",
+      "destination": "gs://your-bucket",
+      "delete": false,
+      "dryRun": false,
+      "env": {}
     },
     "gitAutoCommit": {
       "enabled": false

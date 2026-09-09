@@ -104,6 +104,13 @@ export interface Config {
   hooks: Hooks;
 }
 
+/** Per-module defaults, so a half-written block cannot make a step guess.
+ *  Mirrors MODULE_DEFAULTS in ingest/seo_config.py. */
+export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
+  staticExport: { signOutUrl: "", signOutLabel: "Sign out" },
+  publish: { target: "gcs", destination: "", command: "", delete: false, dryRun: false, env: {} },
+};
+
 export const MODULE_INFO: { key: string; title: string; blurb: string; needs?: string }[] = [
   { key: "indexStatus", title: "Index coverage sweep", blurb: "Ask Search Console's URL Inspection API whether each sitemap URL is actually indexed. ~1 call per URL, 2,000/day quota per property." },
   { key: "metadataAudit", title: "Metadata audit", blurb: "Fetch each ranking page's live title/description and judge them against the queries it ranks for." },
@@ -112,7 +119,8 @@ export const MODULE_INFO: { key: string; title: string; blurb: string; needs?: s
   { key: "hackerNews", title: "Hacker News digest", blurb: "Find fresh HN threads in your expertise areas and brief you on each. Briefings only — no comment text is ever generated.", needs: "your HN username (to mark threads you already joined)" },
   { key: "reddit", title: "Reddit digest", blurb: "Same idea for subreddits. Reddit blocks anonymous API reads, so this needs a free 'script' app's credentials in .env.", needs: "REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET" },
   { key: "indexNow", title: "IndexNow", blurb: "Generate a key and ping Bing/Copilot/Yandex with changed URLs on publish. Free and instant; does nothing for Google." },
-  { key: "staticExport", title: "Static export", blurb: "Snapshot the dashboard into site/ as static HTML after each daily run, for hosting a read-only mirror behind your own auth." },
+  { key: "staticExport", title: "Static export", blurb: "Snapshot the dashboard into site/ as static HTML after each daily run, for hosting a read-only mirror behind your own auth. `signOutUrl` adds a sign-out link to every exported page." },
+  { key: "publish", title: "Publish the mirror", blurb: "Copy site/ to a bucket, an object store or a box over ssh after the export — a real pipeline step, so it is logged and retried like the rest. `dryRun` prints the command without running it, which is how you rehearse a cutover.", needs: "gcloud, aws or rsync on PATH, depending on the target" },
   { key: "gitAutoCommit", title: "Git auto-commit", blurb: "Commit the daily log and export after each run (and push if a remote is set)." },
   { key: "notifications", title: "Desktop notifications", blurb: "macOS notification when a daily step fails (osascript)." },
 ];
@@ -124,7 +132,7 @@ function readJson<T>(p: string): T {
 /** Fill in defaults so the rest of the app can assume the shape. */
 function normalize(raw: Partial<Config>): Config {
   const modules: Record<string, ModuleCfg> = {};
-  for (const m of MODULE_INFO) modules[m.key] = { enabled: false, ...(raw.modules?.[m.key] ?? {}) };
+  for (const m of MODULE_INFO) modules[m.key] = { enabled: false, ...(MODULE_DEFAULTS[m.key] ?? {}), ...(raw.modules?.[m.key] ?? {}) };
   for (const [k, v] of Object.entries(raw.modules ?? {})) if (!modules[k]) modules[k] = { ...v, enabled: !!v?.enabled };
   const sites = (raw.sites ?? []).map((s) => ({
     ...s,
