@@ -139,6 +139,27 @@ workflow also deliberately omits `registry-url` from `setup-node`, because it
 writes an `.npmrc` auth line interpolating `NODE_AUTH_TOKEN`, and an empty
 value there produces the same misleading 404.
 
+## Approving a staged release
+
+The trusted publisher is configured to allow `npm stage publish` only, so the
+workflow submits a version and stops. It is not on the registry until a human
+approves it with 2FA. That is deliberate: a compromised runner or a stray tag
+cannot put code on npm that other people's machines will then execute.
+
+After the release run goes green:
+
+```sh
+npm stage list n-seo          # the stage id
+npm stage view <stage-id>     # inspect exactly what CI built
+npm stage approve <stage-id>  # 2FA; now it is live
+```
+
+`npm stage reject <stage-id>` throws it away. The package's Staged Packages
+tab on npmjs.com does the same thing in a browser, which is easier if your
+second factor is a passkey rather than an authenticator app.
+
+The workflow's run summary prints these commands with the version filled in.
+
 ## Verify what was published
 
 Do not trust the workflow's own output. Install from the registry, into an
