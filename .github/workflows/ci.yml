@@ -96,7 +96,8 @@ jobs:
           # does not reliably handle the mixed separators that would produce.
           inst="${RUNNER_TEMP//\\//}/instance"
           node bin/n-seo.mjs init "$inst"
-          for f in n-seo.config.json .mcp.json .gitignore config/backlog.json; do
+          for f in n-seo.config.json .mcp.json .gitignore config/backlog.json \
+                   CLAUDE.md .claude/skills/n-seo-triage/SKILL.md; do
             test -f "$inst/$f" || { echo "init did not create $f"; exit 1; }
           done
           node bin/n-seo.mjs version --instance "$inst"

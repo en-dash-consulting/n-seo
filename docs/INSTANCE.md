@@ -1,5 +1,13 @@
 # Running n-seo as an engine + instance
 
+> **An instance is a standalone project.** It is never a subdirectory of a
+> website you are optimising, and `n-seo init` refuses to scaffold into an
+> application directory or a git repository it does not own (`--force`
+> overrides). n-seo reads your sites through the Search Console and GA4 APIs;
+> it has no reason to live in their code, and living there means committing
+> and deploying its config, its queue and a `data/` tree that is rewritten
+> every morning. One instance watches as many sites as you own.
+
 n-seo can run two ways. In the simplest, you clone the repo, put your config
 in the checkout and run it there. In the second, the checkout is an **engine**
 you never edit, and everything that is yours — config, queue, content, data,
@@ -92,6 +100,36 @@ node ~/tools/n-seo/bin/n-seo.mjs doctor --instance ~/sites/search-ops
 and `content/campaigns/README.md`, `.env` (from `.env.example`), a
 `.gitignore` that excludes `data/`, `site/` and `.env`, a `.mcp.json` that
 spawns the engine's MCP server with `N_SEO_INSTANCE` set, and a short README.
+
+It also makes the instance agent-ready, which is how most people should drive
+it:
+
+- `.claude/skills/` — the seven operating skills (`orient`, `n-seo-setup`,
+  `n-seo-add-site`, `n-seo-triage`, `n-seo-ship`, `n-seo-review`,
+  `n-seo-deploy`), copied from the engine with this install's real engine and
+  instance paths substituted in, so every command in them is copy-pasteable.
+  The engine's contributor skills (`ndx-*`) are not copied — they are for
+  developing n-seo, not operating it.
+- `CLAUDE.md` — the operating rules an agent working in this directory has to
+  follow: the 28-day freeze, the weekly metadata budget, impact-is-not-a-
+  forecast, decisions on the 90-day window, shipped-becomes-watching,
+  proposals never self-promote, site changes ship as pull requests.
+
+With those two files plus `.mcp.json`, opening the instance in Claude Code is
+enough: it can read the queue and the metrics, and it already knows the rules.
+
+```sh
+cd ~/sites/search-ops && claude
+  "set this up for my sites"        → /n-seo-setup
+  "what should I work on today?"    → /n-seo-triage
+  "do the first one"                → /n-seo-ship
+  "how did last month go?"          → /n-seo-review
+```
+
+Both files are yours once written. `n-seo init` never overwrites, so editing
+`CLAUDE.md` to add your own rules survives every re-run and every engine
+upgrade. To pick up improved skills from a newer engine, delete the ones you
+have not customised and re-run `n-seo init`.
 
 To make `n-seo` a command, link the engine once:
 

@@ -7,6 +7,13 @@ account with a JSON key** — a machine identity you add as a read-only user in
 each console. No gcloud install, no browser login, no token that expires when
 your session does.
 
+> **You can have this done for you.** `n-seo init` installed the
+> `n-seo-setup` skill in your instance. Open the directory in Claude Code and
+> say *"set this up for my sites"*: it works through everything below, runs
+> `n-seo doctor` between steps, and stops at each decision that is yours (the
+> Cloud project, the property ids, whether to grant access). This page is the
+> reference behind it, and what to read when something does not fit.
+
 ## 1. Pick a Google Cloud project
 
 Any project works; a dedicated one keeps it tidy. In the

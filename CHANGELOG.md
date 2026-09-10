@@ -6,7 +6,52 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **`n-seo init` refuses to scaffold inside a website.** An instance is a
+  standalone project: it writes a config, a queue, drafts and a `data/` tree
+  that the daily run rewrites every morning, and inside a site repo all of
+  that gets committed and usually deployed. `init` now stops when the target
+  directory (or the parent of a directory it is about to create) holds an
+  application marker such as `package.json`, or sits inside a git repository
+  that is not itself an instance. The error names the reason and shows the
+  right command. `--force` overrides; re-running `init` on an existing
+  instance is always allowed, and in-place mode in the engine checkout is
+  unaffected. The README, the marketing site, `docs/INSTANCE.md` and the FAQ
+  say the same thing in words.
+- **The skills ship, and `init` installs them.** `.claude/skills/` was not in
+  the npm `files` list, so an `npm i n-seo` install had none of the operating
+  skills at all. The seven instance-facing ones are now packaged, and `init`
+  copies them into the new instance with this install's real engine and
+  instance paths substituted for the placeholders, alongside a `CLAUDE.md`
+  carrying the operating rules. Opening an instance in Claude Code is now
+  enough to run setup, triage, shipping and the weekly review by asking. The
+  contributor skills (`ndx-*`) stay in the engine checkout.
+- **Command output points at the skills where it is useful.** `n-seo init`
+  ends with the prompts to try, `n-seo demo` names the one that connects real
+  sites, `n-seo start` prints the triage prompt, and `n-seo doctor` suggests
+  `/n-seo-setup` only when it found problems to fix. Each is gated on the
+  skills actually being present.
+
+### Changed
+- **Typography, self-hosted.** Montserrat and Merriweather replace DM Sans,
+  DM Mono and the Google Fonts CDN on the marketing site; the dashboard's
+  headings and brand mark move to Montserrat while its tables keep the system
+  UI font. Both families are shipped as latin-subset variable woff2 files
+  served from the same origin, so there is no third-party request, no
+  render-blocking stylesheet on another domain, and the dashboard renders
+  correctly on a host with no outbound internet. Licences are in
+  `www/fonts/OFL.txt` and `public/fonts/OFL.txt`. The static export copies the
+  font alongside `styles.css`.
+- **The indexing page says what to do, per verdict.** Every coverage state now
+  carries a remediation line and a marker saying whether Request Indexing will
+  help. It helps for "URL is unknown to Google" and "Discovered - currently
+  not indexed", where Google has formed no judgement about the content. It
+  does not help for "Soft 404" or "Crawled - currently not indexed": Google
+  fetched the page, judged it, and would judge the same content the same way
+  again, so a re-request spends a slot of a roughly ten-a-day quota for
+  nothing. Redirects, canonicals, duplicates, robots blocks and noindex are
+  covered too. The FAQ answer on stale soft 404s was rewritten for the same
+  reason.
 
 ## [0.2.0] - 2026-09-09
 

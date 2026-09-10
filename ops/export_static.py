@@ -106,6 +106,11 @@ def main():
             dest.write_text(html, encoding="utf-8")
 
         (out / "styles.css").write_text(fetch("/styles.css"), encoding="utf-8")
+        # styles.css declares @font-face against /fonts/, so the file has to
+        # travel with it or every heading in the mirror falls back silently.
+        fonts = ROOT / "public" / "fonts"
+        if fonts.is_dir():
+            shutil.copytree(fonts, out / "fonts")
         (out / "favicon.svg").write_text(fetch("/favicon.svg"), encoding="utf-8")
         (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
     except BaseException:

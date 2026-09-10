@@ -652,12 +652,59 @@ const COVERAGE_ORDER = [
   "Crawled - currently not indexed",
 ];
 
-const COVERAGE_HELP: Record<string, string> = {
-  "URL is unknown to Google": "Not discovered at all — check the sitemap and internal links.",
-  "Discovered - currently not indexed": "Known but never fetched. Request Indexing (manual, in the Search Console UI) moves these.",
-  "Soft 404": "Serves 200 but Google reads it as an error or empty page.",
-  "Crawled - currently not indexed": "Google fetched it and declined — a content/value judgement.",
+/** What each verdict means and — separately — what to actually do about it.
+ *
+ *  These are not the same action, and treating them as one is the common
+ *  mistake. "Request Indexing" only helps where Google has *not yet judged*
+ *  the page: unknown or discovered-never-crawled. Once Google has fetched a
+ *  URL and declined it (soft 404, crawled-not-indexed), another request
+ *  re-runs the same judgement on the same content and spends a slot of a
+ *  quota that is roughly ten URLs a day. Those need a page change first. */
+const COVERAGE_HELP: Record<string, { means: string; fix: string }> = {
+  "URL is unknown to Google": {
+    means: "Not discovered at all — Google has never seen this URL.",
+    fix: "Discovery problem, not a content one: confirm it is in the sitemap Search Console actually read, and link to it from a page that is already indexed. Then request indexing.",
+  },
+  "Discovered - currently not indexed": {
+    means: "Known but never fetched — it is sitting in the crawl queue.",
+    fix: "Request Indexing (manual, in the Search Console UI) is the right move here and usually works within hours. Spend the daily quota on these first.",
+  },
+  "Soft 404": {
+    means: "Google fetched it, got a 200, and read the response as an error or an empty page.",
+    fix: "Do NOT just request indexing — Google already judged this content and would judge it the same way again. Fetch the URL and find the cause: content rendered only in JavaScript (the crawler sees an empty shell), a genuinely thin page, or an error page returning 200 that should return 404 or 410 and leave the sitemap. Fix it, then request indexing.",
+  },
+  "Crawled - currently not indexed": {
+    means: "Google fetched it and declined to index it — a judgement about value.",
+    fix: "Requesting indexing re-submits the same page for the same verdict. Either make it substantially better and more distinct from your other pages, or accept it as not worth indexing and drop it from the sitemap.",
+  },
+  "Page with redirect": {
+    means: "The URL redirects, so the destination is what gets indexed.",
+    fix: "Expected for an old URL. If it is in your sitemap, remove it — sitemaps should list final URLs only.",
+  },
+  "Alternate page with proper canonical tag": {
+    means: "Correctly pointing at a canonical elsewhere. Not a problem.",
+    fix: "No action. Remove it from the sitemap if you want the report clean.",
+  },
+  "Duplicate without user-selected canonical": {
+    means: "Google picked a different URL as canonical because it reads as a duplicate.",
+    fix: "Set an explicit canonical, or differentiate the content. Requesting indexing does not change a duplicate judgement.",
+  },
+  "Blocked by robots.txt": {
+    means: "Crawling is disallowed, so it cannot be indexed.",
+    fix: "Either remove the Disallow rule, or remove the URL from the sitemap — asking for a URL you block is a contradiction.",
+  },
+  "Excluded by 'noindex' tag": {
+    means: "The page asks not to be indexed and Google is obeying.",
+    fix: "If that is intentional, drop it from the sitemap. If not, remove the noindex tag, then request indexing.",
+  },
 };
+
+/** True where re-submitting the URL is a reasonable use of the daily quota:
+ *  Google has not yet formed a verdict on the content. */
+const REQUEST_INDEXING_HELPS = new Set([
+  "URL is unknown to Google",
+  "Discovered - currently not indexed",
+]);
 
 const STALE_DAYS = 90;
 
@@ -760,7 +807,24 @@ export const IndexingPage: FC = () => {
                           <tr class="idx-group">
                             <td colspan={2}>
                               <strong>{header}</strong>{" "}
-                              <span class="idx-help">{COVERAGE_HELP[header] ?? p.detail ?? ""}</span>
+                              <span class="idx-help">{COVERAGE_HELP[header]?.means ?? p.detail ?? ""}</span>
+                              {COVERAGE_HELP[header] && (
+                                <div class="idx-fix">
+                                  <span
+                                    class={`idx-ri ${REQUEST_INDEXING_HELPS.has(header) ? "yes" : "no"}`}
+                                    title={
+                                      REQUEST_INDEXING_HELPS.has(header)
+                                        ? "Google has not judged this content yet — a request moves it"
+                                        : "Google already fetched and judged this page; re-requesting repeats the same verdict and spends quota"
+                                    }
+                                  >
+                                    {REQUEST_INDEXING_HELPS.has(header)
+                                      ? "Request Indexing helps"
+                                      : "Request Indexing will not fix this"}
+                                  </span>{" "}
+                                  {COVERAGE_HELP[header].fix}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )}

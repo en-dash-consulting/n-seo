@@ -3,6 +3,10 @@
 One entry in `n-seo.config.json`. There are no per-script site lists:
 every pull, probe, audit, page and export reads the same `sites` array.
 
+> Or say *"add example.com"* in the instance directory: the `n-seo-add-site`
+> skill picks the right property form, finds the numeric GA4 id, proposes a
+> brand regex, and reminds you about both access grants.
+
 ```json
 {
   "host": "docs.example.com",

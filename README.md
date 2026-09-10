@@ -24,8 +24,10 @@ to **a model you choose**, and everything that changes a site is handed to you.
   ships with n-seo. Leave it off and you still get the full data-derived queue.
 - **Your coding agent, on the queue.** A read-only MCP server exposes the same
   data the dashboard reads, so Claude Code — or any MCP client — can answer
-  "what should I do first this week?" and then go implement it. Six skills ship
-  with it, so the operating rules are enforced rather than merely documented.
+  "what should I do first this week?" and then go implement it. Seven skills
+  are installed into your instance, so setup, triage and shipping are things
+  you ask for in plain language, with the operating rules enforced rather than
+  merely documented.
 - **It proposes; it never acts.** No module edits a site, sends an email or
   posts a comment. Machine proposals wait in a holding area until you accept
   them. Your data stays on your hardware: nothing leaves the host except the
@@ -35,7 +37,15 @@ to **a model you choose**, and everything that changes a site is handed to you.
 
 ## Quickstart (5 minutes, no Google setup)
 
+> **n-seo is its own project — do not install it inside a website's repo.**
+> `n-seo init` creates a standalone directory holding your config, your action
+> queue and a `data/` tree the daily run rewrites every morning. It reads your
+> sites through the Search Console and GA4 APIs, so it never needs to live in
+> their code, and putting it there means committing and deploying all of that.
+> The command refuses to scaffold into an app directory or a foreign git repo.
+
 ```sh
+cd ~                # anywhere outside your site repos
 npm install -g n-seo
 n-seo init my-sites && cd my-sites
 n-seo demo          # a synthetic dataset for example.com
@@ -48,6 +58,29 @@ removes it.
 
 Prefer not to install globally? `npx n-seo init my-sites` works the same way.
 
+### Then talk to it
+
+`n-seo init` installs seven skills into the new directory, so the rest of the
+setup is a conversation rather than a docs crawl. Open it in Claude Code — or
+any agent that reads `.claude/skills/` — and say what you want:
+
+```
+cd my-sites && claude
+
+  "set this up for my sites"        → /n-seo-setup: config, the Google service
+                                      account, both console grants, first run
+  "add learn-pretext.com"           → /n-seo-add-site
+  "what should I work on today?"    → /n-seo-triage: the queue, with evidence
+  "do the first one"                → /n-seo-ship: a branch and a PR in the
+                                      site's own repo, freeze rules enforced
+  "how did last month go?"          → /n-seo-review
+```
+
+A read-only MCP server is registered in the generated `.mcp.json`, so the agent
+reads the same queue and metrics the dashboard shows. It can propose and
+implement; it cannot publish, post, or change a site behind your back. Details
+in [Agentic by design](#agentic-by-design).
+
 <details>
 <summary>Or run it from a clone, if you want to change the engine itself</summary>
 
@@ -59,10 +92,11 @@ npm run demo
 npm start
 ```
 
-In this mode the config, queue and data live inside the checkout. That is the
-right shape for hacking on n-seo; for running it, the instance layout above
-keeps your files separate from the engine so upgrades are a reinstall rather
-than a merge. See [docs/INSTANCE.md](docs/INSTANCE.md).
+In this mode the config, queue and data live inside the checkout — still a
+standalone project of its own, just one you can edit. That is the right shape
+for hacking on n-seo; for running it, the instance layout above keeps your
+files separate from the engine so upgrades are a reinstall rather than a
+merge. See [docs/INSTANCE.md](docs/INSTANCE.md).
 </details>
 
 ## Connect your real sites
@@ -149,8 +183,10 @@ Desktop, stdio and authenticated HTTP clients are covered in
 working here has to follow.
 
 Skills ship for the work itself, so the rules are enforced rather than
-merely documented — six that operate an instance, plus `orient` to get
-current in a fresh session:
+merely documented. `n-seo init` copies all seven into the instance's
+`.claude/skills/` with this install's real paths substituted in, alongside a
+`CLAUDE.md` carrying the operating rules — so an agent opened in that
+directory is oriented before you type anything:
 
 | Skill | Use it when |
 |---|---|
@@ -163,9 +199,9 @@ current in a fresh session:
 | `orient` | First thing in a fresh session — get current in a few reads |
 
 `n-seo-ship` stops rather than crossing the 28-day title freeze or the weekly
-metadata budget. `.claude/skills/README.md` explains which skills operate an
-instance and which are contributor tooling for developing the engine with
-[n-dx](https://n-dx.dev).
+metadata budget. The engine checkout carries a second set of skills (`ndx-*`)
+for developing n-seo itself with [n-dx](https://n-dx.dev); those are not
+copied into an instance. `.claude/skills/README.md` explains the split.
 
 Read-only is the point: an agent can reason over your search data all day and
 still cannot bypass the freeze, the batching, or you.

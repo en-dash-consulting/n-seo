@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT, PORT, siteByHost, dotEnv } from "./config.js";
+import { ROOT, INSTANCE, PORT, siteByHost, dotEnv } from "./config.js";
 import { draftBySlug, campaignBySlug } from "./data.js";
 import { allActions } from "./actions.js";
 import { acceptProposal, setWatching, retire } from "./backlog.js";
@@ -92,6 +92,20 @@ app.all("/mcp", async (c) => {
 app.get("/styles.css", (c) => {
   const css = fs.readFileSync(path.join(ROOT, "public", "styles.css"), "utf8");
   return c.text(css, 200, { "Content-Type": "text/css; charset=utf-8" });
+});
+
+// The one webfont the dashboard uses, served from this origin. Self-hosting
+// keeps the dashboard free of third-party requests — it renders on machines
+// with no outbound internet, and it never tells Google when someone opens it.
+app.get("/fonts/:file", (c) => {
+  const file = c.req.param("file");
+  if (!/^[\w.-]+\.woff2$/.test(file)) return c.notFound();
+  const abs = path.join(ROOT, "public", "fonts", file);
+  if (!fs.existsSync(abs)) return c.notFound();
+  return c.body(fs.readFileSync(abs), 200, {
+    "Content-Type": "font/woff2",
+    "Cache-Control": "public, max-age=31536000, immutable",
+  });
 });
 
 app.get("/favicon.svg", (c) => {
@@ -257,4 +271,11 @@ app.post("/api/backlog/:id/retire", (c) => {
 const HOST = process.env.SEO_HOST ?? "127.0.0.1";
 serve({ fetch: app.fetch, port: PORT, hostname: HOST }, (info) => {
   console.log(`n-seo → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${info.port}`);
+  // Printed once per start, and only where it is actionable: an instance that
+  // has the skills installed. A running dashboard says nothing about how to
+  // get the next thing done, and most people should be asking rather than
+  // reading.
+  if (fs.existsSync(path.join(INSTANCE, ".claude", "skills", "n-seo-triage", "SKILL.md"))) {
+    console.log(`      ask it: cd ${INSTANCE} && claude → "what should I work on today?"`);
+  }
 });

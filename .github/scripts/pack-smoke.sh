@@ -75,7 +75,8 @@ pkg="$proj/node_modules/n-seo"
 # The two files that went missing before. Checking the installed tree rather
 # than the tarball listing is deliberate: this is what a consumer actually has.
 say "shipped files"
-for f in tsconfig.json .env.example package.json bin/n-seo.mjs src/server.tsx public/styles.css; do
+for f in tsconfig.json .env.example package.json bin/n-seo.mjs src/server.tsx public/styles.css \
+         public/fonts/montserrat-latin-var.woff2 .claude/skills/n-seo-setup/SKILL.md; do
   if [ -e "$pkg/$f" ]; then
     echo "  ok   $f"
   else
@@ -85,15 +86,43 @@ done
 
 say "the CLI runs from an npm install"
 npx n-seo version
-npx n-seo init ./inst >/dev/null
-for f in n-seo.config.json .mcp.json config/backlog.json; do
-  [ -f "./inst/$f" ] || fail "init did not create $f"
+
+# An instance is a standalone project. `init` must refuse to scaffold into
+# the consumer project itself — it has a package.json, so it is somebody's
+# application — and it must say why rather than failing opaquely.
+guard="$(npx n-seo init ./inst 2>&1 || true)"
+case "$guard" in
+  *"refusing to scaffold"*) echo "  ok   init refuses to scaffold inside an application" ;;
+  *) printf '%s\n' "$guard"; fail "init scaffolded inside a project that has a package.json" ;;
+esac
+if [ -e "./inst" ]; then fail "init created the directory it refused to scaffold into"; fi
+
+# The real layout: the instance lives beside the sites it watches, not inside
+# one. $WORK is a bare temp directory, which is what a user's ~ looks like to
+# the guard.
+inst="$WORK/inst"
+npx n-seo init "$inst" >/dev/null
+for f in n-seo.config.json .mcp.json config/backlog.json CLAUDE.md; do
+  [ -f "$inst/$f" ] || fail "init did not create $f"
 done
-npx n-seo demo --instance ./inst >/dev/null
-[ -d "./inst/data/gsc" ] || fail "demo data did not land in the instance"
+
+# The skills are the documented way to drive this, so a package that ships
+# without them is broken even though every route still answers. They were
+# missing from the `files` list once already.
+for skill in orient n-seo-setup n-seo-add-site n-seo-triage n-seo-ship n-seo-review n-seo-deploy; do
+  [ -f "$inst/.claude/skills/$skill/SKILL.md" ] \
+    || fail "init did not install the $skill skill (check the \"files\" list in package.json)"
+done
+if grep -rq "<engine checkout>" "$inst/.claude/skills"; then
+  fail "init left the <engine checkout> placeholder in an installed skill"
+fi
+echo "  ok   7 skills installed with real paths"
+
+npx n-seo demo --instance "$inst" >/dev/null
+[ -d "$inst/data/gsc" ] || fail "demo data did not land in the instance"
 
 say "the dashboard serves on :$PORT"
-SEO_PORT="$PORT" npx n-seo start --instance ./inst > "$WORK/server.log" 2>&1 &
+SEO_PORT="$PORT" npx n-seo start --instance "$inst" > "$WORK/server.log" 2>&1 &
 SERVER_PID=$!
 for _ in $(seq 1 40); do
   if curl -sf -o /dev/null "http://localhost:$PORT/api/actions"; then break; fi
@@ -121,7 +150,7 @@ say "the MCP server answers over stdio"
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"pack-smoke","version":"1"}}}' \
   > "$WORK/mcp-in.jsonl"
 ( cat "$WORK/mcp-in.jsonl"; sleep 3 ) \
-  | N_SEO_INSTANCE="$proj/inst" npx n-seo mcp > "$WORK/mcp-out.jsonl" 2>"$WORK/mcp-err.log" || true
+  | N_SEO_INSTANCE="$inst" npx n-seo mcp > "$WORK/mcp-out.jsonl" 2>"$WORK/mcp-err.log" || true
 if grep -q '"serverInfo"' "$WORK/mcp-out.jsonl"; then
   echo "  ok   initialize answered"
 else

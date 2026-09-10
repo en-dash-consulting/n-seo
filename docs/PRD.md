@@ -102,6 +102,10 @@ a fresh checkout runs.
 - Acceptance: date × page series for 180 days from both sources.
 - Acceptance: URL Inspection verdict for every sitemap URL (sitemap indexes
   followed one level, ≤400 URLs/host), with sitemap submission state.
+- Acceptance: each coverage state renders with what it means, what to do
+  about it, and whether Request Indexing helps — true only where Google has
+  formed no judgement on the content (unknown, discovered-never-crawled),
+  false where it fetched and declined (soft 404, crawled-not-indexed).
 - Acceptance: metadata audit flags title/query mismatch, CTR below position
   expectation, missing/short/duplicate descriptions, long titles.
 - Acceptance: trend file with branded/generic split, rising/falling queries
@@ -148,7 +152,9 @@ the config with the current values as defaults.
   be marked watching or retired; rule-derived items expose no write buttons.
 - Acceptance: the server binds 127.0.0.1 by default and rejects cross-origin
   POSTs.
-- Acceptance: light and dark themes; no external fonts.
+- Acceptance: light and dark themes; no external fonts — the one webfont is
+  served from the app's own origin, so the dashboard renders identically on a
+  host with no outbound internet and leaks no request to a font CDN.
 
 ## Feature: Settings page [shipped]
 
@@ -206,14 +212,22 @@ instead of a CLI, with the key read from `.env`.
   mode is unchanged when it is unset.
 - Acceptance: `n-seo init|start|dev|daily|doctor|demo|mcp|check|export|
   upgrade|version` behave as documented in `docs/INSTANCE.md`.
+- Acceptance: an instance is a standalone project. `n-seo init` exits 2
+  without writing anything when the target holds an application marker, or
+  when the directory it would create falls inside a git repository that is
+  not an instance; `--force` overrides, re-running on an existing instance
+  succeeds, and in-place mode in the engine checkout is unaffected.
+- Acceptance: `init` installs the seven instance-facing skills and a
+  `CLAUDE.md` with the operating rules, substituting the real engine and
+  instance paths, and leaves the contributor (`ndx-*`) skills behind.
 - Acceptance: `n-seo upgrade` refuses to leave the engine on a commit that
   fails `npm run check` without printing the rollback command.
 
-## Feature: Publish the engine to npm [planned]
+## Feature: Publish the engine to npm [shipped]
 
 - Acceptance: `npm i n-seo` installs a working engine; `npx n-seo init`
   scaffolds an instance; the `files` list excludes tests and the marketing
-  site.
+  site, and includes the instance-facing skills.
 
 ## Feature: Scheduled upgrade with gate [planned]
 
@@ -246,6 +260,10 @@ runs doctor.
   promises (local data, evidence first, briefs-not-acts) and the operating
   rules.
 
-## Feature: Custom domain [planned]
+## Feature: Custom domain [shipped]
 
-`www/CNAME` and URL updates once a domain is chosen.
+`www/CNAME` carries n-seo.dev; analytics are guarded on the hostname so a
+fork's Pages deploy never reports into the project's property.
+
+- Acceptance: typography is self-hosted (latin-subset variable woff2 from the
+  page's own origin), so the site makes no third-party request.

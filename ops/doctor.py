@@ -273,6 +273,15 @@ def main():
     check_dashboard()
     check_modules(cfg)
     print(f"\n{'all good' if not FAILS else f'{FAILS} problem(s) to fix'}")
+    # Most people should not work through the setup docs by hand. If the
+    # skills are installed, say so exactly when it is useful: after a report
+    # that lists things to fix.
+    if FAILS and (seo_config.INSTANCE / ".claude" / "skills" / "n-seo-setup" / "SKILL.md").exists():
+        print(
+            "\nnot sure what to do with these? this instance ships the fixes as skills.\n"
+            f"  cd {seo_config.INSTANCE} && claude\n"
+            '  "set this up for my sites"   → /n-seo-setup works through every item above'
+        )
     return 1 if FAILS else 0
 
 

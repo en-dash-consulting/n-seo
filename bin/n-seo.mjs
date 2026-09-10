@@ -28,7 +28,9 @@ const USAGE = `n-seo ${PKG.version} — an SEO on your machine
 
 usage: n-seo <command> [--instance <dir>] [args...]
 
-  init [dir]      scaffold an instance directory (default: cwd); never overwrites
+  init [dir]      scaffold a standalone instance directory (default: cwd); never
+                  overwrites, and refuses to scaffold inside a website's repo
+                  (--force overrides)
   start           run the dashboard for the instance
   dev             dashboard with reload on engine code changes
   daily           the morning run (args pass through: --only, --skip, --list, …)
@@ -142,8 +144,87 @@ function missingDeps(cmd, what) {
 
 /* ---------- init ---------- */
 
-function init(dirArg) {
+/** Files that mean "this directory is an application", not a place to keep
+ *  search-ops files. n-seo is a standalone project: it writes a config, a
+ *  queue, drafts and a data/ tree that the daily run rewrites every morning.
+ *  Dropped into a website's repo those files get committed, deployed, and
+ *  eventually served — and `n-seo upgrade` starts fighting the site's own
+ *  package.json. The instance sits beside the sites it watches, never inside
+ *  one. */
+const APP_MARKERS = [
+  "package.json", "index.html", "next.config.js", "next.config.mjs", "next.config.ts",
+  "vite.config.js", "vite.config.ts", "astro.config.mjs", "nuxt.config.ts",
+  "svelte.config.js", "gatsby-config.js", "remix.config.js", "angular.json",
+  "Gemfile", "go.mod", "Cargo.toml", "pyproject.toml", "composer.json",
+  "hugo.toml", "config.toml", "_config.yml", "wp-config.php", "Dockerfile",
+];
+
+/** The nearest ancestor holding a .git, or null. */
+function gitRootOf(dir) {
+  let cur = path.resolve(dir);
+  for (;;) {
+    if (fs.existsSync(path.join(cur, ".git"))) return cur;
+    const up = path.dirname(cur);
+    if (up === cur) return null;
+    cur = up;
+  }
+}
+
+/** Why this directory is the wrong place for an instance, or null if it is
+ *  fine.
+ *
+ *  `forChild` means the instance will be a NEW directory created inside
+ *  `dir`, which changes one answer: a repository root is a fine place to put
+ *  an instance (it becomes its own repo) but a terrible parent for one (the
+ *  new directory lands inside that repo's working tree).
+ *
+ *  Re-running init on an existing instance is always allowed. */
+function wrongPlaceFor(dir, forChild = false) {
+  if (fs.existsSync(path.join(dir, "n-seo.config.json"))) return null;
+  // In-place mode: the engine checkout is the instance. It has a package.json
+  // and a .git of its own, both of which would otherwise trip every check.
+  if (!forChild && path.resolve(dir) === ROOT) return null;
+  const marker = APP_MARKERS.find((f) => fs.existsSync(path.join(dir, f)));
+  if (marker) {
+    return forChild
+      ? `${dir} contains ${marker} — an instance created here would sit inside an application`
+      : `${dir} contains ${marker} — that is an application, not an n-seo instance`;
+  }
+  const root = gitRootOf(dir);
+  const insideSomeoneElsesRepo = root && (forChild || root !== path.resolve(dir));
+  if (insideSomeoneElsesRepo && !fs.existsSync(path.join(root, "n-seo.config.json"))) {
+    return `${dir} is inside the git repository at ${root} — the instance would be committed to it`;
+  }
+  return null;
+}
+
+function init(dirArg, force = false) {
   const dir = path.resolve(dirArg ?? process.cwd());
+  // A directory that does not exist yet inherits its parent's problem: a new
+  // folder created inside a site repo is still inside that site repo.
+  const wrong = fs.existsSync(dir) ? wrongPlaceFor(dir) : wrongPlaceFor(path.dirname(dir), true);
+  if (wrong && !force) {
+    console.error(`n-seo init: refusing to scaffold here.
+
+  ${wrong}
+
+n-seo is a standalone project, not something you add to a website. It keeps a
+config, an action queue, content drafts and a data/ tree that the daily run
+rewrites every morning; inside a site repo those get committed and deployed.
+The instance watches your sites over the Search Console API — it never needs
+to live in their code.
+
+Do this instead:
+
+  cd ~            # anywhere outside your site repos
+  n-seo init my-sites
+  cd my-sites
+
+Then list the sites you own in my-sites/n-seo.config.json.
+
+If you really mean it here, pass --force.`);
+    return 2;
+  }
   fs.mkdirSync(dir, { recursive: true });
   const name = path.basename(dir);
   const put = (rel, content) => {
@@ -170,6 +251,59 @@ function init(dirArg) {
     const src = path.join(ROOT, rel);
     put(rel, fs.existsSync(src) ? fs.readFileSync(src, "utf8") : `# ${rel}\n`);
   }
+  // The skills are the product's front door: with them in place the instance
+  // is a directory an agent can be pointed at, and setup / triage / shipping
+  // become a conversation instead of a docs-reading exercise. The engine's
+  // own contributor skills (ndx-*) stay behind — they are for working on
+  // n-seo, not with it. Placeholders become this install's real paths so the
+  // commands in them are copy-pasteable.
+  const INSTANCE_SKILLS = ["orient", "n-seo-setup", "n-seo-add-site", "n-seo-triage", "n-seo-ship", "n-seo-review", "n-seo-deploy"];
+  let skillsCopied = 0;
+  for (const skill of INSTANCE_SKILLS) {
+    const src = path.join(ROOT, ".claude", "skills", skill, "SKILL.md");
+    if (!fs.existsSync(src)) continue;
+    const body = fs
+      .readFileSync(src, "utf8")
+      .replaceAll("<engine checkout>/bin/n-seo.mjs", path.join(ROOT, "bin", "n-seo.mjs"))
+      .replaceAll("<instance dir>", dir);
+    put(path.join(".claude", "skills", skill, "SKILL.md"), body);
+    skillsCopied++;
+  }
+
+  put("CLAUDE.md", `# ${name} — an n-seo instance
+
+This directory is an n-seo instance: config, the curated action queue, content
+drafts, and the data the daily run writes. It is **not** a website. The sites
+it watches live in their own repositories and are read over the Search Console
+and GA4 APIs.
+
+Engine (the code): ${ROOT}
+Docs: ${path.join(ROOT, "docs")}
+
+## Working here
+
+Skills in \`.claude/skills/\` cover the routine work — start with
+\`/orient\` in a fresh session, then \`/n-seo-triage\` for what to do today,
+\`/n-seo-ship\` to implement one card, \`/n-seo-review\` for the weekly pass.
+
+## Rules that are not negotiable
+
+- **28-day metadata freeze.** After a page's title or description changes,
+  leave that page's metadata alone for 28 days. Title churn reads as
+  manipulation and resets Google's evaluation.
+- **At most ~8 title/description changes a week** across all sites.
+- **Impact numbers order the queue. They are not forecasts.** Never report
+  one as an expected result.
+- **Decisions ride the trailing 90 days.** The 16-month data is for totals
+  and history only.
+- **Shipped work becomes \`watching\`, never deleted** — that is how the loop
+  closes.
+- **Machine proposals never self-promote.** They wait in the holding area on
+  /actions until a human accepts them.
+- **Site changes ship as branches and pull requests** in the site's own repo,
+  never committed straight to its main branch.
+`);
+
   const envExample = path.join(ROOT, ".env.example");
   put(".env", fs.existsSync(envExample) ? fs.readFileSync(envExample, "utf8") : "");
   put(".gitignore", "data/\nsite/\n.env\n__pycache__/\nnode_modules/\n");
@@ -203,15 +337,38 @@ n-seo upgrade         # update the engine; your files here are untouched
 
 Edit \`n-seo.config.json\` for sites, Google access, modules and hooks.
 Docs: ${path.join(ROOT, "docs")}
+
+## Or just ask
+
+n-seo is built to be driven by an AI agent. Open this directory in Claude Code
+(or any agent that reads \`.claude/skills/\`) and talk to it:
+
+    "set this up for my sites"      → /n-seo-setup
+    "what should I work on today?"  → /n-seo-triage
+    "do the first one"              → /n-seo-ship
+    "how did last month go?"        → /n-seo-review
+
+A read-only MCP server is wired up in \`.mcp.json\`, so the agent reads the
+same queue and metrics the dashboard shows. It can propose and implement;
+it cannot publish, post, or change your sites behind your back.
 `);
   console.log(`
 instance ready at ${dir}
+  a standalone project — your websites stay in their own repos, untouched
 
 next:
   cd ${dir}
-  edit n-seo.config.json      (sites, google.serviceAccountKey — see ${path.join(ROOT, "docs", "SETUP-GOOGLE.md")})
-  n-seo doctor
-  n-seo demo && n-seo start   (or n-seo daily once the key is in place)
+  n-seo demo && n-seo start   see the dashboard working on synthetic data
+  edit n-seo.config.json      your sites + google.serviceAccountKey
+  n-seo doctor                checks the setup and names what is missing
+
+or hand it to an agent — ${skillsCopied} skills are installed in .claude/skills/:
+  cd ${dir} && claude
+  "set this up for my sites"  → /n-seo-setup walks the whole thing, including
+                                the Google service account and both grants
+  later: "what should I work on today?" → /n-seo-triage
+
+setup guide: ${path.join(ROOT, "docs", "SETUP-GOOGLE.md")}
 `);
   return 0;
 }
@@ -264,7 +421,7 @@ let code = 0;
 
 switch (cmd) {
   case "init":
-    code = init(rest[0] ?? flag ?? process.cwd());
+    code = init(rest.find((a) => !a.startsWith("-")) ?? flag ?? process.cwd(), rest.includes("--force"));
     break;
   case "start":
   case "dev":

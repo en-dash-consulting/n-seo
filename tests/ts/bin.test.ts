@@ -46,6 +46,82 @@ describe("bin/n-seo.mjs", () => {
     assert.equal(JSON.parse(fs.readFileSync(path.join(dir, "n-seo.config.json"), "utf8")).name, "kept");
   });
 
+  test("init installs the operating skills and a CLAUDE.md, with real paths substituted", () => {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), "n-seo-skills-"));
+    try {
+      const r = cli(["init", d]);
+      assert.equal(r.status, 0, r.stderr);
+      for (const skill of ["orient", "n-seo-setup", "n-seo-add-site", "n-seo-triage", "n-seo-ship", "n-seo-review", "n-seo-deploy"]) {
+        assert.ok(fs.existsSync(path.join(d, ".claude", "skills", skill, "SKILL.md")), skill);
+      }
+      // Contributor skills are for developing the engine, not operating an
+      // instance; shipping them would offer commands that do not apply.
+      assert.ok(!fs.existsSync(path.join(d, ".claude", "skills", "ndx-plan")));
+      const triage = fs.readFileSync(path.join(d, ".claude", "skills", "n-seo-triage", "SKILL.md"), "utf8");
+      assert.ok(!triage.includes("<engine checkout>"), "engine placeholder left unsubstituted");
+      assert.ok(!triage.includes("<instance dir>"), "instance placeholder left unsubstituted");
+      assert.ok(triage.includes(path.join(REPO, "bin", "n-seo.mjs")));
+      assert.ok(triage.includes(d));
+      const claude = fs.readFileSync(path.join(d, "CLAUDE.md"), "utf8");
+      assert.match(claude, /28-day metadata freeze/);
+      assert.match(claude, /not\*{0,2} a website|\*\*not\*\* a website/);
+      assert.ok(claude.includes(REPO), "CLAUDE.md should name the engine directory");
+      assert.match(r.stdout, /skills are installed/);
+    } finally {
+      fs.rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  test("init refuses to scaffold into an application directory, and inside a foreign git repo", () => {
+    const app = fs.mkdtempSync(path.join(os.tmpdir(), "n-seo-app-"));
+    try {
+      // An app directory: the marker file is enough, no git needed.
+      fs.writeFileSync(path.join(app, "package.json"), '{"name":"my-site"}');
+      const here = cli(["init", app]);
+      assert.equal(here.status, 2, here.stdout);
+      assert.match(here.stderr, /refusing to scaffold/);
+      assert.match(here.stderr, /package\.json/);
+      assert.ok(!fs.existsSync(path.join(app, "n-seo.config.json")), "nothing should be written");
+
+      // A new subdirectory inherits the parent's problem.
+      const nested = cli(["init", path.join(app, "my-sites")]);
+      assert.equal(nested.status, 2);
+      assert.ok(!fs.existsSync(path.join(app, "my-sites")), "the directory should not even be created");
+
+      // --force is the documented escape hatch.
+      const forced = cli(["init", path.join(app, "my-sites"), "--force"]);
+      assert.equal(forced.status, 0, forced.stderr);
+      assert.ok(fs.existsSync(path.join(app, "my-sites", "n-seo.config.json")));
+    } finally {
+      fs.rmSync(app, { recursive: true, force: true });
+    }
+
+    // A directory inside someone else's git repository, with no app markers.
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), "n-seo-git-"));
+    try {
+      fs.mkdirSync(path.join(repo, ".git"));
+      const r = cli(["init", path.join(repo, "seo")]);
+      assert.equal(r.status, 2, r.stdout);
+      assert.match(r.stderr, /inside the git repository/);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test("re-running init on an existing instance is always allowed", () => {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), "n-seo-reinit-"));
+    try {
+      assert.equal(cli(["init", d]).status, 0);
+      // Make it look like an app AND a foreign repo; the existing config wins.
+      fs.writeFileSync(path.join(d, "package.json"), "{}");
+      fs.mkdirSync(path.join(d, ".git"));
+      const again = cli(["init", d]);
+      assert.equal(again.status, 0, again.stderr);
+    } finally {
+      fs.rmSync(d, { recursive: true, force: true });
+    }
+  });
+
   test("version reports engine + instance; --instance and $N_SEO_INSTANCE both work", () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(REPO, "package.json"), "utf8"));
     const a = cli(["version", "--instance", dir]);

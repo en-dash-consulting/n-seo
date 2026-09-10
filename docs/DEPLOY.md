@@ -7,6 +7,10 @@ it sleeps, it travels, and the run silently skips a day.
 
 This document is about moving it to a box that is always on.
 
+> Or say *"get this off my laptop"* in the instance directory — the
+> `n-seo-deploy` skill runs this procedure, and refuses to expose the
+> dashboard port to the internet whatever you ask it for.
+
 ## The shape
 
 One host runs two long-lived things — the dashboard and a scheduler that

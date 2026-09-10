@@ -4,6 +4,10 @@ Two things should always be running: the **dashboard** (a long-lived process
 serving the configured port) and the **daily run** (`ops/daily.py`, once a
 morning). Both are plain processes; pick the scheduler your OS already has.
 
+> Or say *"schedule the morning run"* in the instance directory — the
+> `n-seo-deploy` skill covers scheduling on each platform, and `n-seo-setup`
+> ends here.
+
 ## macOS (launchd)
 
 The install script fills in the templates under `ops/templates/`, copies them

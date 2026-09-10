@@ -5,6 +5,25 @@ Nothing. The Search Console and GA4 APIs are free within quotas that ordinary
 use never approaches. The optional LLM module runs whatever local command you
 give it; if that is a paid CLI, that is your cost, not the tool's.
 
+**Can I install it inside my website's repository?**
+No — and `n-seo init` refuses to, so you cannot do it by accident. n-seo is a
+standalone project. It writes a config, an action queue, content drafts and a
+`data/` tree that the daily run rewrites every morning; inside a site repo all
+of that gets committed, and usually deployed. It reads your sites through the
+Search Console and GA4 APIs, so it has no reason to sit in their code. Put the
+instance anywhere else — `~/my-sites` is fine — and list the sites you own in
+its config. One instance can watch as many sites as you like. `--force`
+overrides the check if you have a reason.
+
+**Do I have to read all these docs?**
+No. `n-seo init` installs seven skills into your instance, so setup and daily
+use are a conversation: open the directory in Claude Code (or any agent that
+reads `.claude/skills/`) and say "set this up for my sites", "what should I
+work on today?", "do the first one". The agent reads the queue over a
+read-only MCP server, follows the operating rules in the generated
+`CLAUDE.md`, and cannot publish or change a site on its own. The docs are the
+reference behind the skills, not a prerequisite.
+
 **Does it change my site?**
 No. It reads your data, probes your pages, and produces a queue of actions
 with evidence and specs. You make the change in your own repo and ship it.
@@ -89,9 +108,19 @@ shown flat rather than omitted so you can tell "connected and quiet" from
 "missing from the pipeline."
 
 **The indexing page lists a "Soft 404" for a page that is fine.**
-Check the "last crawled" column. A verdict is only as current as the crawl
-behind it; the page flags verdicts older than 90 days as stale. Request
-indexing and re-check rather than chasing a template bug.
+Check the "last crawled" column first. A verdict is only as current as the
+crawl behind it, and the page flags verdicts older than 90 days as stale — a
+page rewritten since then is being judged on content Google has not seen. For
+a stale verdict, request indexing once and let the recrawl settle it.
+
+For a *fresh* soft 404, requesting indexing is the wrong move: Google already
+fetched the page, got a 200, and decided the content was an error or empty.
+Asking again re-runs the same judgement and spends the daily quota. Fetch the
+URL yourself and pick the real cause — the page renders its content in
+JavaScript and the crawler saw an empty shell, or it is genuinely thin, or it
+is an error page returning 200 and should return 404 or 410 and leave the
+sitemap. Fix that, then request indexing. n-seo's indexing page names the
+check to run for each verdict.
 
 **A daily step failed. What now?**
 Open `/logs` (or `data/daily-ops.log`), then run `n-seo doctor`. A 401

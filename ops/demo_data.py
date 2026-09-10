@@ -522,6 +522,12 @@ def main():
     else:
         print("\nnow run: n-seo start   (then open the dashboard)")
         print("remove with: n-seo demo --clean")
+    # The demo answers "what is this"; the next question is always "how do I
+    # point it at my own sites", and the answer is a sentence, not a doc.
+    if (seo_config.INSTANCE / ".claude" / "skills" / "n-seo-setup" / "SKILL.md").exists():
+        print("\nwhen you want it on your own sites, you can just ask:")
+        print(f"  cd {seo_config.INSTANCE} && claude")
+        print('  "set this up for my sites"   → /n-seo-setup')
     return 0
 
 

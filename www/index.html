@@ -40,9 +40,13 @@
 </script>
 
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- Typography is self-hosted: two variable fonts, latin subset, served from
+     this origin. No Google Fonts, so the page makes no third-party request
+     and there is no render-blocking stylesheet on another domain to wait for.
+     Both are SIL Open Font License 1.1 — see fonts/OFL.txt. -->
+<link rel="preload" href="fonts/montserrat-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/merriweather-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 
 <script type="application/ld+json">
 {
@@ -61,6 +65,27 @@
 </script>
 
 <style>
+  /* One variable file per family carries every weight the page uses, so this
+     is two requests, not six. font-display: swap paints in the fallback
+     immediately rather than holding the hero blank. */
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/montserrat-latin-var.woff2') format('woff2-variations'),
+         url('fonts/montserrat-latin-var.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Merriweather';
+    src: url('fonts/merriweather-latin-var.woff2') format('woff2-variations'),
+         url('fonts/merriweather-latin-var.woff2') format('woff2');
+    font-weight: 300 900;
+    font-stretch: 100%;
+    font-style: normal;
+    font-display: swap;
+  }
+
   :root {
     --navy: #0d1b3e;
     --navy-mid: #132247;
@@ -78,13 +103,13 @@
     --border: rgba(255,255,255,0.10);
     --card: rgba(255,255,255,0.05);
     --card-hover: rgba(255,255,255,0.09);
-    --font-display: 'Montserrat', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --font-mono: 'DM Mono', monospace;
+    --font-display: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+    --font-body: 'Merriweather', Georgia, 'Times New Roman', serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font-body); font-size: 16px; line-height: 1.7; }
   a { color: var(--teal); }
   img { max-width: 100%; height: auto; display: block; }
   code, pre, .mono { font-family: var(--font-mono); }
@@ -104,12 +129,12 @@
   .logo svg { align-self: center; }
   /* The name is a pun and a family marker; spelling it out once, quietly,
      stops it reading as noise to someone landing cold. */
-  .logo .expand { font-family: var(--font-body); font-weight: 400; font-size: 0.78rem; color: var(--dim); letter-spacing: 0.02em; white-space: nowrap; }
+  .logo .expand { font-family: var(--font-display); font-weight: 500; font-size: 0.78rem; color: var(--dim); letter-spacing: 0.02em; white-space: nowrap; }
   .logo svg { width: 28px; height: 28px; }
   .nav-links { display: flex; gap: 6px; margin-left: auto; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; padding: 6px 12px; border-radius: 999px; }
+  .nav-links a { font-family: var(--font-display); font-weight: 500; color: var(--muted); text-decoration: none; font-size: 0.9rem; padding: 6px 12px; border-radius: 999px; }
   .nav-links a:hover { color: var(--white); background: var(--card); }
-  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 500; border-radius: 10px; padding: 12px 20px; font-size: 0.98rem; border: 1px solid var(--border); color: var(--white); transition: background .15s, border-color .15s; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); text-decoration: none; font-weight: 600; border-radius: 10px; padding: 12px 20px; font-size: 0.95rem; border: 1px solid var(--border); color: var(--white); transition: background .15s, border-color .15s; }
   .btn:hover { background: var(--card-hover); border-color: rgba(255,255,255,0.22); }
   .btn.primary { background: var(--teal); color: var(--navy); border-color: var(--teal); font-weight: 700; }
   .btn.primary:hover { background: #33ffc2; }
@@ -132,7 +157,7 @@
   .hero h1 span { color: var(--teal); }
   .hero .sub { color: var(--muted); font-size: 1.2rem; font-weight: 300; max-width: 62ch; }
   .install { position: relative; margin: 18px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 1rem; }
-  .install span { color: var(--dim); font-family: var(--font-body); font-size: 0.9rem; }
+  .install span { color: var(--dim); font-family: var(--font-display); font-weight: 500; font-size: 0.85rem; }
   .install code { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 9px 16px; color: var(--teal); display: inline-block; }
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
   .hero-shot { margin-top: 56px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--navy-mid); box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
@@ -300,12 +325,13 @@
         <h3>Your coding agent, on the queue</h3>
         <p>A read-only MCP server exposes the queue, per-site metrics, the metadata audit, index coverage, trends and ops health. Claude Code picks it up from <code>.mcp.json</code> with no setup; other clients use stdio or an authenticated HTTP endpoint.</p>
         <div class="prompts">
+          <div class="prompt">Set this up for my sites.</div>
           <div class="prompt">What should I do first this week, and why?</div>
           <div class="prompt">Which pages rank well but rarely get clicked?</div>
           <div class="prompt">Did last week's title change on /pricing move anything?</div>
           <div class="prompt">Ship the top striking-distance card and open the PR.</div>
         </div>
-        <p style="margin-top: 14px;">Six skills ship with it — setup, add-site, triage, ship, review, deploy — so the operating rules are enforced rather than merely documented. <code>ship</code> stops rather than crossing a 28-day freeze or the weekly metadata budget.</p>
+        <p style="margin-top: 14px;"><b><code>n-seo init</code> installs seven skills into your instance</b> — orient, setup, add-site, triage, ship, review, deploy — with a <code>CLAUDE.md</code> carrying the operating rules. Open the directory in Claude Code and it is already oriented: no docs to read first, and the rules are enforced rather than merely documented. <code>ship</code> stops rather than crossing a 28-day freeze or the weekly metadata budget.</p>
         <p class="shot-caption" style="text-align:left; margin: 12px 0 0;">16 tools, 3 doc resources, every one annotated read-only. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md">MCP docs →</a></p>
       </div>
     </div>
@@ -318,20 +344,25 @@
     <div class="eyebrow">Quickstart</div>
     <h2>Five minutes, no Google setup</h2>
     <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+ and curl are all it needs, on macOS, Linux or Windows.</p>
-    <div class="qs" style="margin-top: 36px;">
-<pre><span class="c"># see it working</span>
+    <div class="aside" style="margin-top: 22px;"><b>n-seo is its own project — don't install it inside a website's repo.</b> <code>n-seo init</code> creates a standalone directory for your config, your queue and a <code>data/</code> tree the daily run rewrites every morning. It reads your sites through the Search Console and GA4 APIs, so it never needs to live in their code, and putting it there means committing and deploying all of that. The command refuses to scaffold into an app directory or someone else's git repo. One instance watches as many sites as you own.</div>
+    <div class="qs" style="margin-top: 30px;">
+<pre><span class="c"># see it working — from anywhere outside your site repos</span>
 npm install -g n-seo
 n-seo init my-sites &amp;&amp; cd my-sites
 n-seo demo          <span class="c"># synthetic data for example.com</span>
 n-seo start         <span class="c"># → http://localhost:4600</span>
 
-<span class="c"># connect your sites</span>
-<span class="c"># edit n-seo.config.json, then:</span>
+<span class="c"># then just ask — init installed the skills</span>
+claude
+<span class="c">#  "set this up for my sites"</span>
+<span class="c">#  "what should I work on today?"</span>
+
+<span class="c"># or do it by hand</span>
 n-seo doctor        <span class="c"># checks key + access</span>
-n-seo daily         <span class="c"># the morning run, by hand</span></pre>
+n-seo daily         <span class="c"># the morning run</span></pre>
       <div class="steps">
         <div class="step"><div><h3>Try it on demo data</h3><p>Every page, every card, every chart — populated. Poke around the queue, open a spec, toggle a module in Settings.</p></div></div>
-        <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally by node — no gcloud, no pip installs, no openssl. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
+        <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally by node — no gcloud, no pip installs, no openssl. Say <em>"set this up for my sites"</em> and the <code>n-seo-setup</code> skill walks the whole thing, stopping at each decision that is yours. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
         <div class="step"><div><h3>Schedule the morning run</h3><p>launchd on macOS, cron or systemd on Linux. It waits for the network, retries once, logs every step, and tells you when something failed. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SCHEDULING.md">Scheduling →</a></p></div></div>
         <div class="step"><div><h3>Ship what it tells you to</h3><p>In your own repo, your own way. The next morning's data says whether it worked, and the card moves to <em>watching</em> instead of disappearing.</p></div></div>
       </div>
