@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.3.0] - 2026-09-10
+
 ### Added
 - **`n-seo init` refuses to scaffold inside a website.** An instance is a
   standalone project: it writes a config, a queue, drafts and a `data/` tree
@@ -312,6 +316,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/en-dash-consulting/n-seo/releases/tag/v0.1.0
