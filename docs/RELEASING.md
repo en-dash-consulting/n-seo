@@ -94,23 +94,50 @@ signed attestation linking the tarball to the workflow run that built it.
 GitHub will not issue the OIDC token for that on a private repo, so the repo
 must be public before the first tag is pushed.
 
-**Trusted publishing cannot be configured until the package exists.** npm's
-trusted publishing binds a package to a specific repository and workflow, and
-the settings page for it lives on the package — which does not exist yet. So
-the first release uses a token, and you switch afterwards:
+**Trusted publishing cannot be configured until the package exists.** npm
+binds a trusted publisher to a package, and the settings page for it lives on
+the package — which does not exist before the first publish. PyPI allows
+configuring a publisher for a not-yet-existing project; npm does not
+([npm/cli#8544](https://github.com/npm/cli/issues/8544)).
 
-1. Make the repository public.
-2. Create an npm **automation** token (npmjs.com → your avatar → Access
-   Tokens → Generate New Token → Automation). Automation tokens bypass 2FA,
-   which is what a CI publish needs.
-3. Add it as a repository secret named `NPM_TOKEN`
-   (`gh secret set NPM_TOKEN`).
-4. Tag and push as above. The workflow publishes `n-seo@<version>`.
-5. On npmjs.com, open the package → Settings → Trusted Publisher, and point it
-   at `en-dash-consulting/n-seo` and `.github/workflows/release.yml`.
-6. Delete the `NPM_TOKEN` secret and remove the `NODE_AUTH_TOKEN` env line
-   from the publish step. Later releases authenticate with OIDC and no
-   long-lived credential exists anywhere.
+So something has to make version 0.1.0 exist. The best option is **not** a CI
+token: publish the first version by hand, from a machine, with interactive
+2FA. No long-lived credential is created and nothing is ever stored in the
+repository.
+
+1. Make the repository public (provenance requires it).
+2. From a clean checkout at the tagged commit:
+   ```sh
+   npm login                 # interactive, with 2FA
+   npm run check             # the suite
+   .github/scripts/pack-smoke.sh   # install the tarball and drive it
+   npm publish --access public
+   ```
+   Skip `--provenance` here: a local publish has no OIDC token to sign
+   against. Only the workflow can attach provenance.
+3. On npmjs.com, open the package → Settings → Trusted Publisher, and point it
+   at `en-dash-consulting/n-seo` with workflow `.github/workflows/release.yml`.
+4. `npm logout`, so the local session token dies too.
+
+Every release after that is just a tag. The workflow authenticates over OIDC,
+signs with provenance, and no secret exists in the repository at all.
+
+If you would rather automate even the first publish, a **granular access
+token** scoped to publish, with the shortest expiry npm offers, added as
+`NPM_TOKEN` and restored to the publish step as
+`NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`, will do it. Delete the secret
+immediately afterwards. Prefer the manual route: npm is actively moving away
+from long-lived tokens, and 2FA-bypassing automation tokens for account
+management are being retired.
+
+### Why the workflow upgrades npm
+
+Node 22 ships npm 10, and trusted publishing needs **npm 11.5.1 or later**.
+Without the upgrade step the OIDC exchange never happens and the publish
+fails with a 404 that has nothing to do with the package being missing. The
+workflow also deliberately omits `registry-url` from `setup-node`, because it
+writes an `.npmrc` auth line interpolating `NODE_AUTH_TOKEN`, and an empty
+value there produces the same misleading 404.
 
 ## Verify what was published
 

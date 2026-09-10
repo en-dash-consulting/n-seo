@@ -26,7 +26,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://registry.npmjs.org
+      # No registry-url on purpose. It writes an .npmrc whose auth line
+      # interpolates NODE_AUTH_TOKEN, and an empty value there makes a trusted
+      # publish fail with a misleading 404 instead of an auth error.
+
+      # Node 22 ships npm 10, and trusted publishing needs 11.5.1 or later.
+      # Without this the OIDC exchange never happens.
+      - name: npm new enough for trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - uses: actions/setup-python@v7
         with:
@@ -56,10 +65,14 @@ jobs:
       - name: Pack, install and drive the tarball
         run: .github/scripts/pack-smoke.sh
 
+      # Authentication is OIDC: npm exchanges the id-token above for a
+      # short-lived credential. No secret is stored in this repository, which
+      # is the point — a long-lived publish token is the thing worth stealing.
+      # It requires a trusted publisher configured on the package at
+      # npmjs.com, which in turn requires the package to already exist; see
+      # docs/RELEASING.md for how the first release bootstraps that.
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Release notes from the changelog
         run: node .github/scripts/changelog-section.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
