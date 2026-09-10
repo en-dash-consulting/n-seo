@@ -20,7 +20,24 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PORT="${SMOKE_PORT:-4699}"
+# A hard-coded port makes this fail for anyone who happens to have something
+# on it — including a leftover dashboard from a previous run. Start from the
+# requested port and take the first free one.
+pick_port() {
+  node -e '
+    const net = require("node:net");
+    const start = Number(process.argv[1]);
+    (function probe(port) {
+      if (port > start + 60) { console.error("no free port near " + start); process.exit(1); }
+      const s = net.createServer();
+      s.once("error", () => probe(port + 1));
+      s.once("listening", () => s.close(() => console.log(port)));
+      s.listen(port, "127.0.0.1");
+    })(start);
+  ' "$1"
+}
+PORT="$(pick_port "${SMOKE_PORT:-4699}")"
+echo "using port $PORT"
 WORK="$(mktemp -d)"
 SERVER_PID=""
 
@@ -37,9 +54,13 @@ say() { printf '\n\033[1m== %s\033[0m\n' "$1"; }
 fail() { printf '::error::%s\n' "$1" >&2; exit 1; }
 
 say "pack $REPO"
-tarball="$(cd "$REPO" && npm pack --pack-destination "$WORK" --json \
-  | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s)[0].filename))')"
-[ -f "$WORK/$tarball" ] || fail "npm pack produced no tarball"
+# Do not parse `npm pack --json`: its shape is not stable across npm majors,
+# and the release job upgrades npm before running this, so it saw a different
+# shape than CI did and died on an undefined index. $WORK is ours and empty,
+# so whatever lands there is the tarball.
+(cd "$REPO" && npm pack --pack-destination "$WORK" >/dev/null)
+tarball="$(cd "$WORK" && ls -1 ./*.tgz 2>/dev/null | head -1 | sed 's|^\./||')"
+[ -n "$tarball" ] && [ -f "$WORK/$tarball" ] || fail "npm pack produced no tarball"
 echo "  $tarball ($(du -h "$WORK/$tarball" | cut -f1))"
 
 say "install into an empty project"
