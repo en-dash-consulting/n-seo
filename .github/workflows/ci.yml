@@ -19,14 +19,14 @@ jobs:
         # 20 is the floor declared in package.json engines; 22 is what we develop on.
         node: [20, 22]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -112,7 +112,7 @@ jobs:
     # README/site attribution, and the n-dx skill trailers.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Grep for forbidden words
         run: |
           pattern='endash|naniel|beergame|html-in-canvas|spacetrader|stillhouse|hotdogbenchmark'
