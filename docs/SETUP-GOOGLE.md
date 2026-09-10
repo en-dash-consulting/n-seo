@@ -120,7 +120,7 @@ Set `google.auth` to one of:
 
 | Mode | How it gets a token | When to use |
 |---|---|---|
-| `service-account-key` | Signs an OAuth JWT with the key file using `openssl` | Default. No extra tools |
+| `service-account-key` | Signs an OAuth JWT with the key file, using node's crypto module | Default. No extra tools, on any platform |
 | `gcloud-impersonate` | `gcloud auth print-access-token --impersonate-service-account=<google.impersonate>` | You already use gcloud and would rather grant your user *Service Account Token Creator* on the SA than keep a key file. Still add the SA to the consoles as above |
 | `gcloud-user` | `gcloud auth print-access-token` for your own login | Rarely works: gcloud's default client does not carry the Search Console or Analytics scopes for user credentials, and Google blocks `application-default login` with those scopes. Kept for completeness |
 | `metadata` | The runtime service account from the GCE / Cloud Run / GKE metadata server, exchanged for a scoped token | Running on Google Cloud. No key file exists, so none can leak |

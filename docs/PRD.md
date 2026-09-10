@@ -72,9 +72,10 @@ a fresh checkout runs.
 
 ## Feature: Service-account auth without gcloud [shipped]
 
-- Acceptance: with only a service-account JSON key and `openssl` on PATH,
-  `python3 ingest/google_auth.py` mints a token and lists accessible
-  properties.
+- Acceptance: with only a service-account JSON key, `n-seo doctor` mints a
+  token and lists accessible properties. No gcloud, no pip install and no
+  openssl binary: the JWT is signed with node's crypto module, which the
+  dashboard already requires.
 - Acceptance: gcloud impersonation and gcloud user modes remain selectable.
 - Acceptance: `ops/doctor.py` reports the exact email to add in Search
   Console and GA4 and which configured properties are not yet accessible.
