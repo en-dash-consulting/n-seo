@@ -85,7 +85,11 @@
   /* nav */
   .nav { position: sticky; top: 0; z-index: 10; background: rgba(13,27,62,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
   .nav .wrap { display: flex; align-items: center; gap: 22px; height: 62px; }
-  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
+  .logo { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--white); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
+  .logo svg { align-self: center; }
+  /* The name is a pun and a family marker; spelling it out once, quietly,
+     stops it reading as noise to someone landing cold. */
+  .logo .expand { font-family: var(--font-body); font-weight: 400; font-size: 0.78rem; color: var(--dim); letter-spacing: 0.02em; white-space: nowrap; }
   .logo svg { width: 28px; height: 28px; }
   .nav-links { display: flex; gap: 6px; margin-left: auto; }
   .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; padding: 6px 12px; border-radius: 999px; }
@@ -121,7 +125,7 @@
   .shot-caption { font-family: var(--font-mono); font-size: 0.78rem; color: var(--dim); margin-top: 12px; text-align: center; }
 
   /* three promises */
-  .promises { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .promises { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 16px; margin-top: 48px; }
   .promise { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; }
   .promise .k { font-family: var(--font-mono); color: var(--teal); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .promise h3 { margin: 8px 0 8px; }
@@ -163,7 +167,14 @@
   .aside b { color: var(--white); }
 
   /* agent */
-  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .half { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; height: 100%; }
+  .half .k { font-family: var(--font-mono); color: var(--teal); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .half h3 { margin: 8px 0 10px; font-size: 1.15rem; }
+  .half p { color: var(--muted); font-size: 0.97rem; margin: 0 0 10px; }
+  .half ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.95rem; }
+  .half li { margin-bottom: 6px; }
+  .half code { background: rgba(255,255,255,0.06); border-radius: 5px; padding: 1px 6px; font-size: 0.88em; color: var(--teal); }
   .prompts { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
   .prompt { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 0.95rem; color: var(--muted); }
   .prompt::before { content: "› "; color: var(--teal); font-family: var(--font-mono); }
@@ -195,7 +206,7 @@
   footer img { height: 34px; width: auto; border-radius: 6px; }
 
   @media (max-width: 900px) {
-    .promises, .rules, .loop { grid-template-columns: 1fr 1fr; }
+    .rules, .loop { grid-template-columns: 1fr 1fr; }
     .qs, .agent, .gallery, .free { grid-template-columns: 1fr; }
     .nav-links a:not(.btn) { display: none; }
   }
@@ -210,15 +221,15 @@
 
 <nav class="nav" aria-label="Primary">
   <div class="wrap">
-    <a class="logo" href="./" aria-label="n-seo home">
+    <a class="logo" href="./" aria-label="n-seo, En Dash SEO — home">
       <svg viewBox="0 0 300 300" fill="none" aria-hidden="true"><path d="M300 0H0V300H300V0Z" fill="#00E5B9"/><path d="M300 239.902H32.0074V255.489H300V239.902Z" fill="#00FFCE"/><path d="M55.7684 202.351L118.59 139.53L160.47 181.41L244.232 97.6489" stroke="#001769" stroke-width="27.4428" stroke-linecap="round" stroke-linejoin="round"/><path d="M181.411 97.6489H244.232V160.47" stroke="#001769" stroke-width="27.4428" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      n-seo
+      n-seo <span class="expand">En&nbsp;Dash&nbsp;SEO</span>
     </a>
     <div class="nav-links">
+      <a href="#agent">Agentic</a>
       <a href="#how">How it works</a>
       <a href="#see">What you get</a>
       <a href="#rules">The rules</a>
-      <a href="#agent">Your agent</a>
       <a href="#free">Free</a>
       <a class="btn small" href="https://github.com/en-dash-consulting/n-seo">GitHub ↗</a>
     </div>
@@ -231,7 +242,7 @@
   <div class="wrap">
     <div class="badge"><span>● open source · MIT · your infrastructure</span><span>·</span><b>from the makers of <a href="https://n-dx.dev">n-dx</a></b></div>
     <h1>An SEO, self-hosted<span>.</span></h1>
-    <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and hands you a ranked queue of concrete moves — with the numbers attached. No account, no SaaS. It briefs you; it never posts for you.</p>
+    <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and ranks the moves worth making. Your model — Claude, GPT, something local, your choice — turns those findings into proposals and briefings. Your coding agent works the queue over MCP. It proposes; it never posts, publishes or edits a site.</p>
     <div class="hero-actions">
       <a class="btn primary" href="#start">Run it in 5 minutes</a>
       <a class="btn" href="https://github.com/en-dash-consulting/n-seo">View on GitHub ↗</a>
@@ -245,11 +256,47 @@
 
     <div class="promises">
       <div class="promise"><div class="k">Data</div><h3>Yours, on your hardware</h3><p>Laptop, VPS, NAS or a VM in your own cloud. Nothing leaves the host except calls to the Google APIs you authorize. No account, no SaaS, no telemetry.</p></div>
+      <div class="promise"><div class="k">Model</div><h3>Yours, whichever you pick</h3><p>Proposals, verdicts and briefings come from the provider you configure — Anthropic, any OpenAI-compatible endpoint, or a CLI on your machine. No key ships with n-seo and nothing is called that you did not set up.</p></div>
       <div class="promise"><div class="k">Judgment</div><h3>Evidence first</h3><p>Every card shows the queries, positions and impressions behind it, then the move, then a spec. You learn what actually moves the numbers.</p></div>
-      <div class="promise"><div class="k">Hands</div><h3>It briefs; you act</h3><p>No module edits your site, sends an email or posts a comment. Community modules write briefings. The words are always yours.</p></div>
+      <div class="promise"><div class="k">Hands</div><h3>It proposes; you act</h3><p>No module edits a site, sends an email or posts a comment. Machine proposals wait in a holding area until you accept them. The words are always yours.</p></div>
     </div>
   </div>
 </header>
+
+<section id="agent">
+  <div class="wrap">
+    <div class="eyebrow">Agentic by design</div>
+    <h2>Your model does the thinking. Your agent does the work.</h2>
+    <p class="lede">n-seo is deterministic where it should be — the pulls, the probes and the ranking rules are plain code you can read. Everything that needs judgment is handed to a model you choose, and everything that changes a site is handed to you.</p>
+    <div class="agent" style="margin-top: 34px;">
+      <div class="half">
+        <div class="k">Inside n-seo</div>
+        <h3>Your model, on your findings</h3>
+        <p>Point <code>modules.llm</code> at a provider and the morning run stops being a report and starts being a colleague:</p>
+        <ul>
+          <li><b>Proposals.</b> Rising queries nothing in your queue covers become concrete cards — the page to write, the section to add, with the numbers cited.</li>
+          <li><b>Verdicts.</b> Shipped work is judged against its own success criterion: succeeded, failed, or still cooking.</li>
+          <li><b>Briefings.</b> For each community thread worth joining: the gist, the debate, and where your genuine experience connects.</li>
+        </ul>
+        <p style="margin-top: 12px;">Reach it however you like: any CLI that reads a prompt on stdin — <code>claude -p</code> or <code>ollama run</code> or a shell script — or an HTTP endpoint, Anthropic or anything OpenAI-compatible, gateways and local servers included. Turn it off and you still get the full data-derived queue; you lose the proposals, verdicts and briefings.</p>
+      </div>
+      <div class="half">
+        <div class="k">Alongside n-seo</div>
+        <h3>Your coding agent, on the queue</h3>
+        <p>A read-only MCP server exposes the queue, per-site metrics, the metadata audit, index coverage, trends and ops health. Claude Code picks it up from <code>.mcp.json</code> with no setup; other clients use stdio or an authenticated HTTP endpoint.</p>
+        <div class="prompts">
+          <div class="prompt">What should I do first this week, and why?</div>
+          <div class="prompt">Which pages rank well but rarely get clicked?</div>
+          <div class="prompt">Did last week's title change on /pricing move anything?</div>
+          <div class="prompt">Ship the top striking-distance card and open the PR.</div>
+        </div>
+        <p style="margin-top: 14px;">Six skills ship with it — setup, add-site, triage, ship, review, deploy — so the operating rules are enforced rather than merely documented. <code>ship</code> stops rather than crossing a 28-day freeze or the weekly metadata budget.</p>
+        <p class="shot-caption" style="text-align:left; margin: 12px 0 0;">16 tools, 3 doc resources, every one annotated read-only. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md">MCP docs →</a></p>
+      </div>
+    </div>
+    <div class="aside" style="margin-top: 22px;"><b>Read-only is the point.</b> An agent can reason over your search data all day and still cannot bypass the freeze, the batching, or you. Machine proposals land in a holding area; accepting one into the queue is a click a human makes.</div>
+  </div>
+</section>
 
 <section id="start">
   <div class="wrap">
@@ -281,10 +328,10 @@ n-seo daily         <span class="c"># the morning run, by hand</span></pre>
   <div class="wrap">
     <div class="eyebrow">How it works</div>
     <h2>What an agency does every month, as a loop that runs every morning</h2>
-    <p class="lede">Four planes. The first and second are automated; the third is you (or your AI agent); the fourth is what makes the second one honest.</p>
+    <p class="lede">Four planes. The first two are code; the third is you and your agent; the fourth is what keeps the second one honest.</p>
     <div class="loop">
       <div><div class="n">01 · awareness</div><h3>Pull everything</h3><p>Search Console (16 months and the trailing 90 days), GA4 sessions, sources and landing pages, per-page time series, URL Inspection verdicts for every sitemap URL, and a no-auth probe of each site: robots, sitemap, llms.txt, soft 404s, blocked AI crawlers, JS-only shells.</p></div>
-      <div><div class="n">02 · analysis</div><h3>Rank the moves</h3><p>Rules over the 90-day window turn snapshots into actions: metadata that misses the ranking language, pages that rank well but rarely get clicked, queries sitting at position 5–15, landing pages that don't deliver what the click promised, traffic drops. Impact per unit of effort orders the queue.</p></div>
+      <div><div class="n">02 · analysis</div><h3>Rank the moves</h3><p>Rules over the 90-day window turn snapshots into actions: metadata that misses the ranking language, pages that rank well but rarely get clicked, queries sitting at position 5–15, landing pages that don't deliver what the click promised, traffic drops. Impact per unit of effort orders the queue. With the LLM module on, rising queries nothing covers become drafted proposals too.</p></div>
       <div><div class="n">03 · action</div><h3>You ship</h3><p>Each card opens to the evidence, the move and a build spec. You change the title, add the section, fix the 404 — in your repo, on a branch, your way. Accept machine proposals into your queue with one click; nothing self-modifies it.</p></div>
       <div><div class="n">04 · measurement</div><h3>The data decides</h3><p>Shipped work becomes <em>watching</em>, never deleted. Watched pages are reported in the daily log; the scan judges whether a change succeeded, failed or needs more time. That feedback is how you hone your own principles.</p></div>
     </div>
@@ -323,26 +370,6 @@ n-seo daily         <span class="c"># the morning run, by hand</span></pre>
   </div>
 </section>
 
-<section id="agent">
-  <div class="wrap agent">
-    <div>
-      <div class="eyebrow">Bring your own agent</div>
-      <h2>Your AI agent gets the same view you do</h2>
-      <p class="lede">A read-only MCP server exposes the queue, per-site metrics, the metadata audit, index coverage, trends and ops health. Claude Code picks it up from the repo's <code>.mcp.json</code> with no setup; Claude Desktop and other clients use stdio or an authenticated HTTP endpoint.</p>
-      <p class="lede">Read-only is the point: an agent can reason over your search data all day and still cannot bypass the freeze, the batching, or you.</p>
-    </div>
-    <div>
-      <div class="prompts">
-        <div class="prompt">What should I do first this week, and why?</div>
-        <div class="prompt">Which pages on example.com rank well but rarely get clicked?</div>
-        <div class="prompt">Did last week's title change on /pricing move anything yet?</div>
-        <div class="prompt">Which sitemap URLs has Google never crawled?</div>
-        <div class="prompt">Draft the spec for the top striking-distance page as a PR description.</div>
-      </div>
-      <p class="shot-caption" style="text-align:left; margin-top: 14px;">15 tools, 3 doc resources, every one annotated read-only. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md">MCP docs →</a></p>
-    </div>
-  </div>
-</section>
 
 <section id="modules">
   <div class="wrap">
@@ -356,7 +383,7 @@ n-seo daily         <span class="c"># the morning run, by hand</span></pre>
         <tr><td>Index coverage sweep</td><td>URL Inspection verdict for every sitemap URL</td><td>Search Console access</td><td class="on">on</td></tr>
         <tr><td>Metadata audit</td><td>Fetches each ranking page's live title and description, judges them against the queries it ranks for</td><td>—</td><td class="on">on</td></tr>
         <tr><td>Opportunity scan</td><td>84-day trend refresh; rising queries no queue item covers become candidates</td><td>—</td><td class="on">on</td></tr>
-        <tr><td>LLM inference</td><td>Turns candidates into proposals and watched items into verdicts; writes digest briefings</td><td>any CLI that reads a prompt on stdin — <code>claude -p</code> by default</td><td class="off">off</td></tr>
+        <tr><td>LLM inference</td><td>Turns candidates into proposals and watched items into verdicts; writes digest briefings</td><td>a provider you choose: any stdin CLI, or an Anthropic / OpenAI-compatible endpoint</td><td class="off">off</td></tr>
         <tr><td>Hacker News digest</td><td>Finds fresh threads in your expertise areas and briefs you on each</td><td>your HN username</td><td class="off">off</td></tr>
         <tr><td>Reddit digest</td><td>Same for subreddits</td><td>a free Reddit "script" app's credentials</td><td class="off">off</td></tr>
         <tr><td>IndexNow</td><td>Key generation and pings to Bing / Copilot / Yandex on publish</td><td>—</td><td class="off">off</td></tr>
@@ -376,7 +403,7 @@ n-seo daily         <span class="c"># the morning run, by hand</span></pre>
     <div class="free">
       <div><b>No SaaS, no account, no seat price.</b> MIT licensed. Clone it, run it, fork it, ship it inside your company.</div>
       <div><b>Google's APIs are free within quota.</b> Search Console and GA4 reporting cost nothing at this scale; the index sweep is capped well under the daily limit.</div>
-      <div><b>Bring the LLM you already have — or none.</b> The core loop needs no model at all. The inference module runs whatever command you give it, or calls an endpoint you choose, with your prompt.</div>
+      <div><b>Bring the model you already pay for.</b> n-seo has no inference costs of its own — it calls the provider you configure, with your key, at your rates. A local model costs nothing. Without one you still get the full data-derived queue, minus the proposals and briefings.</div>
       <div><b>We run our own sites on it.</b> n-seo is the generalized version of the control plane En Dash uses for its own portfolio every morning. When it breaks, we notice first.</div>
     </div>
   </div>

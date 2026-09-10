@@ -1,13 +1,14 @@
-# n-seo
+# n-seo (En Dash SEO)
 
-> n-seo is an open-source, self-hosted SEO / AEO / GEO control plane from En Dash Consulting. It pulls Google Search Console and GA4 into local JSON every morning, probes your live sites for regressions (robots.txt, sitemap, soft 404s, blocked AI crawlers, JS-only shells), and turns the data into a ranked queue of concrete actions with the evidence attached. It briefs you; it never posts, publishes, or edits your site for you.
+> n-seo (full name: En Dash SEO) is an open-source, self-hosted, agentic SEO / AEO / GEO control plane from En Dash Consulting. It pulls Google Search Console and GA4 into local JSON every morning, probes your live sites for regressions (robots.txt, sitemap, soft 404s, blocked AI crawlers, JS-only shells), and ranks the moves worth making, with the evidence attached. That engine is deterministic code; the judgment is handed to an LLM provider the user chooses, and anything that would change a site is handed to the user. It briefs and proposes; it never posts, publishes, or edits.
 
 - Repository: https://github.com/en-dash-consulting/n-seo
 - License: MIT
 - Requirements: Node 20+, Python 3.10+, curl, openssl; macOS or Linux
-- Quickstart: `npm install && npm run demo && npm start` (synthetic data, no Google setup)
+- Quickstart: `npm install -g n-seo`, then `n-seo init my-sites && cd my-sites && n-seo demo && n-seo start` (synthetic data, no Google setup)
 - Real data: a Google service-account JSON key added as a user on Search Console and GA4; no gcloud needed
-- Agent access: read-only MCP server (stdio and HTTP) exposing the action queue, per-site metrics, metadata audit, index coverage, trends, and ops status
+- Bring your own model: the optional `llm` module (off by default) reaches any CLI that reads a prompt on stdin (`claude -p`, `ollama run`, a shell script) or an HTTP endpoint (Anthropic, or anything OpenAI-compatible including gateways and local servers). It writes the opportunity proposals, the verdicts on shipped work, and the community briefings. No API key ships with n-seo. With the module off, the full data-derived queue still works
+- Agent access: read-only MCP server (stdio and authenticated HTTP), 16 tools and 3 doc resources, exposing the action queue, per-site metrics, metadata audit, index coverage, trends, and ops status. `.mcp.json` registers it for Claude Code automatically; six operating skills ship with it (setup, add-site, triage, ship, review, deploy) so the operating rules below are enforced rather than merely documented
 - Built-in operating rules: 28-day title freeze after any metadata change, at most ~8 metadata changes per week, decisions on the trailing 90 days, impact numbers order the queue and are not forecasts, shipped work is watched rather than deleted, community participation is written by a human
 
 ## Pages
@@ -17,7 +18,7 @@
 - [Google setup](https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md)
 - [Operating rules](https://github.com/en-dash-consulting/n-seo/blob/main/docs/OPERATING-RULES.md)
 - [Playbook](https://github.com/en-dash-consulting/n-seo/blob/main/docs/PLAYBOOK.md) — SEO, AEO, GEO and what moves each
-- [MCP](https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md) — using it from Claude Code or another agent
+- [MCP](https://github.com/en-dash-consulting/n-seo/blob/main/docs/MCP.md) — putting Claude Code or another coding agent on the queue
 
 ## Related En Dash open source
 

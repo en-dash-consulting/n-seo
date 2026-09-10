@@ -1,10 +1,22 @@
-# MCP server — the same data, for agents
+# MCP server — your agent, on the queue
 
-`src/mcp.ts` exposes the control plane over the Model Context Protocol so an
-AI agent can read the queue and the metrics directly instead of scraping the
-dashboard. It is **read-only by design**: the queue is edited through the
-dashboard's accept/watch/retire flow, so nothing here writes anything. Every
-tool is annotated `readOnlyHint`.
+n-seo has two agentic surfaces. Inside the daily run, the `llm` module hands
+the findings to a model you configure and gets back proposals, verdicts and
+briefings (see the README). This document is the other one: `src/mcp.ts`
+exposes the control plane over the Model Context Protocol, so the coding agent
+you already use — Claude Code, Claude Desktop, or any MCP client — reads the
+real queue and the real metrics instead of scraping the dashboard, then goes
+and implements the work in your site's repo.
+
+The division of labour is the point. n-seo decides *what is worth doing*, from
+data, with the evidence attached. Your agent does the doing, in the repo where
+the change belongs, under the rules in `CLAUDE.md`.
+
+It is **read-only by design**: the queue is edited through the dashboard's
+accept/watch/retire flow, so nothing here writes anything. All 16 tools and 3
+doc resources are annotated `readOnlyHint`. An agent can reason over your
+search data all day and still cannot bypass the 28-day title freeze, the
+weekly metadata budget, or you.
 
 ## Two transports
 
@@ -65,7 +77,7 @@ another device, tunnel to the dashboard port (Tailscale, `cloudflared`,
 an SSH tunnel) rather than exposing it — the bearer token is the only thing
 in front of it.
 
-## Tools
+## Tools (16)
 
 | Tool | Returns |
 |---|---|
@@ -84,8 +96,9 @@ in front of it.
 | `conversions_status` | Whether conversion events are instrumented and their 28-day counts by source |
 | `campaigns` | Outreach campaigns from `content/campaigns/` — targets, plan, template ids |
 | `settings` | The effective config: sites, module switches, auth mode (never the key) |
+| `engine_info` | Which engine version, commit and instance directory are running, and which modules are on — check before assuming a feature exists |
 
-Resources: `seo://docs/playbook`, `seo://docs/daily-log`,
+Resources (3): `seo://docs/playbook`, `seo://docs/daily-log`,
 `seo://docs/operating-rules`.
 
 ## Example prompts
@@ -98,6 +111,9 @@ Resources: `seo://docs/playbook`, `seo://docs/daily-log`,
 - "Summarize the last five daily-log entries — what regressed, what moved."
 - "Read the opportunity proposals and tell me which ones are worth accepting
   and why. Don't add anything to the queue."
+- "Take the top striking-distance card for example.com, implement it on a
+  branch in the site's repo, and open the PR." — this is the `n-seo-ship`
+  skill's job; it stops rather than crossing the freeze or the weekly budget.
 
 The rules in `CLAUDE.md` apply to an agent using these tools: it proposes,
 you accept; it never drafts community comments; it reads outputs rather than
