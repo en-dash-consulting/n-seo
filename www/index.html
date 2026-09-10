@@ -112,6 +112,9 @@
   .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); font-weight: 900; margin: 26px 0 18px; }
   .hero h1 span { color: var(--teal); }
   .hero .sub { color: var(--muted); font-size: 1.2rem; font-weight: 300; max-width: 62ch; }
+  .install { position: relative; margin: 18px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 1rem; }
+  .install span { color: var(--dim); font-family: var(--font-body); font-size: 0.9rem; }
+  .install code { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 9px 16px; color: var(--teal); display: inline-block; }
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
   .hero-shot { margin-top: 56px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--navy-mid); box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
   .hero-shot img { width: 100%; }
@@ -233,6 +236,7 @@
       <a class="btn primary" href="#start">Run it in 5 minutes</a>
       <a class="btn" href="https://github.com/en-dash-consulting/n-seo">View on GitHub ↗</a>
     </div>
+    <p class="install"><code>npm install -g n-seo</code> <span>then <code>n-seo init my-sites</code></span></p>
 
     <div class="hero-shot">
       <img src="assets/shot-overview-dark.png" alt="n-seo overview: the Today board grouping what is waiting on you — Fix, Approve, Ship — above a per-site strip of sessions, clicks, AI-referral share and search share" width="1400" height="900" loading="eager">
@@ -254,15 +258,15 @@
     <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+, curl and openssl are all it needs.</p>
     <div class="qs" style="margin-top: 36px;">
 <pre><span class="c"># see it working</span>
-git clone https://github.com/en-dash-consulting/n-seo
-cd n-seo && npm install
-npm run demo        <span class="c"># synthetic data for example.com</span>
-npm start           <span class="c"># → http://localhost:4600</span>
+npm install -g n-seo
+n-seo init my-sites &amp;&amp; cd my-sites
+n-seo demo          <span class="c"># synthetic data for example.com</span>
+n-seo start         <span class="c"># → http://localhost:4600</span>
 
 <span class="c"># connect your sites</span>
-cp n-seo.config.example.json n-seo.config.json
-python3 ops/doctor.py   <span class="c"># checks key + access</span>
-python3 ops/daily.py    <span class="c"># the morning run, by hand</span></pre>
+<span class="c"># edit n-seo.config.json, then:</span>
+n-seo doctor        <span class="c"># checks key + access</span>
+n-seo daily         <span class="c"># the morning run, by hand</span></pre>
       <div class="steps">
         <div class="step"><div><h3>Try it on demo data</h3><p>Every page, every card, every chart — populated. Poke around the queue, open a spec, toggle a module in Settings.</p></div></div>
         <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally with openssl — no gcloud, no pip installs. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>

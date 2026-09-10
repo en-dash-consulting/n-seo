@@ -2,6 +2,10 @@
 
 **An SEO, self-hosted.** Website: https://n-seo.dev/ · From the makers of [n-dx](https://n-dx.dev).
 
+[![npm](https://img.shields.io/npm/v/n-seo)](https://www.npmjs.com/package/n-seo)
+[![CI](https://github.com/en-dash-consulting/n-seo/actions/workflows/ci.yml/badge.svg)](https://github.com/en-dash-consulting/n-seo/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/n-seo)](LICENSE)
+
 A local-first control plane for growing organic traffic to your own sites —
 classic search (SEO), answer engines (AEO) and AI assistants that cite sources
 (GEO) — without paying an agency to read Search Console for you.
@@ -25,15 +29,34 @@ It runs on hardware you control, on a schedule, and shows you the result on a da
 ## Quickstart (5 minutes, no Google setup)
 
 ```sh
-git clone https://github.com/en-dash-consulting/n-seo.git
-cd n-seo
-npm install
-npm run demo        # writes a synthetic dataset for example.com under data/
-npm start           # dashboard → http://localhost:4600
+npm install -g n-seo
+n-seo init my-sites && cd my-sites
+n-seo demo          # a synthetic dataset for example.com
+n-seo start         # dashboard → http://localhost:4600
 ```
 
 Open http://localhost:4600. Every page is populated from the demo data, so you
-can see what the tool does before you connect anything.
+can see what the tool does before you connect anything. `n-seo demo --clean`
+removes it.
+
+Prefer not to install globally? `npx n-seo init my-sites` works the same way.
+
+<details>
+<summary>Or run it from a clone, if you want to change the engine itself</summary>
+
+```sh
+git clone https://github.com/en-dash-consulting/n-seo.git
+cd n-seo
+npm install
+npm run demo
+npm start
+```
+
+In this mode the config, queue and data live inside the checkout. That is the
+right shape for hacking on n-seo; for running it, the instance layout above
+keeps your files separate from the engine so upgrades are a reinstall rather
+than a merge. See [docs/INSTANCE.md](docs/INSTANCE.md).
+</details>
 
 ## Connect your real sites
 

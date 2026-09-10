@@ -8,6 +8,27 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.1.1] - 2026-09-09
+
+### Changed
+- Install instructions lead with `npm install -g n-seo` now that the package
+  is published; the clone path stays documented for people changing the
+  engine itself. README carries npm, CI and licence badges.
+- The site moves to https://n-seo.dev, and `www/CNAME` ships inside the Pages
+  artifact so a redeploy cannot drop the custom domain.
+
+### Fixed
+- The release smoke script no longer parses `npm pack --json`, whose shape
+  differs between npm 10 and npm 12. The release job upgrades npm before
+  running it, so it saw a different shape than CI did and failed one step
+  before publishing.
+
+### Security
+- Releases are staged rather than published directly. CI submits with
+  `npm stage publish`; a maintainer approves with 2FA before anything is
+  live, so a compromised runner or a stray tag cannot put code on the
+  registry.
+
 ## [0.1.0] - 2026-09-09
 
 First public release.
@@ -183,5 +204,6 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/en-dash-consulting/n-seo/releases/tag/v0.1.0
