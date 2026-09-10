@@ -71,8 +71,20 @@ jobs:
       # It requires a trusted publisher configured on the package at
       # npmjs.com, which in turn requires the package to already exist; see
       # docs/RELEASING.md for how the first release bootstraps that.
+      # Idempotent on purpose. The very first release is published by hand,
+      # because npm cannot configure a trusted publisher for a package that
+      # does not exist yet — so its tag would otherwise arrive here and fail
+      # on "cannot publish over the previously published version". This also
+      # makes a re-run of a failed release safe.
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if npm view "n-seo@$version" version >/dev/null 2>&1; then
+            echo "n-seo@$version is already on the registry — skipping publish"
+            echo "published=skipped" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npm publish --provenance --access public
 
       - name: Release notes from the changelog
         run: node .github/scripts/changelog-section.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
