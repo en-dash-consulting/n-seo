@@ -52,7 +52,8 @@ with evidence attached, and measure yesterday's changes.
 - Not an auto-publisher, link builder, or comment bot.
 - Not a hosted product; there is no account and no server-side component
   beyond an optional static mirror the owner hosts.
-- Windows is not a target (WSL likely works; untested).
+- Not a hosted control panel for other people's sites; one owner, one
+  instance, their own credentials.
 
 ---
 

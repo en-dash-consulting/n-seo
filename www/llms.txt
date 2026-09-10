@@ -4,7 +4,7 @@
 
 - Repository: https://github.com/en-dash-consulting/n-seo
 - License: MIT
-- Requirements: Node 20+, Python 3.10+, curl, openssl; macOS or Linux
+- Requirements: Node 20+, Python 3.10+, curl; macOS, Linux or Windows
 - Quickstart: `npm install -g n-seo`, then `n-seo init my-sites && cd my-sites && n-seo demo && n-seo start` (synthetic data, no Google setup)
 - Real data: a Google service-account JSON key added as a user on Search Console and GA4; no gcloud needed
 - Bring your own model: the optional `llm` module (off by default) reaches any CLI that reads a prompt on stdin (`claude -p`, `ollama run`, a shell script) or an HTTP endpoint (Anthropic, or anything OpenAI-compatible including gateways and local servers). It writes the opportunity proposals, the verdicts on shipped work, and the community briefings. No API key ships with n-seo. With the module off, the full data-derived queue still works

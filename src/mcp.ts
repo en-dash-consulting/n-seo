@@ -273,7 +273,7 @@ export function createMcpServer(): McpServer {
     },
     async ({ host }) => {
       const audit = data.metadataAudit();
-      if (!audit) return fail("No metadata audit on disk yet — run python3 ingest/analyze_metadata.py.");
+      if (!audit) return fail("No metadata audit on disk yet — run `n-seo daily --only metadata-audit`.");
       if (!host) return json(audit);
       const findings = audit.sites[host];
       if (!findings) return fail(`No audit entry for "${host}". Known: ${Object.keys(audit.sites).join(", ")}`);
@@ -379,7 +379,7 @@ export function createMcpServer(): McpServer {
     },
     async () => {
       const scan = data.opportunityScan();
-      if (!scan) return fail("No opportunity scan on disk yet — run python3 ops/opportunity_scan.py.");
+      if (!scan) return fail("No opportunity scan on disk yet — run `n-seo daily --only opportunity-scan`.");
       return json(scan);
     }
   );

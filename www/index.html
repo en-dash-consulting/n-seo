@@ -302,7 +302,7 @@
   <div class="wrap">
     <div class="eyebrow">Quickstart</div>
     <h2>Five minutes, no Google setup</h2>
-    <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+, curl and openssl are all it needs.</p>
+    <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+ and curl are all it needs, on macOS, Linux or Windows.</p>
     <div class="qs" style="margin-top: 36px;">
 <pre><span class="c"># see it working</span>
 npm install -g n-seo
@@ -316,7 +316,7 @@ n-seo doctor        <span class="c"># checks key + access</span>
 n-seo daily         <span class="c"># the morning run, by hand</span></pre>
       <div class="steps">
         <div class="step"><div><h3>Try it on demo data</h3><p>Every page, every card, every chart — populated. Poke around the queue, open a spec, toggle a module in Settings.</p></div></div>
-        <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally with openssl — no gcloud, no pip installs. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
+        <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally by node — no gcloud, no pip installs, no openssl. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
         <div class="step"><div><h3>Schedule the morning run</h3><p>launchd on macOS, cron or systemd on Linux. It waits for the network, retries once, logs every step, and tells you when something failed. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SCHEDULING.md">Scheduling →</a></p></div></div>
         <div class="step"><div><h3>Ship what it tells you to</h3><p>In your own repo, your own way. The next morning's data says whether it worked, and the card moves to <em>watching</em> instead of disappearing.</p></div></div>
       </div>

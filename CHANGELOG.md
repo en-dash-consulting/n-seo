@@ -10,6 +10,22 @@ Nothing yet.
 
 ## [0.2.0] - 2026-09-09
 
+### Changed
+- **Says what it is.** n-seo is an agentic tool: your model turns findings
+  into proposals, verdicts and briefings, and your coding agent works the
+  queue over MCP. That was the seventh heading in the README and absent from
+  the npm description; it is now the second section on the site and near the
+  top of the README. "En Dash SEO" appears beside the wordmark, since `n-seo`
+  reads as noise to someone landing cold. The LLM module remains opt-in and
+  nothing posts, publishes or edits a site.
+
+### Fixed
+- The docs claimed 15 MCP tools where the server registers 16 (`engine_info`
+  was missing from the table), the README skills list omitted `n-seo-deploy`,
+  and `llms.txt` still carried the pre-npm clone quickstart.
+- Two MCP error messages told the reader to run a Python script directly
+  rather than the CLI command that works on every platform.
+
 ### Added
 - **Windows support.** CI runs the whole check job on `windows-latest` —
   typecheck, both test suites, every dashboard route, the MCP stdio smoke and
