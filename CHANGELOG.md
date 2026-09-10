@@ -8,6 +8,19 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.1] - 2026-09-10
+
+### Fixed
+- **`doctor` told a healthy npm install to run `npm install`.** The check
+  looked for a `node_modules` directory inside the engine. npm hoists
+  dependencies to the *consumer's* `node_modules`, so an `npm i n-seo` engine
+  correctly has none of its own, and every install reported a warning whose
+  suggested fix did nothing. It now asks node to resolve `tsx`, `hono` and
+  `@hono/node-server` from the engine — the same resolution the CLI does
+  before it spawns the dashboard — so it passes on both layouts and still
+  fails on an engine that genuinely cannot start. Found by pointing a real
+  instance at the published package instead of a git checkout.
+
 ## [0.3.0] - 2026-09-10
 
 ### Added
@@ -316,7 +329,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.0...v0.1.1

@@ -78,8 +78,35 @@ def check_tools():
     report("OK" if v >= (3, 10) else "FAIL",
            f"python {v.major}.{v.minor} ({Path(sys.executable).name})",
            "" if v >= (3, 10) else "3.10+ required")
-    nm = seo_config.ROOT / "node_modules"
-    report("OK" if nm.exists() else "WARN", "node_modules", "" if nm.exists() else "run: npm install")
+    # Ask node whether the engine can actually resolve its dependencies,
+    # rather than looking for a node_modules directory inside the engine.
+    # npm hoists dependencies to the *consumer's* node_modules, so a perfectly
+    # healthy `npm i n-seo` has none of its own — and the old check told those
+    # users to run `npm install`, which would not have helped. This is the
+    # same resolution the CLI uses to find tsx before it spawns the dashboard.
+    # tsx is resolved through its package.json because that is the exact
+    # lookup the CLI does before spawning the dashboard. hono and its server
+    # are resolved as bare specifiers: their `exports` maps deliberately do
+    # not expose ./package.json, so asking for it throws on a healthy install.
+    probe = (
+        "const {createRequire}=require('node:module');"
+        "const r=createRequire(process.argv[1]+'/');"
+        "r.resolve('tsx/package.json');"
+        "for (const d of ['hono','@hono/node-server']) r.resolve(d);"
+    )
+    try:
+        subprocess.run([node, "-e", probe, str(seo_config.ROOT)],
+                       check=True, capture_output=True, timeout=30)
+        report("OK", "engine dependencies")
+    except FileNotFoundError:
+        report("WARN", "engine dependencies", "skipped — node not found")
+    except subprocess.TimeoutExpired:
+        report("WARN", "engine dependencies", "node timed out resolving them")
+    except subprocess.CalledProcessError:
+        hint = ("run: npm install" if (seo_config.ROOT / "package.json").exists()
+                and not (seo_config.ROOT / "node_modules").exists()
+                else "reinstall the engine: npm install n-seo")
+        report("FAIL", "engine dependencies", f"tsx/hono not resolvable — {hint}")
 
 
 def check_auth(cfg):

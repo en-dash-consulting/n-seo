@@ -1,6 +1,6 @@
 {
   "name": "n-seo",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Agentic, local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and ranks the next moves. Your LLM writes the proposals; your coding agent works the queue over MCP.",
   "license": "MIT",
   "author": "En Dash Consulting (https://endash.us)",
