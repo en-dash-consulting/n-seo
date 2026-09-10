@@ -20,6 +20,12 @@ import seo_config  # noqa: E402
 # dashboard URL at import time.
 import export_static  # noqa: E402
 
+# The local half of every publish command. str() of it, not a hardcoded
+# "/i/site": the site directory is passed through as a native path, which is
+# backslash-separated on Windows.
+SITE = Path("/i/site")
+LOCAL = str(SITE)
+
 
 class PublishTests(unittest.TestCase):
     def setUp(self):
@@ -62,42 +68,42 @@ class PublishTests(unittest.TestCase):
 
     def test_gcs_command(self):
         self.cfg(target="gcs", destination="gs://bucket")
-        cmd, shell = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, shell = publish.build_command(seo_config.module("publish"), SITE)
         self.assertFalse(shell)
-        self.assertEqual(cmd, ["gcloud", "storage", "rsync", "/i/site", "gs://bucket", "--recursive"])
+        self.assertEqual(cmd, ["gcloud", "storage", "rsync", LOCAL, "gs://bucket", "--recursive"])
 
     def test_gcs_command_with_delete(self):
         self.cfg(target="gcs", destination="gs://bucket", delete=True)
-        cmd, _ = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, _ = publish.build_command(seo_config.module("publish"), SITE)
         self.assertEqual(cmd[-1], "--delete-unmatched-destination-objects")
 
     def test_s3_command(self):
         self.cfg(target="s3", destination="s3://bucket")
-        cmd, shell = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, shell = publish.build_command(seo_config.module("publish"), SITE)
         self.assertFalse(shell)
-        self.assertEqual(cmd, ["aws", "s3", "sync", "/i/site", "s3://bucket"])
+        self.assertEqual(cmd, ["aws", "s3", "sync", LOCAL, "s3://bucket"])
 
     def test_s3_command_with_delete(self):
         self.cfg(target="s3", destination="s3://bucket", delete=True)
-        cmd, _ = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, _ = publish.build_command(seo_config.module("publish"), SITE)
         self.assertEqual(cmd[-1], "--delete")
 
     def test_rsync_command_copies_contents_not_the_directory(self):
         self.cfg(target="rsync", destination="user@host:/srv/mirror")
-        cmd, shell = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, shell = publish.build_command(seo_config.module("publish"), SITE)
         self.assertFalse(shell)
         # the trailing slash is the difference between /srv/mirror/*.html and
         # /srv/mirror/site/*.html — getting it wrong nests the mirror
-        self.assertEqual(cmd, ["rsync", "-a", "/i/site/", "user@host:/srv/mirror"])
+        self.assertEqual(cmd, ["rsync", "-a", LOCAL + "/", "user@host:/srv/mirror"])
 
     def test_rsync_command_with_delete(self):
         self.cfg(target="rsync", destination="user@host:/srv/mirror", delete=True)
-        cmd, _ = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, _ = publish.build_command(seo_config.module("publish"), SITE)
         self.assertEqual(cmd[-1], "--delete")
 
     def test_command_target_is_a_shell_string(self):
         self.cfg(target="command", command="./my-publish.sh site/")
-        cmd, shell = publish.build_command(seo_config.module("publish"), Path("/i/site"))
+        cmd, shell = publish.build_command(seo_config.module("publish"), SITE)
         self.assertTrue(shell)
         self.assertEqual(cmd, "./my-publish.sh site/")
 
@@ -106,7 +112,7 @@ class PublishTests(unittest.TestCase):
     def test_unknown_target(self):
         self.cfg(target="ftp", destination="x")
         with self.assertRaises(ValueError) as e:
-            publish.build_command(seo_config.module("publish"), Path("/i/site"))
+            publish.build_command(seo_config.module("publish"), SITE)
         self.assertIn("unknown publish target", str(e.exception))
 
     def test_missing_destination(self):

@@ -113,7 +113,8 @@ class ConfigTests(unittest.TestCase):
         saved_instance = seo_config.INSTANCE
         seo_config.INSTANCE = self.tmp  # .env is instance-owned
         self.addCleanup(setattr, seo_config, "INSTANCE", saved_instance)
-        (self.tmp / ".env").write_text('REDDIT_CLIENT_ID=abc\nQUOTED="q v"\n# comment\nEMPTY=\n')
+        (self.tmp / ".env").write_text('REDDIT_CLIENT_ID=abc\nQUOTED="q v"\n# comment\nEMPTY=\n',
+                                        encoding="utf-8")
         self.assertEqual(seo_config.env("REDDIT_CLIENT_ID"), "abc")
         self.assertEqual(seo_config.env("QUOTED"), "q v")
         self.assertEqual(seo_config.env("EMPTY", "dflt"), "", "present but empty wins over the default")

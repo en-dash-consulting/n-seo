@@ -19,19 +19,43 @@ SOURCES = sorted(
 TEXT_CALLS = {"read_text", "write_text", "open"}
 
 
+def _arg(node: ast.Call, pos: int | None, kw: str):
+    """One argument of a call, by keyword or by position."""
+    for k in node.keywords:
+        if k.arg == kw:
+            return k.value
+    if pos is not None and len(node.args) > pos:
+        return node.args[pos]
+    return None
+
+
 def text_io_calls(tree: ast.AST):
-    """Every call that opens a file in text mode, with its keywords."""
+    """Every call that opens a file in text mode, with its encoding argument.
+
+    Argument positions differ per call and getting them wrong is not
+    theoretical: an earlier version of this scanned every positional argument
+    for a "b" to detect binary mode, which made `write_text("Appended by …")`
+    look like a binary write and hid a real bug from this test.
+    """
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        name = (node.func.attr if isinstance(node.func, ast.Attribute)
+        attr = isinstance(node.func, ast.Attribute)
+        name = (node.func.attr if attr
                 else node.func.id if isinstance(node.func, ast.Name) else None)
-        if name not in TEXT_CALLS:
+        if name == "open":
+            # builtin open(file, mode, buffering, encoding); Path.open(mode, buffering, encoding)
+            mode = _arg(node, 0 if attr else 1, "mode")
+            enc = _arg(node, 2 if attr else 3, "encoding")
+        elif name == "read_text":     # read_text(encoding, errors)
+            mode, enc = None, _arg(node, 0, "encoding")
+        elif name == "write_text":    # write_text(data, encoding, errors)
+            mode, enc = None, _arg(node, 1, "encoding")
+        else:
             continue
-        binary = any(isinstance(a, ast.Constant) and isinstance(a.value, str) and "b" in a.value
-                     for a in node.args)
-        if not binary:
-            yield name, node
+        if isinstance(mode, ast.Constant) and "b" in str(mode.value):
+            continue
+        yield name, node, enc
 
 
 class PortabilityTests(unittest.TestCase):
@@ -48,9 +72,7 @@ class PortabilityTests(unittest.TestCase):
         missing = []
         for path in SOURCES:
             tree = ast.parse(path.read_text(encoding="utf-8"))
-            for name, node in text_io_calls(tree):
-                kw = {k.arg: k.value for k in node.keywords}
-                enc = kw.get("encoding")
+            for name, node, enc in text_io_calls(tree):
                 if not (isinstance(enc, ast.Constant) and str(enc.value).lower() in ("utf-8", "utf8")):
                     missing.append(f"{path.relative_to(REPO)}:{node.lineno}  {name}()")
         self.assertEqual(missing, [], "add encoding=\"utf-8\":\n  " + "\n  ".join(missing))

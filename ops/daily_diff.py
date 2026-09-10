@@ -123,7 +123,8 @@ def main():
     log = INSTANCE / "docs" / "daily-log.md"
     log.parent.mkdir(parents=True, exist_ok=True)
     if not log.exists():
-        log.write_text("# Daily ops log\n\nAppended by ops/daily.py — newest entries last.\n")
+        log.write_text("# Daily ops log\n\nAppended by ops/daily.py — newest entries last.\n",
+                       encoding="utf-8")
     today = date.today().isoformat()
     entry = [f"\n## {today}\n"]
     entry += [f"- **ALERT:** {a}" for a in alerts]

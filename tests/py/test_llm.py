@@ -5,6 +5,8 @@ so it is the only way the digests and the opportunity scan produce anything
 off a laptop. `infer` must never raise — every caller degrades on None.
 """
 import json
+import os
+import shutil
 import sys
 import unittest
 from pathlib import Path
@@ -15,6 +17,13 @@ import _paths  # noqa: F401
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "ops"))
 import llm  # noqa: E402
 import seo_config  # noqa: E402
+
+# A command that copies stdin to stdout, for exercising the CLI path for
+# real. Windows has no /bin/cat, so there it is this interpreter doing the
+# same job — which also exercises the Windows branch of split_command, since
+# sys.executable is a backslash path.
+CAT = ("/bin/cat" if os.name != "nt" else
+       f'"{sys.executable}" -c "import sys;sys.stdout.write(sys.stdin.read())"')
 
 ANTHROPIC = {"provider": "anthropic", "model": "claude-sonnet-5",
              "fastModel": "claude-haiku-4-5-20251001", "apiKeyEnv": "TEST_LLM_KEY"}
@@ -102,7 +111,7 @@ class LlmTests(unittest.TestCase):
 
     def test_falls_back_to_the_command_when_the_key_is_missing(self):
         self.env = {}
-        self.cfg(http=ANTHROPIC, command="/bin/cat")
+        self.cfg(http=ANTHROPIC, command=CAT)
         self.assertIsNone(llm.http_config())
         self.assertTrue(llm.available())
         self.assertEqual(llm.infer("round trip"), "round trip")
@@ -110,7 +119,7 @@ class LlmTests(unittest.TestCase):
     def test_available_truth_table(self):
         self.cfg(http=ANTHROPIC)
         self.assertTrue(llm.available(), "http configured")
-        self.cfg(command="/bin/cat")
+        self.cfg(command=CAT)
         self.assertTrue(llm.available(), "cli configured")
         self.cfg(command="definitely-not-a-real-binary")
         self.assertFalse(llm.available(), "cli not on PATH")
@@ -177,12 +186,16 @@ class SplitCommandTests(unittest.TestCase):
         self.assertEqual(self.posix('sh -c "echo hi"'), ["sh", "-c", "echo hi"])
 
     def test_command_uses_the_platform_split(self):
-        self._cfg = seo_config._cache
+        """command() must route through split_command, not shlex directly —
+        otherwise the interpreter path on Windows arrives mangled and the
+        which() lookup below fails."""
+        saved = seo_config._cache
         try:
-            seo_config._cache = {"modules": {"llm": {"enabled": True, "command": "/bin/cat -u"}}}
-            self.assertEqual(llm.command(), ["/bin/cat", "-u"])
+            seo_config._cache = {"modules": {"llm": {"enabled": True, "command": CAT}}}
+            self.assertEqual(llm.command(), llm.split_command(CAT))
+            self.assertTrue(shutil.which(llm.command()[0]), llm.command()[0])
         finally:
-            seo_config._cache = self._cfg
+            seo_config._cache = saved
 
 
 if __name__ == "__main__":

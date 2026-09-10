@@ -45,7 +45,7 @@ class InstanceResolutionTest(unittest.TestCase):
     def test_set_moves_instance_paths_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             inst = Path(tmp).resolve()
-            (inst / ".env").write_text("SEO_MCP_TOKEN='abc'\n")
+            (inst / ".env").write_text("SEO_MCP_TOKEN='abc'\n", encoding="utf-8")
             (inst / "n-seo.config.json").write_text(json.dumps({
                 "sites": [{"host": "example.com", "gscProperty": "sc-domain:example.com"}],
                 "gscExtraProperties": ["https://example.com/", ""],
@@ -64,7 +64,9 @@ class InstanceResolutionTest(unittest.TestCase):
             self.assertEqual(r["props_no_extra"], {"sc-domain:example.com": "example.com"})
 
     def test_relative_instance_resolves_against_cwd(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        # Inside the repo on purpose: Windows puts TEMP on C: while the
+        # checkout is on D:, and there is no relative path between drives.
+        with tempfile.TemporaryDirectory(dir=REPO) as tmp:
             inst = Path(tmp).resolve()
             rel = os.path.relpath(inst, REPO)
             r = self._probe({"N_SEO_INSTANCE": rel})
@@ -96,7 +98,13 @@ class HooksTest(unittest.TestCase):
 
     def test_records_success_and_failure_and_env(self):
         results, failures = [], []
-        cmds = ["echo step=$N_SEO_STEP inst=$N_SEO_INSTANCE > marker.txt", "false", "echo ok"]
+        # Hooks are handed to the system shell, so the variable syntax is
+        # the shell's: %VAR% under cmd.exe, $VAR under sh. Asserting the
+        # marker either way proves the documented env actually reaches a
+        # hook on this platform.
+        expand = ("echo step=%N_SEO_STEP% inst=%N_SEO_INSTANCE% > marker.txt" if os.name == "nt"
+                  else "echo step=$N_SEO_STEP inst=$N_SEO_INSTANCE > marker.txt")
+        cmds = [expand, "false", "echo ok"]
         self.daily.run_hooks("daily-diff", cmds, results, failures, step="daily-diff")
         self.assertEqual([r["name"] for r in results], ["hook:daily-diff:0", "hook:daily-diff:1", "hook:daily-diff:2"])
         self.assertEqual([r["ok"] for r in results], [True, False, True])

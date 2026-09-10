@@ -79,15 +79,52 @@ loginctl enable-linger "$USER"     # keep user units running when you are logged
 Check on them with `systemctl --user status n-seo-dashboard` and
 `journalctl --user -u n-seo-daily`.
 
+## Windows (Task Scheduler)
+
+`ops/templates/n-seo-daily-task.xml` is a ready task definition. Replace the
+two placeholders in it, then register it:
+
+```bat
+where n-seo
+:: put that path in __NSEO__, and your instance directory in __INSTANCE__
+schtasks /create /tn "n-seo daily" /xml ops\templates\n-seo-daily-task.xml
+```
+
+Check it with `schtasks /query /tn "n-seo daily" /v /fo list`, run it now with
+`schtasks /run /tn "n-seo daily"`, remove it with
+`schtasks /delete /tn "n-seo daily"`.
+
+The task sets `StartWhenAvailable`, which is the Windows equivalent of the
+launchd behaviour above: a machine that was asleep at 07:00 runs the job when
+it wakes rather than skipping the day the way cron does. It also sets
+`RunOnlyIfNetworkAvailable`, so it will not start into a dead connection.
+
+For the dashboard, run `n-seo start` from a terminal, or register a second
+task with the same XML, changing the arguments to `start` and the trigger to
+"At log on".
+
+**Hooks run through `cmd.exe` on Windows.** The `hooks` block in your config
+is handed to the system shell, which is `cmd.exe` there and `/bin/sh`
+elsewhere, so a hook written as `foo && bar` behaves but one relying on
+POSIX quoting, `$VAR` or pipelines into Unix tools will not. Point the hook at
+a `.cmd`/`.ps1` script if it needs to do anything shell-specific.
+
 ## Running by hand
 
 ```sh
-python3 ops/daily.py                   # everything
-python3 ops/daily.py --list            # the step names
-python3 ops/daily.py --only gsc,ga4    # a subset
-python3 ops/daily.py --skip index-status
-python3 ops/daily.py --no-network-wait
+n-seo daily                   # everything
+n-seo daily --list            # the step names
+n-seo daily --only gsc,ga4    # a subset
+n-seo daily --skip index-status
+n-seo daily --no-network-wait
 ```
+
+The CLI is the portable form: it finds the Python interpreter this machine
+actually has. `python3 ops/daily.py` is equivalent on macOS and Linux, but
+Windows has no `python3` — it installs Python as `python`, and the
+`python3.exe` that Windows ships is an App Execution Alias that opens the
+Microsoft Store instead of running anything. From a checkout, `npm run daily`
+works everywhere for the same reason. `$PYTHON` overrides the choice.
 
 Each run appends to `data/daily-ops.log`, writes `data/last-run.json` (which
 the dashboard shows as the run status chip), and appends a dated entry to
