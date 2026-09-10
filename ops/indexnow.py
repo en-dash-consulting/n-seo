@@ -33,12 +33,12 @@ def key_file() -> Path:
 def cmd_init() -> int:
     kf = key_file()
     if kf.exists():
-        key = kf.read_text().strip()
+        key = kf.read_text(encoding="utf-8").strip()
         print(f"key file already exists: {kf}")
     else:
         key = secrets.token_hex(16)
         kf.parent.mkdir(parents=True, exist_ok=True)
-        kf.write_text(key + "\n")
+        kf.write_text(key + "\n", encoding="utf-8")
         print(f"wrote {kf}")
     print(f"\nkey: {key}\n\nServe this key as plain text at, for every site:")
     for s in seo_config.sites():
@@ -52,7 +52,7 @@ def cmd_ping(urls: list[str]) -> int:
     if not kf.exists():
         print(f"no key file at {kf} — run: python3 ops/indexnow.py init")
         return 1
-    key = kf.read_text().strip()
+    key = kf.read_text(encoding="utf-8").strip()
     by_host: dict[str, list[str]] = {}
     for u in urls:
         host = urlsplit(u).netloc

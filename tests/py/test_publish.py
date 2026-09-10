@@ -27,7 +27,7 @@ class PublishTests(unittest.TestCase):
         self._instance = seo_config.INSTANCE
         self.tmp = Path(tempfile.mkdtemp(prefix="n-seo-publish-"))
         (self.tmp / "site").mkdir()
-        (self.tmp / "site" / "index.html").write_text("<html></html>")
+        (self.tmp / "site" / "index.html").write_text("<html></html>", encoding="utf-8")
         seo_config.INSTANCE = self.tmp
 
     def tearDown(self):

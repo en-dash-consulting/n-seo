@@ -31,9 +31,9 @@ class JwtTests(unittest.TestCase):
         self.key_file.write_text(json.dumps({
             "type": "service_account",
             "client_email": "reader@project.iam.gserviceaccount.com",
-            "private_key": priv.read_text(),
+            "private_key": priv.read_text(encoding="utf-8"),
             "token_uri": "https://oauth2.googleapis.com/token",
-        }))
+        }), encoding="utf-8")
         google_auth._cache.clear()
         self._cfg = seo_config._cache
         seo_config._cache = {"google": {"auth": "service-account-key", "serviceAccountKey": str(self.key_file)}}
@@ -86,7 +86,7 @@ class JwtTests(unittest.TestCase):
         """The signer runs through node, so a machine without openssl (every
         stock Windows box) can still authenticate. Verified cryptographically,
         not just for plausible-looking bytes."""
-        key = json.loads(self.key_file.read_text())
+        key = json.loads(self.key_file.read_text(encoding="utf-8"))
         data = b"eyJhbGciOiJSUzI1NiJ9.eyJzY29wZSI6InRlc3QifQ"
         sig = google_auth._sign_rs256(key["private_key"], data)
         self.assertEqual(len(sig), 256, "RSA-2048 signature is 256 bytes")

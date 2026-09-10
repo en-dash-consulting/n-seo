@@ -40,7 +40,7 @@ class InstanceResolutionTest(unittest.TestCase):
         self.assertEqual(r["config"], str(Path(r["root"]) / "n-seo.config.json"))
         self.assertEqual(r["info"]["mode"], "in-place")
         self.assertEqual(set(r["info"]), {"version", "commit", "root", "instance", "mode"})
-        self.assertEqual(r["info"]["version"], json.loads((REPO / "package.json").read_text())["version"])
+        self.assertEqual(r["info"]["version"], json.loads((REPO / "package.json").read_text(encoding="utf-8"))["version"])
 
     def test_set_moves_instance_paths_only(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -50,7 +50,7 @@ class InstanceResolutionTest(unittest.TestCase):
                 "sites": [{"host": "example.com", "gscProperty": "sc-domain:example.com"}],
                 "gscExtraProperties": ["https://example.com/", ""],
                 "hooks": {"beforeRun": ["echo a"], "afterStep": {"probe": ["echo b"]}, "afterRun": []},
-            }))
+            }), encoding="utf-8")
             r = self._probe({"N_SEO_INSTANCE": str(inst)})
             self.assertEqual(r["instance"], str(inst))
             self.assertNotEqual(r["instance"], r["root"])
@@ -72,7 +72,7 @@ class InstanceResolutionTest(unittest.TestCase):
 
     def test_defaults_without_hooks_keys(self):
         with tempfile.TemporaryDirectory() as tmp:
-            (Path(tmp) / "n-seo.config.json").write_text('{"sites": []}')
+            (Path(tmp) / "n-seo.config.json").write_text('{"sites": []}', encoding="utf-8")
             r = self._probe({"N_SEO_INSTANCE": tmp})
             self.assertEqual(r["hooks"], {"beforeRun": [], "afterStep": {}, "afterRun": []})
             self.assertEqual(r["extra"], [])
@@ -104,9 +104,9 @@ class HooksTest(unittest.TestCase):
         for r in results:
             self.assertIn("seconds", r)
         # ran in the instance dir with the documented env
-        marker = (self.tmp / "marker.txt").read_text().strip()
+        marker = (self.tmp / "marker.txt").read_text(encoding="utf-8").strip()
         self.assertEqual(marker, f"step=daily-diff inst={self.tmp}")
-        log = (self.tmp / "data" / "daily-ops.log").read_text()
+        log = (self.tmp / "data" / "daily-ops.log").read_text(encoding="utf-8")
         self.assertIn("hook:daily-diff:1 FAILED", log)
         self.assertIn("  ok", log)
 

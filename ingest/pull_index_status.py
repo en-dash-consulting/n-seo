@@ -170,7 +170,7 @@ def main() -> int:
               f"({len(never_crawled)} never crawled)")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out, indent=2))
+    OUT.write_text(json.dumps(out, indent=2), encoding="utf-8")
     print(f"saved {OUT} — {total_problems} URLs needing attention")
     return 0
 

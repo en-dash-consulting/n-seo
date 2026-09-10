@@ -48,12 +48,12 @@ class DailyDiffTests(unittest.TestCase):
         }
         (self.data / "gsc" / "example.com" / "pages_90d.json").write_text(json.dumps({"rows": [
             {"keys": ["https://example.com/pricing"], "clicks": 12, "impressions": 400, "ctr": 0.03, "position": 4.2},
-        ]}))
+        ]}), encoding="utf-8")
         (self.data / "probes" / "probe-20260901-070000.json").write_text(json.dumps(
-            {"probed_at": "x", "sites": [probe("https://example.com"), probe("https://docs.example.com")]}))
+            {"probed_at": "x", "sites": [probe("https://example.com"), probe("https://docs.example.com")]}), encoding="utf-8")
         (self.data / "probes" / "probe-20260902-070000.json").write_text(json.dumps(
             {"probed_at": "y", "sites": [probe("https://example.com"),
-                                        probe("https://docs.example.com", **{"llms.txt": {"exists": False}})]}))
+                                        probe("https://docs.example.com", **{"llms.txt": {"exists": False}})]}), encoding="utf-8")
 
     def tearDown(self):
         daily_diff.ROOT, daily_diff.INSTANCE, daily_diff.DATA, seo_config._cache = self._saved
@@ -63,7 +63,7 @@ class DailyDiffTests(unittest.TestCase):
         out = io.StringIO()
         with redirect_stdout(out):
             code = daily_diff.main()
-        return code, out.getvalue(), (self.tmp / "docs" / "daily-log.md").read_text()
+        return code, out.getvalue(), (self.tmp / "docs" / "daily-log.md").read_text(encoding="utf-8")
 
     def test_entry_contents(self):
         code, out, log = self.run_diff()
@@ -82,13 +82,13 @@ class DailyDiffTests(unittest.TestCase):
         self.run_diff()
         # an older day before today's must survive
         log = self.tmp / "docs" / "daily-log.md"
-        text = log.read_text()
+        text = log.read_text(encoding="utf-8")
         today = date.today().isoformat()
         text = text.replace(f"\n## {today}\n", f"\n## 2000-01-01\n\n- old line\n\n## {today}\n", 1)
-        log.write_text(text)
+        log.write_text(text, encoding="utf-8")
         (self.data / "gsc" / "example.com" / "pages_90d.json").write_text(json.dumps({"rows": [
             {"keys": ["https://example.com/pricing/"], "clicks": 99, "impressions": 500, "ctr": 0.198, "position": 3.0},
-        ]}))
+        ]}), encoding="utf-8")
         _, _, log2 = self.run_diff()
         self.assertEqual(log2.count(f"## {today}"), 1, "one heading per day")
         self.assertIn("- old line", log2)
@@ -102,10 +102,10 @@ class DailyDiffTests(unittest.TestCase):
         (self.data / "ga4" / "example.com" / "funnel.json").write_text(json.dumps({"rows": [
             {"dimensionValues": [{"value": "20260901"}, {"value": "sign_up"}], "metricValues": [{"value": "3"}]},
             {"dimensionValues": [{"value": "20260902"}, {"value": "sign_up"}], "metricValues": [{"value": "4"}]},
-        ]}))
+        ]}), encoding="utf-8")
         (self.data / "ga4" / "example.com" / "sources.json").write_text(json.dumps(ga4_rows([
             ("google", "organic", 100), ("docs.example.com", "referral", 7), ("example.com", "internal", 1),
-        ])))
+        ])), encoding="utf-8")
         _, _, log = self.run_diff()
         self.assertIn("CONVERSIONS: sign_up=7 (90d)", log)
         self.assertIn("cross-referrals into example.com (90d sessions): docs.example.com=7", log)

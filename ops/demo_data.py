@@ -151,7 +151,7 @@ def write_gsc(prop, slug, sites_in_prop, index_of):
                                   ("queries", ["query"], agg(by_q)),
                                   ("pages", ["page"], agg(by_p))):
             (d / f"{name}{suffix}.json").write_text(json.dumps(
-                {**meta, "dimensions": dims, "rowCount": len(rows_), "rows": rows_}))
+                {**meta, "dimensions": dims, "rowCount": len(rows_), "rows": rows_}), encoding="utf-8")
 
     dataset(full_rows, 1.0, "", END - timedelta(days=FULL_DAYS))
     dataset(full_rows, 0.22, "_90d", END - timedelta(days=RECENT_DAYS))
@@ -168,7 +168,7 @@ def write_gsc(prop, slug, sites_in_prop, index_of):
                       "ctr": clicks / imps if imps else 0, "position": round(rng.uniform(9, 14), 1)})
     (d / "dates.json").write_text(json.dumps(
         {"site": prop, "dimensions": ["date"], "startDate": day0.isoformat(), "endDate": END.isoformat(),
-         "rowCount": len(dates), "rows": dates}))
+         "rowCount": len(dates), "rows": dates}), encoding="utf-8")
     return full_rows
 
 
@@ -199,14 +199,14 @@ def write_ga4(site, idx, conv, gsc_rows):
     total = sum(m[0] for _, m in daily)
     meta = {"site": host, "property": f"properties/{site.get('ga4Property') or '000000000'}",
             "pulled": TODAY.isoformat()}
-    (d / "daily.json").write_text(json.dumps({**meta, **ga4_report(["date"], ["sessions", "totalUsers"], daily)}))
+    (d / "daily.json").write_text(json.dumps({**meta, **ga4_report(["date"], ["sessions", "totalUsers"], daily)}), encoding="utf-8")
 
     mix = [(src, med, w) for src, med, w, _ai in SOURCE_MIX]
     others = [h for h in seo_config.hosts() if h != host]
     if others:
         mix.append((others[0], "referral", 0.015))
     sources = [([src, med], [round(total * w), round(total * w * 0.8)]) for src, med, w in mix]
-    (d / "sources.json").write_text(json.dumps({**meta, **ga4_report(["sessionSource", "sessionMedium"], ["sessions", "totalUsers"], sources)}))
+    (d / "sources.json").write_text(json.dumps({**meta, **ga4_report(["sessionSource", "sessionMedium"], ["sessions", "totalUsers"], sources)}), encoding="utf-8")
 
     pages = sorted({r[1] for r in gsc_rows if r[1].split("/")[2] == site["gscHost"]})
     paths = [p.split(site["gscHost"], 1)[1].rstrip("/") or "/" for p in pages] or ["/", "/docs", "/pricing"]
@@ -219,7 +219,7 @@ def write_ga4(site, idx, conv, gsc_rows):
             eng = 0.18
         landing.append(([p], [sessions, round(eng, 4)]))
     landing.sort(key=lambda r: -r[1][0])
-    (d / "landing.json").write_text(json.dumps({**meta, **ga4_report(["landingPage"], ["sessions", "engagementRate"], landing)}))
+    (d / "landing.json").write_text(json.dumps({**meta, **ga4_report(["landingPage"], ["sessions", "engagementRate"], landing)}), encoding="utf-8")
 
     if conv and conv.get("site") == host:
         rows = []
@@ -227,7 +227,7 @@ def write_ga4(site, idx, conv, gsc_rows):
             day = (day0 + timedelta(days=i)).strftime("%Y%m%d")
             for ev in conv.get("events", [])[:2]:
                 rows.append(([day, ev, rng.choice(["web", "docs", "(not set)"])], [rng.randint(0, 4)]))
-        (d / "funnel.json").write_text(json.dumps({**meta, **ga4_report(["date", "eventName", conv.get("sourceDimension") or "customEvent:source_app"], ["eventCount"], rows)}))
+        (d / "funnel.json").write_text(json.dumps({**meta, **ga4_report(["date", "eventName", conv.get("sourceDimension") or "customEvent:source_app"], ["eventCount"], rows)}), encoding="utf-8")
     return paths, total
 
 
@@ -250,7 +250,7 @@ def write_timeseries(prop, slug, sites_in_prop, gsc_rows, ga4_paths):
                 rows.append({"keys": [day.isoformat(), p], "clicks": round(dc), "impressions": round(di),
                              "ctr": (dc / di) if di else 0, "position": round(rng.uniform(4, 20), 1)})
     (d / f"gsc-{slug}.json").write_text(json.dumps(
-        {"site": prop, "startDate": day0.isoformat(), "endDate": END.isoformat(), "rows": rows}))
+        {"site": prop, "startDate": day0.isoformat(), "endDate": END.isoformat(), "rows": rows}), encoding="utf-8")
     for s in sites_in_prop:
         paths, total = ga4_paths.get(s["host"], ([], 0))
         if not s.get("ga4Property"):
@@ -263,7 +263,7 @@ def write_timeseries(prop, slug, sites_in_prop, gsc_rows, ga4_paths):
                 v = weekly(day, (total / 90) * (0.35 if j == 0 else 0.08), day0=ga0)
                 if round(v):
                     rows.append({"date": day.strftime("%Y%m%d"), "page": p, "sessions": round(v)})
-        (d / f"ga4-{s['host']}.json").write_text(json.dumps({"site": s["host"], "rows": rows}))
+        (d / f"ga4-{s['host']}.json").write_text(json.dumps({"site": s["host"], "rows": rows}), encoding="utf-8")
 
         # date x source/medium. AI assistants grow over the window and the
         # rest hold roughly flat, so the demo actually shows the thing the
@@ -278,7 +278,7 @@ def write_timeseries(prop, slug, sites_in_prop, gsc_rows, ga4_paths):
                     rows.append({"date": day.strftime("%Y%m%d"), "source": src,
                                  "medium": med, "sessions": round(v)})
         (d / f"ga4-sources-{s['host']}.json").write_text(
-            json.dumps({"site": s["host"], "rows": rows}))
+            json.dumps({"site": s["host"], "rows": rows}), encoding="utf-8")
 
 
 def write_probe(sites):
@@ -302,7 +302,7 @@ def write_probe(sites):
             "soft_404": {"status": 404, "real_404": True},
         })
     now = datetime.now(timezone.utc)
-    (d / f"probe-{now:%Y%m%d-%H%M%S}.json").write_text(json.dumps({"probed_at": now.isoformat(), "sites": out}, indent=2))
+    (d / f"probe-{now:%Y%m%d-%H%M%S}.json").write_text(json.dumps({"probed_at": now.isoformat(), "sites": out}, indent=2), encoding="utf-8")
 
 
 def write_metadata_audit(sites, gsc_by_host):
@@ -333,7 +333,7 @@ def write_metadata_audit(sites, gsc_by_host):
                              "imps": imps, "clicks": sum(q["clicks"] for q in qs), "issues": issues,
                              "top_queries": qs[:5], "missed_clicks_window": missed})
         audit["sites"][s["host"]] = findings
-    (DATA / "metadata-audit.json").write_text(json.dumps(audit, indent=1))
+    (DATA / "metadata-audit.json").write_text(json.dumps(audit, indent=1), encoding="utf-8")
 
 
 def write_index_status(sites, gsc_by_host):
@@ -365,7 +365,7 @@ def write_index_status(sites, gsc_by_host):
                                                     "pending": False, "errors": 0, "warnings": 0}]},
             "problems": problems,
         }
-    (DATA / "index-status.json").write_text(json.dumps(out, indent=2))
+    (DATA / "index-status.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
 
 
 def write_trends(props, sites, gsc_rows_by_prop):
@@ -399,7 +399,7 @@ def write_trends(props, sites, gsc_rows_by_prop):
 
         monthly = {}
         dates_file = DATA / "gsc" / slug / "dates.json"
-        for r in json.loads(dates_file.read_text())["rows"]:
+        for r in json.loads(dates_file.read_text(encoding="utf-8"))["rows"]:
             m = r["keys"][0][:7]
             cur = monthly.setdefault(m, {"clicks": 0, "imps": 0})
             cur["clicks"] += r["clicks"]
@@ -417,7 +417,7 @@ def write_trends(props, sites, gsc_rows_by_prop):
             total[ym] = t
             ai[ym] = round(t * (0.01 + (12 - k) * 0.004))
         out["ai_referrals"][s["host"]] = {"ai": ai, "total": total}
-    (DATA / f"trends-{TODAY.isoformat()}.json").write_text(json.dumps(out, indent=1))
+    (DATA / f"trends-{TODAY.isoformat()}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
 
 
 def write_proposals(sites, gsc_by_host):
@@ -450,7 +450,7 @@ def write_proposals(sites, gsc_by_host):
                       "evidence": "DEMO DATA — 12 days since the change; CTR up from 1.9% to 2.6% but the 28-day window has not closed."}],
         "inference_ran": True,
     }
-    (DATA / "opportunity-proposals.json").write_text(json.dumps(out, indent=1))
+    (DATA / "opportunity-proposals.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
 
 
 def write_run_files():
@@ -459,8 +459,8 @@ def write_run_files():
         "ts": ts.strftime("%Y-%m-%dT%H:%MZ"), "failures": "",
         "steps": [{"name": n, "ok": True, "seconds": s} for n, s in
                   (("probe", 6.2), ("gsc", 41.0), ("ga4", 9.8), ("timeseries", 22.4), ("metadata-audit", 14.1),
-                   ("index-status", 38.5), ("opportunity-scan", 17.0), ("daily-diff", 0.3))]}, indent=1))
-    with (DATA / "daily-ops.log").open("a") as f:
+                   ("index-status", 38.5), ("opportunity-scan", 17.0), ("daily-diff", 0.3))]}, indent=1), encoding="utf-8")
+    with (DATA / "daily-ops.log").open("a", encoding="utf-8") as f:
         f.write(f"=== daily run {ts:%Y-%m-%d %H:%M} (demo data) ===\n")
         f.write("--- probe\n  2 sites probed\n--- gsc\n  2 properties pulled\n--- daily-diff\n  daily-log updated (0 alerts)\n")
         f.write("=== done (0 failures) ===\n")

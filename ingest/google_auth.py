@@ -127,7 +127,7 @@ def _sa_key_token(scope: str) -> str:
         raise RuntimeError(
             "google.auth is service-account-key but no key file was found at "
             f"{kp or '(unset)'} — see docs/SETUP-GOOGLE.md")
-    key = json.loads(Path(kp).read_text())
+    key = json.loads(Path(kp).read_text(encoding="utf-8"))
     # Backdate slightly: Google rejects a JWT issued in its future, so a
     # machine whose clock runs a few seconds fast otherwise fails to
     # authenticate at all, with an error that names nothing useful.
@@ -255,7 +255,7 @@ def service_account_email() -> str | None:
     kp = key_path()
     if kp and os.path.exists(kp):
         try:
-            return json.loads(Path(kp).read_text()).get("client_email")
+            return json.loads(Path(kp).read_text(encoding="utf-8")).get("client_email")
         except (OSError, json.JSONDecodeError):
             return None
     return None

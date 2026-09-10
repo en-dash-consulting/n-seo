@@ -9,7 +9,23 @@ and export. Stdlib only.
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
+
+# Print UTF-8 whatever the platform thinks the console encoding is.
+#
+# Windows picks the ANSI code page (cp1252 on a US install) for a piped
+# stdout, so the em dashes and middle dots this tool prints come out as
+# mojibake or raise UnicodeEncodeError mid-run. Every entry point imports
+# this module, so fixing it once here covers all of them. File I/O is
+# handled separately: every read_text/write_text/open call passes
+# encoding="utf-8" explicitly, and tests/py/test_portability.py enforces it.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        if getattr(_stream, "encoding", "").lower().replace("-", "") != "utf8":
+            _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError, OSError):
+        pass  # a captured or replaced stream; nothing to fix
 
 # The engine checkout: code, engine docs, public assets.
 ROOT = Path(__file__).resolve().parent.parent
@@ -50,7 +66,7 @@ def load(force: bool = False) -> dict:
     if _cache is not None and not force:
         return _cache
     path = CONFIG_PATH if CONFIG_PATH.exists() else EXAMPLE_PATH
-    raw = json.loads(path.read_text())
+    raw = json.loads(path.read_text(encoding="utf-8"))
     modules = {k: {"enabled": False, **MODULE_DEFAULTS.get(k, {})} for k in MODULE_KEYS}
     for k, v in (raw.get("modules") or {}).items():
         modules[k] = {"enabled": False, **MODULE_DEFAULTS.get(k, {}), **(v or {})}
@@ -96,7 +112,7 @@ def load(force: bool = False) -> dict:
 def engine_info() -> dict:
     """Mirrors src/config.ts engineInfo(): what engine is running, for which instance."""
     try:
-        version = json.loads((ROOT / "package.json").read_text()).get("version", "0.0.0")
+        version = json.loads((ROOT / "package.json").read_text(encoding="utf-8")).get("version", "0.0.0")
     except (OSError, json.JSONDecodeError):
         version = "0.0.0"
     try:
@@ -204,7 +220,7 @@ def env(key: str, default: str = "") -> str:
     if os.environ.get(key):
         return os.environ[key]
     try:
-        for line in (INSTANCE / ".env").read_text().splitlines():
+        for line in (INSTANCE / ".env").read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line.startswith(f"{key}="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")

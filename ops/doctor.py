@@ -95,7 +95,7 @@ def check_auth(cfg):
                    f"{kp or '(unset)'} — set google.serviceAccountKey or $GOOGLE_APPLICATION_CREDENTIALS; see docs/SETUP-GOOGLE.md")
             return None
         try:
-            key = json.loads(Path(kp).read_text())
+            key = json.loads(Path(kp).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             report("FAIL", "key file unreadable", str(exc))
             return None

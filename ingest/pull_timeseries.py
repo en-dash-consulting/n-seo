@@ -87,7 +87,7 @@ def main():
             if failed:
                 continue
             (OUT / f"gsc-{slug}.json").write_text(json.dumps(
-                {"site": site, "startDate": start, "endDate": end, "rows": rows}))
+                {"site": site, "startDate": start, "endDate": end, "rows": rows}), encoding="utf-8")
             print(f"gsc  {slug:28s} {len(rows)} date x page rows")
 
     ga4_props = seo_config.ga4_properties()
@@ -104,7 +104,7 @@ def main():
                          "page": row["dimensionValues"][1]["value"],
                          "sessions": float(row["metricValues"][0]["value"])}
                         for row in batch]
-                (OUT / f"ga4-{host}.json").write_text(json.dumps({"site": host, "rows": rows}))
+                (OUT / f"ga4-{host}.json").write_text(json.dumps({"site": host, "rows": rows}), encoding="utf-8")
                 print(f"ga4  {host:28s} {len(rows)} date x page rows")
 
             batch, ok = ga4_series(tok, prop, ["date", "sessionSource", "sessionMedium"],
@@ -118,7 +118,7 @@ def main():
                          "sessions": float(row["metricValues"][0]["value"])}
                         for row in batch]
                 (OUT / f"ga4-sources-{host}.json").write_text(
-                    json.dumps({"site": host, "rows": rows}))
+                    json.dumps({"site": host, "rows": rows}), encoding="utf-8")
                 print(f"ga4  {host:28s} {len(rows)} date x source rows")
 
     if not gsc_props and not ga4_props:

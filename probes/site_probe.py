@@ -173,7 +173,7 @@ def main():
     out_dir = seo_config.DATA / "probes"
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"probe-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.json"
-    out.write_text(json.dumps(snapshot, indent=2))
+    out.write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
 
     for s in snapshot["sites"]:
         h = s["homepage"]

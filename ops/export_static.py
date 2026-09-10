@@ -103,11 +103,11 @@ def main():
             html = html.replace("</body>", staleness + "</body>", 1)
             dest = out / "index.html" if route == "/" else out / route.lstrip("/") / "index.html"
             dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(html)
+            dest.write_text(html, encoding="utf-8")
 
-        (out / "styles.css").write_text(fetch("/styles.css"))
-        (out / "favicon.svg").write_text(fetch("/favicon.svg"))
-        (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
+        (out / "styles.css").write_text(fetch("/styles.css"), encoding="utf-8")
+        (out / "favicon.svg").write_text(fetch("/favicon.svg"), encoding="utf-8")
+        (out / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
     except BaseException:
         # Never leave a half-built staging directory behind; the next
         # run would otherwise start from someone else's leftovers.

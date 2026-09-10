@@ -157,7 +157,7 @@ def main():
     seo_config.DATA.mkdir(parents=True, exist_ok=True)
     (seo_config.DATA / "hn-digest.json").write_text(json.dumps(
         {"generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
-         "stats": stats, "picks": picks}, indent=1))
+         "stats": stats, "picks": picks}, indent=1), encoding="utf-8")
     for p in picks:
         print(f"- {p['title']} ({p['comments']}c/{p['points']}p) {p['url']}  [{p['why']}]")
     if not picks:

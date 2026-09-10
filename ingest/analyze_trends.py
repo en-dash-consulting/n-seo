@@ -93,7 +93,7 @@ def main():
         p = seo_config.DATA / "gsc" / slug / "dates.json"
         if p.exists():
             monthly = {}
-            for r in json.loads(p.read_text())["rows"]:
+            for r in json.loads(p.read_text(encoding="utf-8"))["rows"]:
                 m = r["keys"][0][:7]
                 cur = monthly.setdefault(m, {"clicks": 0, "imps": 0})
                 cur["clicks"] += r["clicks"]
@@ -122,7 +122,7 @@ def main():
 
     seo_config.DATA.mkdir(parents=True, exist_ok=True)
     dest = seo_config.DATA / f"trends-{date.today().isoformat()}.json"
-    dest.write_text(json.dumps(out, indent=1))
+    dest.write_text(json.dumps(out, indent=1), encoding="utf-8")
     print(f"saved {dest}\n")
 
     for site, d in out["sites"].items():

@@ -151,7 +151,7 @@ def main():
     seo_config.DATA.mkdir(parents=True, exist_ok=True)
     (seo_config.DATA / "reddit-digest.json").write_text(json.dumps(
         {"generated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
-         "user": user or None, "auth": bool(oauth_token()), "picks": picks}, indent=1))
+         "user": user or None, "auth": bool(oauth_token()), "picks": picks}, indent=1), encoding="utf-8")
     for p in picks:
         print(f"- r/{p['sub']}: {p['title']} ({p['comments']}c/{p['score']}pts, {p['age_days']}d) {p['url']}")
     if not picks:

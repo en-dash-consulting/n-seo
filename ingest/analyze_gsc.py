@@ -19,7 +19,7 @@ EXPECTED_CTR = {1: 0.28, 2: 0.15, 3: 0.10, 4: 0.07, 5: 0.05, 6: 0.04}
 
 def load(slug, dataset):
     p = seo_config.DATA / "gsc" / slug / f"{dataset}.json"
-    return json.loads(p.read_text())["rows"] if p.exists() else []
+    return json.loads(p.read_text(encoding="utf-8"))["rows"] if p.exists() else []
 
 
 def fmt_pct(x):
@@ -126,7 +126,7 @@ def main():
     dest_dir = seo_config.INSTANCE / "docs" / "reports"
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"gsc-findings-{date.today():%Y-%m}.md"
-    dest.write_text(text)
+    dest.write_text(text, encoding="utf-8")
     print(text)
     print(f"\n[saved to {dest}]")
     return 0

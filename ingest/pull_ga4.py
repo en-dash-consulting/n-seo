@@ -96,7 +96,7 @@ def main():
                 continue
             (site_dir / f"{name}.json").write_text(json.dumps(
                 {"site": host, "property": f"properties/{prop}",
-                 "pulled": date.today().isoformat(), **resp}))
+                 "pulled": date.today().isoformat(), **resp}), encoding="utf-8")
             print(f"{host:28s} {name:8s} {resp.get('rowCount', 0)} rows")
 
     print(f"\nSaved under {out_root}")

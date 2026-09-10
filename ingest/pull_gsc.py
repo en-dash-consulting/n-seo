@@ -100,7 +100,7 @@ def main():
                     "rowCount": len(result["rows"]),
                     "rows": result["rows"],
                 }
-                (site_dir / f"{name}{suffix}.json").write_text(json.dumps(payload))
+                (site_dir / f"{name}{suffix}.json").write_text(json.dumps(payload), encoding="utf-8")
                 print(f"{slug:28s} {name}{suffix:5s} {len(result['rows'])} rows")
 
     print(f"\nWindows: {start_full} and {start_recent} -> {end}\nSaved under {out_root}")

@@ -59,7 +59,7 @@ class DemoDataTests(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def load(self, rel):
-        return json.loads((self.data / rel).read_text())
+        return json.loads((self.data / rel).read_text(encoding="utf-8"))
 
     def test_exit_and_summary(self):
         self.assertEqual(self.code, 0)
@@ -178,7 +178,7 @@ class DemoDataTests(unittest.TestCase):
     def test_clean_flag(self):
         tmp3 = Path(tempfile.mkdtemp(prefix="n-seo-demo3-"))
         (tmp3 / "data").mkdir()
-        (tmp3 / "data" / "x").write_text("x")
+        (tmp3 / "data" / "x").write_text("x", encoding="utf-8")
         saved_argv = sys.argv
         try:
             demo_data.DATA = tmp3 / "data"

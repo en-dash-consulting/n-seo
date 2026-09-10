@@ -29,7 +29,7 @@ class ConfigTests(unittest.TestCase):
 
     def use(self, raw: dict):
         p = self.tmp / "n-seo.config.json"
-        p.write_text(json.dumps(raw))
+        p.write_text(json.dumps(raw), encoding="utf-8")
         seo_config.CONFIG_PATH = p
         return seo_config.load(force=True)
 
@@ -128,7 +128,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(seo_config.expand("~/x"), Path.home() / "x")
 
     def test_example_file_is_valid_and_complete(self):
-        raw = json.loads((REPO / "n-seo.config.example.json").read_text())
+        raw = json.loads((REPO / "n-seo.config.example.json").read_text(encoding="utf-8"))
         for k in seo_config.MODULE_KEYS:
             self.assertIn(k, raw["modules"], f"example config should document module {k}")
         self.assertIn("google", raw)

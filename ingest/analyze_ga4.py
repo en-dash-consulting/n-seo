@@ -24,7 +24,7 @@ def rows(site, name):
     p = GA_DIR / site / f"{name}.json"
     if not p.exists():
         return []
-    d = json.loads(p.read_text())
+    d = json.loads(p.read_text(encoding="utf-8"))
     out = []
     for r in d.get("rows", []):
         dims = [v["value"] for v in r.get("dimensionValues", [])]
@@ -69,7 +69,7 @@ def main():
     dest_dir = seo_config.INSTANCE / "docs" / "reports"
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"ga4-findings-{date.today():%Y-%m}.md"
-    dest.write_text(text)
+    dest.write_text(text, encoding="utf-8")
     print(text)
     print(f"[saved to {dest}]")
     return 0

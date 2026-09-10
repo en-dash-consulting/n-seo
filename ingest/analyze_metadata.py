@@ -73,7 +73,7 @@ def main():
         host = site["gscHost"]
         cache_key = str(gsc_file)
         if cache_key not in qp_cache:
-            qp_cache[cache_key] = json.loads(gsc_file.read_text())["rows"]
+            qp_cache[cache_key] = json.loads(gsc_file.read_text(encoding="utf-8"))["rows"]
         rows = [r for r in qp_cache[cache_key]
                 if r["keys"][1].split("/")[2] == host]
 
@@ -149,7 +149,7 @@ def main():
         print(f"{site['host']:28s} {len(pages)} pages audited, {len(findings)} with findings")
 
     seo_config.DATA.mkdir(parents=True, exist_ok=True)
-    (seo_config.DATA / "metadata-audit.json").write_text(json.dumps(audit, indent=1))
+    (seo_config.DATA / "metadata-audit.json").write_text(json.dumps(audit, indent=1), encoding="utf-8")
     print("saved data/metadata-audit.json")
     return 0
 

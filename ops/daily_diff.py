@@ -31,7 +31,7 @@ PROBE_KEYS = [
 
 def probes():
     files = sorted((DATA / "probes").glob("probe-*.json"))
-    return [json.loads(f.read_text()) for f in files[-2:]]
+    return [json.loads(f.read_text(encoding="utf-8")) for f in files[-2:]]
 
 
 def watch_groups():
@@ -76,7 +76,7 @@ def main():
         if not f.exists():
             continue
         win = "90d" if f90.exists() else "16mo"
-        by_url = {r["keys"][0]: r for r in json.loads(f.read_text())["rows"]}
+        by_url = {r["keys"][0]: r for r in json.loads(f.read_text(encoding="utf-8"))["rows"]}
         for url in urls:
             r = by_url.get(url) or by_url.get(url.rstrip("/")) or by_url.get(url + "/")
             label = url.split("//", 1)[-1]
@@ -90,7 +90,7 @@ def main():
     conv = seo_config.load()["conversions"]
     if conv:
         try:
-            fr = json.loads((DATA / "ga4" / conv["site"] / "funnel.json").read_text())
+            fr = json.loads((DATA / "ga4" / conv["site"] / "funnel.json").read_text(encoding="utf-8"))
             rows = fr.get("rows", [])
             if rows:
                 counts = {}
@@ -113,7 +113,7 @@ def main():
         # subdomain's own traffic as a referral from the apex
         others = {h.removeprefix("www.") for h in hosts if h != host}
         xref = []
-        for r in json.loads(p.read_text()).get("rows", []):
+        for r in json.loads(p.read_text(encoding="utf-8")).get("rows", []):
             name = r["dimensionValues"][0]["value"]
             if name.lower().removeprefix("www.") in others:
                 xref.append(f"{name}={float(r['metricValues'][0]['value']):.0f}")
@@ -132,15 +132,15 @@ def main():
 
     # Re-running on the same day must replace today's entry, not stack a
     # second one under the same heading.
-    text = log.read_text()
+    text = log.read_text(encoding="utf-8")
     head = f"\n## {today}\n"
     start = text.find(head)
     if start == -1:
-        log.write_text(text.rstrip("\n") + "\n" + body)
+        log.write_text(text.rstrip("\n") + "\n" + body, encoding="utf-8")
     else:
         nxt = text.find("\n## ", start + len(head))
         tail = text[nxt:] if nxt != -1 else ""
-        log.write_text(text[:start].rstrip("\n") + "\n" + body + tail.lstrip("\n"))
+        log.write_text(text[:start].rstrip("\n") + "\n" + body + tail.lstrip("\n"), encoding="utf-8")
     for a in alerts:
         print(f"ALERT: {a}")
     print(f"daily-log updated ({len(alerts)} alerts, {len(lines)} lines)")

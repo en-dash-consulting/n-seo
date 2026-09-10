@@ -57,7 +57,7 @@ STEPS = [
 def log(line: str):
     print(line, flush=True)
     LOG.parent.mkdir(parents=True, exist_ok=True)
-    with LOG.open("a") as f:
+    with LOG.open("a", encoding="utf-8") as f:
         f.write(line.rstrip("\n") + "\n")
 
 
@@ -230,7 +230,7 @@ def main():
             "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
             "failures": "; ".join(failures),
             "steps": results,
-        }, indent=1))
+        }, indent=1), encoding="utf-8")
 
     write_last_run()
     if run_hooks_flag and hooks["afterRun"]:

@@ -36,7 +36,7 @@ RISE_MIN_RATIO = 2.5     # and have grown at least this much vs prior 84d
 
 def latest_trends():
     files = sorted(DATA.glob("trends-*.json"))
-    return json.loads(files[-1].read_text()) if files else None
+    return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
 
 
 def queue():
@@ -51,7 +51,7 @@ def queue():
     except json.JSONDecodeError:
         pass
     try:
-        return json.loads((seo_config.INSTANCE / "config" / "backlog.json").read_text()).get("actions", [])
+        return json.loads((seo_config.INSTANCE / "config" / "backlog.json").read_text(encoding="utf-8")).get("actions", [])
     except (OSError, json.JSONDecodeError):
         return []
 
@@ -84,7 +84,7 @@ def _host_resolver(prop):
     best = {}
     qp = seo_config.DATA / "gsc" / seo_config.gsc_data_slug(prop) / "query_page_90d.json"
     try:
-        for r in json.loads(qp.read_text()).get("rows", []):
+        for r in json.loads(qp.read_text(encoding="utf-8")).get("rows", []):
             q, page = r["keys"][0], r["keys"][1]
             h = page.split("/")[2] if page.count("/") >= 2 else ""
             if h in by_gsc_host and r["impressions"] > best.get(q, (0, ""))[0]:
@@ -175,7 +175,7 @@ def main():
         print("llm module off — candidates recorded without proposals")
 
     DATA.mkdir(parents=True, exist_ok=True)
-    (DATA / "opportunity-proposals.json").write_text(json.dumps(out, indent=1))
+    (DATA / "opportunity-proposals.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
     print(f"candidates: {len(candidates)} | proposals: {len(out['proposals'])} | "
           f"verdicts: {len(out['verdicts'])} | inference: {out['inference_ran']}")
     return 0
