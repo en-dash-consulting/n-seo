@@ -8,6 +8,45 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.2.0] - 2026-09-09
+
+### Added
+- **Windows support.** CI runs the whole check job on `windows-latest` —
+  typecheck, both test suites, every dashboard route, the MCP stdio smoke and
+  a scaffolded instance — alongside Ubuntu on Node 20 and 22. Nothing is
+  gated off for Windows. `ops/templates/n-seo-daily-task.xml` is a Task
+  Scheduler definition for the daily run, with the catch-up behaviour launchd
+  gives on macOS.
+- `ops/py.mjs` resolves the Python interpreter this machine actually has, and
+  the npm scripts and the CLI both go through it. `$PYTHON` still overrides.
+- `tests/py/test_portability.py` enforces the two rules that make the above
+  hold: every text file call names `encoding="utf-8"`, and no shipped code
+  invokes `openssl`.
+
+### Changed
+- The service-account JWT is signed with node's crypto module instead of the
+  `openssl` binary. That removes an external dependency on every platform, and
+  removes the temporary private-key file the old path wrote to disk. The
+  Docker image no longer installs openssl.
+- Dashboard copy names the CLI (`n-seo daily --only probe`) rather than
+  `python3 probes/site_probe.py`, which is not a command on Windows.
+
+### Fixed
+- Python file I/O and stdout used the platform's locale encoding, which is
+  cp1252 on a stock Windows install rather than UTF-8. Non-ASCII Search
+  Console queries would have raised `UnicodeEncodeError` and ended the daily
+  run there. All 85 call sites are explicit now, and `seo_config` forces UTF-8
+  stdio on import.
+- A command configured with an unbalanced quote in Settings raised
+  `ValueError` out of `shlex` and took down the daily run on every platform.
+  It degrades to "no command", and `n-seo doctor` says the command could not
+  be parsed rather than reporting it as unconfigured.
+- `shlex.split` treated backslashes in a configured LLM command as escapes,
+  turning `C:\tools\claude.exe` into `C:toolsclaude.exe`.
+- The TypeScript test sandbox spawned `python3` to seed its dataset, so on
+  Windows every Python-seeded suite would have taken its skip branch and
+  reported a green run that tested none of them.
+
 ## [0.1.1] - 2026-09-09
 
 ### Changed
