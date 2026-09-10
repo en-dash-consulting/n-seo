@@ -24,6 +24,21 @@
 <meta name="twitter:description" content="Open-source, self-hosted SEO control plane from the makers of n-dx. Reads Search Console and GA4, probes your sites, ranks the moves. It briefs you; it never posts for you.">
 <meta name="twitter:image" content="https://n-seo.dev/assets/og.png">
 
+<!-- Analytics, published site only. This file lives in a public repo, so a
+     fork that deploys its own Pages site must not report into our property. -->
+<script>
+  if (location.hostname === "n-seo.dev") {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-PEDHZMHL44");
+    var g = document.createElement("script");
+    g.async = true;
+    g.src = "https://www.googletagmanager.com/gtag/js?id=G-PEDHZMHL44";
+    document.head.appendChild(g);
+  }
+</script>
+
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
