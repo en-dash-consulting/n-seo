@@ -1,6 +1,6 @@
 # n-seo
 
-**An SEO, self-hosted.** Website: https://en-dash-consulting.github.io/n-seo/ · From the makers of [n-dx](https://n-dx.dev).
+**An SEO, self-hosted.** Website: https://n-seo.dev/ · From the makers of [n-dx](https://n-dx.dev).
 
 A local-first control plane for growing organic traffic to your own sites —
 classic search (SEO), answer engines (AEO) and AI assistants that cite sources

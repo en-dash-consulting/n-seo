@@ -4,7 +4,7 @@
   "description": "Local-first SEO / AEO / GEO control plane: pulls Search Console + GA4, probes your sites, and turns the data into a ranked action queue you can act on without an agency.",
   "license": "MIT",
   "author": "En Dash Consulting (https://endash.us)",
-  "homepage": "https://en-dash-consulting.github.io/n-seo/",
+  "homepage": "https://n-seo.dev/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/en-dash-consulting/n-seo.git"
