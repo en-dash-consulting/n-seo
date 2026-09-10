@@ -21,6 +21,7 @@
   --topbar-ink: rgba(255, 255, 255, 0.78);
   --heat: 55, 87, 214;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   /* Traffic-source groups. Okabe-Ito derived: vermillion / indigo / green /
      pink stay separable under deuteranopia and protanopia, and no pair of
@@ -85,7 +86,7 @@ body {
   line-height: 1.55;
 }
 main { max-width: 1480px; margin: 0 auto; padding: 28px 24px 80px; }
-h1, h2, h3 { font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.2; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; letter-spacing: -0.01em; }
 h1 { font-size: 1.8rem; font-weight: 800; margin: 0.5em 0; }
 h2 { font-size: 1.05rem; font-weight: 700; margin: 2em 0 0.6em; text-transform: uppercase; letter-spacing: 0.06em; }
 h2 small { font-weight: 500; color: var(--muted); font-size: 0.75rem; text-transform: none; letter-spacing: 0; }
@@ -100,12 +101,13 @@ a { color: var(--accent); }
   padding: 11px 24px; background: var(--topbar);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: #fff; text-decoration: none; letter-spacing: -0.01em; }
+.brand { display: flex; align-items: center; gap: 9px; font-family: var(--display); font-weight: 800; color: #fff; text-decoration: none; letter-spacing: -0.01em; }
 .brand-mark { flex-shrink: 0; display: block; }   /* the mark carries its own brand colors */
 .brand-name { max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brand-sub { color: var(--topbar-ink); font-weight: 500; font-size: 0.8rem; }
 .topbar nav { display: flex; gap: 4px; flex-wrap: wrap; }
 .topbar nav a, .nav-menu summary {
+  font-family: var(--display);
   color: var(--topbar-ink); text-decoration: none; font-size: 0.82rem; font-weight: 600;
   padding: 4px 10px; border-radius: 99px;
 }

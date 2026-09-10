@@ -8,6 +8,18 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.2] - 2026-09-10
+
+### Changed
+- **The dashboard's top bar uses the display face too.** 0.3.1 put Montserrat
+  on headings only, which left the wordmark and the nav in the system UI font
+  and made the top bar look untouched next to a restyled page. Both now use
+  it, matching how the marketing site treats its own chrome. The face is a
+  `--display` token rather than three copies of a fallback stack. The
+  Sites and System dropdowns keep the mono face: they list hostnames, which
+  are easier to scan monospaced. Tables, chips and numbers are unchanged —
+  a dense data view is designed around the system font.
+
 ## [0.3.1] - 2026-09-10
 
 ### Fixed
@@ -329,7 +341,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.1...v0.2.0
