@@ -1,0 +1,74 @@
+name: release
+
+# Publishing is driven by the tag, so the git history is the record of what
+# was released. Everything here refuses rather than guesses: a tag that does
+# not match package.json, or a version with no changelog section, stops the
+# run before anything reaches the registry.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the GitHub Release
+  id-token: write # npm provenance signs against this
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/n-seo
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Tag must match package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          echo "tag=$tag  package.json=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+
+      - name: Changelog must describe this version
+        run: node .github/scripts/changelog-section.mjs "${GITHUB_REF_NAME#v}" > /dev/null
+
+      - name: Install
+        run: npm ci
+
+      - name: Full check
+        run: npm run check
+
+      # The same script CI runs on every push. A release must not be the first
+      # time the published artifact is actually installed and driven.
+      - name: Pack, install and drive the tarball
+        run: .github/scripts/pack-smoke.sh
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Release notes from the changelog
+        run: node .github/scripts/changelog-section.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag

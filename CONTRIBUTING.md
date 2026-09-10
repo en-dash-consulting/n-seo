@@ -77,6 +77,27 @@ capability should update both — edit `docs/PRD.md`, then reflect it in the
 tree (`ndx add`, `ndx update <id>`, or edit the markdown under
 `.rex/prd_tree/` directly; `ndx validate .` must pass).
 
+## Releasing
+
+Maintainers only, and the full procedure is in
+[docs/RELEASING.md](docs/RELEASING.md). The short version: write the changelog
+section, bump the version, push a `v<version>` tag, and
+`.github/workflows/release.yml` does the rest — it refuses to publish if the
+tag disagrees with `package.json` or the changelog has nothing for that
+version.
+
+Two things are worth knowing even if you never cut a release:
+
+- **The public contract is bigger than the code.** `n-seo.config.json`, the
+  instance directory layout, the CLI verbs, the data-file shapes in
+  `docs/ARCHITECTURE.md`, and the MCP tool names are all things people depend
+  on. Breaking any of them is a major version.
+- **`.github/scripts/pack-smoke.sh` is the packaging regression net.** It
+  packs the tarball, installs it into an empty project and drives it. Run it
+  before you touch `package.json`'s `files`, `dependencies` or `scripts`. A
+  git checkout has devDependencies installed and every file present regardless
+  of `files`, so it hides exactly the bugs that break `npm i n-seo`.
+
 ## Pull requests
 
 - One change per PR, with the reasoning in the description — what you

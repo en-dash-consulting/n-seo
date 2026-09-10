@@ -106,6 +106,30 @@ jobs:
           if [ "$code" -gt 1 ]; then echo "::error::doctor crashed (exit $code)"; exit 1; fi
           grep -qi "engine" doctor.log || { echo "::error::doctor produced no engine block"; exit 1; }
 
+  package:
+    # A git checkout hides packaging bugs: devDependencies are installed, the
+    # engine has its own node_modules, and every file is present regardless of
+    # the `files` list. Two real breaks shipped that way — tsx in
+    # devDependencies, and a missing tsconfig.json that made every route 500 —
+    # so the tarball gets installed into an empty project and driven on every
+    # push, not only at release.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Pack, install and drive the tarball
+        run: .github/scripts/pack-smoke.sh
+
   no-private-names:
     # The project was extracted from a private deployment. Nothing from it
     # (hosts, account names, IDs) may reappear outside the LICENSE line, the

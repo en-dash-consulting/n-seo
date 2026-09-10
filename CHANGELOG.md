@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.0] - 2026-09-09
+
+First public release.
+
 ### Security
 - Dashboard binds `127.0.0.1` by default (`SEO_HOST` overrides) and rejects
   cross-origin `POST`s, since Settings can set the LLM command that the daily
@@ -177,4 +183,5 @@ uses [Semantic Versioning](https://semver.org/).
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/main...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/en-dash-consulting/n-seo/releases/tag/v0.1.0
