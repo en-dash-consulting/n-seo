@@ -28,6 +28,7 @@ path runs. Nothing that comes back is applied automatically: callers turn
 replies into briefings or proposals a human accepts or ignores.
 """
 import json
+import os
 import shlex
 import shutil
 import subprocess
@@ -40,6 +41,27 @@ from http_util import curl_json  # noqa: E402
 
 ANTHROPIC_VERSION = "2023-06-01"
 MAX_TOKENS = 4096
+
+
+def split_command(cmd: str) -> list[str]:
+    """Split a configured command string into argv, per platform.
+
+    POSIX rules treat a backslash as an escape, so on Windows they quietly
+    turn `C:\\tools\\claude.exe` into `C:toolsclaude.exe`. There, split with
+    the non-POSIX rules cmd.exe uses and strip the quotes shlex leaves on.
+
+    Returns [] for anything unparseable. This string comes from the Settings
+    form, so a stray quote is a typo a user can make, and it must not take
+    the daily run down with a ValueError from inside shlex — callers already
+    treat [] as "no command configured". doctor tells them which it was.
+    """
+    try:
+        if os.name != "nt":
+            return shlex.split(cmd)
+        parts = shlex.split(cmd, posix=False)
+    except ValueError:
+        return []
+    return [p[1:-1] if len(p) > 1 and p[0] == p[-1] == '"' else p for p in parts]
 
 
 def _enabled() -> dict | None:
@@ -71,7 +93,7 @@ def command(fast: bool = False) -> list[str] | None:
     if not m:
         return None
     cmd = (m.get("fastCommand") if fast else None) or m.get("command") or ""
-    parts = shlex.split(str(cmd))
+    parts = split_command(str(cmd))
     if not parts or not shutil.which(parts[0]):
         return None
     return parts

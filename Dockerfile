@@ -25,11 +25,13 @@ RUN npm ci --omit=dev && npm cache clean --force
 FROM node:22-bookworm-slim
 
 # python3: the whole ingest/ops pipeline, stdlib only — no pip installs.
-# curl + openssl: every HTTP call and the service-account JWT signature.
+# curl: every HTTP call. (The service-account JWT used to need the openssl
+# binary too; it is signed with node's crypto module now, so the image no
+# longer carries openssl for it.)
 # tini: reaps zombies and forwards signals to the long-running dashboard.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      python3 curl openssl ca-certificates tini \
+      python3 curl ca-certificates tini \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /engine

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<!--
+  n-seo daily run at 07:00 local, for Windows Task Scheduler.
+
+  Register it (from an elevated or normal prompt, your choice — this is a
+  per-user task):
+
+    schtasks /create /tn "n-seo daily" /xml ops\templates\n-seo-daily-task.xml
+
+  Before you do, replace the two placeholders below:
+    __NSEO__     the n-seo command, e.g. C:\Users\you\AppData\Roaming\npm\n-seo.cmd
+                 (find it with:  where n-seo)
+    __INSTANCE__ your instance directory, e.g. C:\Users\you\my-sites
+
+  StartWhenAvailable is the Windows equivalent of launchd's catch-up
+  behaviour: a machine that was asleep at 07:00 runs the job when it wakes,
+  rather than skipping the day the way cron does.
+-->
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>n-seo daily run: pulls Search Console and GA4, probes the sites, refreshes the queue.</Description>
+    <URI>\n-seo daily</URI>
+  </RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2026-01-01T07:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>__NSEO__</Command>
+      <Arguments>daily --instance "__INSTANCE__"</Arguments>
+      <WorkingDirectory>__INSTANCE__</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

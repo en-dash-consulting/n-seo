@@ -123,5 +123,67 @@ class LlmTests(unittest.TestCase):
         self.assertIsNone(llm.infer("p"))
 
 
+class SplitCommandTests(unittest.TestCase):
+    """`llm.command` is a user-configured string that has to become argv.
+
+    POSIX splitting eats backslashes, which is invisible on a Mac and fatal
+    on Windows: a configured `C:\\tools\\claude.exe` would be looked up as
+    `C:toolsclaude.exe` and the LLM module would silently report itself
+    unavailable. These force both branches regardless of the host.
+    """
+
+    def posix(self, cmd):
+        with mock.patch.object(llm.os, "name", "posix"):
+            return llm.split_command(cmd)
+
+    def windows(self, cmd):
+        with mock.patch.object(llm.os, "name", "nt"):
+            return llm.split_command(cmd)
+
+    def test_plain_command_splits_the_same_on_both(self):
+        for split in (self.posix, self.windows):
+            self.assertEqual(split("claude -p --model claude-sonnet-5"),
+                             ["claude", "-p", "--model", "claude-sonnet-5"])
+            self.assertEqual(split(""), [])
+            self.assertEqual(split("   "), [])
+
+    def test_windows_paths_survive_only_the_windows_branch(self):
+        cmd = r'C:\tools\claude.exe -p'
+        self.assertEqual(self.windows(cmd), [r"C:\tools\claude.exe", "-p"])
+        # The bug this guards: POSIX rules drop the separators entirely.
+        self.assertEqual(self.posix(cmd), ["C:toolsclaude.exe", "-p"])
+
+    def test_windows_strips_the_quotes_shlex_leaves_on(self):
+        # shlex(posix=False) keeps quotes in the token; CreateProcess would
+        # then look for a file whose name literally starts with a quote.
+        argv = self.windows(r'"C:\Program Files\nodejs\node.exe" script.js')
+        self.assertEqual(argv, [r"C:\Program Files\nodejs\node.exe", "script.js"])
+        self.assertFalse(any(a.startswith('"') for a in argv))
+
+    def test_an_unbalanced_quote_degrades_instead_of_raising(self):
+        # The command is typed into the Settings form, so a stray quote is a
+        # plausible typo. shlex raises ValueError on it; if that escaped, the
+        # daily run and doctor would both die on a config mistake.
+        for split in (self.posix, self.windows):
+            self.assertEqual(split('claude -p "unfinished'), [])
+        seo_config._cache = {"modules": {"llm": {"enabled": True, "command": 'x "'}}}
+        self.assertIsNone(llm.command())
+        self.assertFalse(llm.available())
+
+    def test_an_empty_quoted_argument_survives_quote_stripping(self):
+        self.assertEqual(self.windows('cmd ""'), ["cmd", ""])
+
+    def test_posix_quoting_still_works_on_posix(self):
+        self.assertEqual(self.posix('sh -c "echo hi"'), ["sh", "-c", "echo hi"])
+
+    def test_command_uses_the_platform_split(self):
+        self._cfg = seo_config._cache
+        try:
+            seo_config._cache = {"modules": {"llm": {"enabled": True, "command": "/bin/cat -u"}}}
+            self.assertEqual(llm.command(), ["/bin/cat", "-u"])
+        finally:
+            seo_config._cache = self._cfg
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -80,7 +80,35 @@ class JwtTests(unittest.TestCase):
                            input=f"{h}.{c}".encode(), capture_output=True)
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(sorted(x for x in os.listdir(self.tmp) if x.endswith(".pem")), ["key.pem", "pub.pem"],
-                         "the temporary private-key file is removed")
+                         "signing leaves no private-key file behind")
+
+    def test_signature_verifies_and_needs_no_openssl_binary(self):
+        """The signer runs through node, so a machine without openssl (every
+        stock Windows box) can still authenticate. Verified cryptographically,
+        not just for plausible-looking bytes."""
+        key = json.loads(self.key_file.read_text())
+        data = b"eyJhbGciOiJSUzI1NiJ9.eyJzY29wZSI6InRlc3QifQ"
+        sig = google_auth._sign_rs256(key["private_key"], data)
+        self.assertEqual(len(sig), 256, "RSA-2048 signature is 256 bytes")
+
+        sig_file = self.tmp / "direct.bin"
+        sig_file.write_bytes(sig)
+        p = subprocess.run(
+            ["openssl", "dgst", "-sha256", "-verify", str(self.pub), "-signature", str(sig_file)],
+            input=data, capture_output=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_signing_reports_a_missing_node(self):
+        with mock.patch.object(google_auth.shutil, "which", return_value=None):
+            with self.assertRaises(RuntimeError) as ctx:
+                google_auth._sign_rs256("-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----\n", b"d")
+        self.assertIn("not on PATH", str(ctx.exception))
+        self.assertIn("NODE", str(ctx.exception))
+
+    def test_signing_reports_a_malformed_key(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            google_auth._sign_rs256("not a pem at all", b"data")
+        self.assertIn("private_key", str(ctx.exception))
 
     def test_token_is_cached_per_scope(self):
         calls = []

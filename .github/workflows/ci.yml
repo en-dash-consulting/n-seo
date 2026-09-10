@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -11,13 +12,25 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         # 20 is the floor declared in package.json engines; 22 is what we develop on.
+        os: [ubuntu-latest]
         node: [20, 22]
+        # Windows is a supported target, so it runs the same job rather than a
+        # reduced one — the interesting failures there are path, interpreter
+        # and shell differences that only the real steps surface.
+        include:
+          - os: windows-latest
+            node: 22
+    defaults:
+      run:
+        # Git Bash on Windows, so one set of steps covers both. Windows has no
+        # python3 either, hence `node ops/py.mjs` in place of it below.
+        shell: bash
     steps:
       - uses: actions/checkout@v7
 
@@ -37,10 +50,10 @@ jobs:
         run: npm run typecheck
 
       - name: Python compiles
-        run: python3 -m py_compile $(git ls-files '*.py')
+        run: node ops/py.mjs -m py_compile $(git ls-files '*.py')
 
       - name: Demo dataset
-        run: python3 ops/demo_data.py
+        run: npm run demo
 
       - name: TypeScript tests
         run: npm test
@@ -50,8 +63,12 @@ jobs:
 
       - name: Dashboard serves every page
         run: |
+          # By PID, not `kill %1`: job control is off in a non-interactive
+          # Git Bash, so the %1 form silently leaves the server running on
+          # the Windows runner and the step can hang at the end.
           npx tsx src/server.tsx > server.log 2>&1 &
-          for i in $(seq 1 30); do
+          server=$!
+          for i in $(seq 1 60); do
             curl -sf -o /dev/null http://localhost:4600/api/actions && break
             sleep 1
           done
@@ -64,7 +81,7 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:4600/mcp)
           echo "$code /mcp (expect 503: fails closed without a token)"
           [ "$code" = "503" ] || fail=1
-          kill %1 || true
+          kill "$server" 2>/dev/null || true
           if [ "$fail" = "1" ]; then cat server.log; exit 1; fi
 
       - name: MCP stdio smoke
@@ -75,7 +92,9 @@ jobs:
       - name: CLI scaffolds and runs an instance
         run: |
           set -e
-          inst="$RUNNER_TEMP/instance"
+          # RUNNER_TEMP is a backslash path on Windows; Git Bash's `test -f`
+          # does not reliably handle the mixed separators that would produce.
+          inst="${RUNNER_TEMP//\\//}/instance"
           node bin/n-seo.mjs init "$inst"
           for f in n-seo.config.json .mcp.json .gitignore config/backlog.json; do
             test -f "$inst/$f" || { echo "init did not create $f"; exit 1; }
@@ -85,13 +104,14 @@ jobs:
           test -d "$inst/data/gsc" || { echo "demo data did not land in the instance"; exit 1; }
           node bin/n-seo.mjs daily --instance "$inst" --list
           N_SEO_INSTANCE="$inst" SEO_PORT=4601 npx tsx src/server.tsx > instance-server.log 2>&1 &
-          for i in $(seq 1 30); do
+          server=$!
+          for i in $(seq 1 60); do
             curl -sf -o /dev/null http://localhost:4601/api/actions && break
             sleep 1
           done
           code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4601/settings)
           echo "$code /settings (instance mode)"
-          kill %1 || true
+          kill "$server" 2>/dev/null || true
           [ "$code" = "200" ] || { cat instance-server.log; exit 1; }
 
       - name: Setup doctor runs and reports
@@ -99,7 +119,7 @@ jobs:
           # Exit 1 is expected here (no service-account key in CI). Anything
           # higher is a crash, and an empty report means it failed silently.
           set +e
-          python3 ops/doctor.py --offline > doctor.log 2>&1
+          node ops/py.mjs ops/doctor.py --offline > doctor.log 2>&1
           code=$?
           set -e
           cat doctor.log

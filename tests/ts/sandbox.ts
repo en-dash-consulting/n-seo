@@ -76,15 +76,33 @@ export function makeSandbox(opts: { data?: boolean } = {}): Sandbox {
 }
 
 /** The demo generator is Python, and so is half the engine, so a checkout
- *  without it cannot run these tests at all. */
+ *  without it cannot run these tests at all.
+ *
+ *  Resolved rather than hardcoded: Windows has no `python3` (it installs as
+ *  `python`, and the `python3.exe` App Execution Alias opens the Microsoft
+ *  Store instead of running). Hardcoding it there would take the `skip:`
+ *  branch on every Python-seeded suite and report a green run that tested
+ *  none of them. */
+const PYTHON = ((): string => {
+  if (process.env.PYTHON) return process.env.PYTHON;
+  const candidates = process.platform === "win32"
+    ? ["python", "python3", "py"]
+    : ["python3", "python"];
+  for (const c of candidates) {
+    const probe = spawnSync(c, ["--version"], { stdio: "ignore" });
+    if (!probe.error && probe.status === 0) return c;
+  }
+  return candidates[0];
+})();
+
 export const hasPython = (): boolean =>
-  spawnSync("python3", ["--version"], { stdio: "ignore" }).status === 0;
+  spawnSync(PYTHON, ["--version"], { stdio: "ignore" }).status === 0;
 
 /** Deterministic (seeded) synthetic dataset for the example config, written
  *  into the sandbox. Fails loudly: a silent miss here used to drop the whole
  *  action-engine suite from the run without changing the reported counts. */
 function generateDemoData(root: string): void {
-  const r = spawnSync("python3", [path.join(REPO, "ops", "demo_data.py")], {
+  const r = spawnSync(PYTHON, [path.join(REPO, "ops", "demo_data.py")], {
     env: { ...process.env, N_SEO_INSTANCE: root },
     encoding: "utf8",
   });

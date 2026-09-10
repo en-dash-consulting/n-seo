@@ -64,10 +64,19 @@ def check_config():
 
 def check_tools():
     print("tools")
-    for tool, why in (("curl", "all HTTP goes through curl"), ("openssl", "signs the service-account JWT")):
-        report("OK" if shutil.which(tool) else "FAIL", tool, "" if shutil.which(tool) else f"install it — {why}")
+    report("OK" if shutil.which("curl") else "FAIL", "curl",
+           "" if shutil.which("curl") else "install it — all HTTP goes through curl "
+           "(Windows 10+ ships it in System32)")
+    # node signs the service-account JWT, so it is required even for someone
+    # who never opens the dashboard.
+    import google_auth
+    node = google_auth.node_bin()
+    report("OK" if shutil.which(node) else "FAIL", f"node ({node})",
+           "" if shutil.which(node) else "install Node 20+ — it runs the dashboard "
+           "and signs the service-account JWT; $NODE overrides the path")
     v = sys.version_info
-    report("OK" if v >= (3, 10) else "FAIL", f"python {v.major}.{v.minor}",
+    report("OK" if v >= (3, 10) else "FAIL",
+           f"python {v.major}.{v.minor} ({Path(sys.executable).name})",
            "" if v >= (3, 10) else "3.10+ required")
     nm = seo_config.ROOT / "node_modules"
     report("OK" if nm.exists() else "WARN", "node_modules", "" if nm.exists() else "run: npm install")
@@ -197,7 +206,6 @@ def check_modules(cfg):
     report("OK", "enabled: " + (", ".join(on) or "(none beyond defaults)"))
     llm = cfg["modules"].get("llm", {})
     if llm.get("enabled"):
-        import shlex
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import llm as llm_mod
         http = llm_mod.http_config()
@@ -211,11 +219,17 @@ def check_modules(cfg):
                    f"check provider/model and that {llm['http'].get('apiKeyEnv') or 'apiKeyEnv'} "
                    "is set in the environment or .env")
         for key in ("command", "fastCommand"):
-            cmd = shlex.split(str(llm.get(key) or ""))
+            raw = str(llm.get(key) or "").strip()
+            cmd = llm_mod.split_command(raw)
             if not cmd:
+                if raw:
+                    # Configured but unparseable — almost always an unbalanced
+                    # quote. Say so, or the next line reads as "not configured".
+                    report("FAIL", f"llm.{key} could not be parsed: {raw[:60]}",
+                           "check for an unbalanced quote")
                 # Only complain about a missing command when there is no http
                 # block at all; a broken one already reported itself.
-                if key == "command" and not http and not llm.get("http"):
+                elif key == "command" and not http and not llm.get("http"):
                     report("FAIL", "llm has neither http nor command configured")
                 continue
             report("OK" if shutil.which(cmd[0]) else "FAIL", f"llm.{key}: {cmd[0]}",

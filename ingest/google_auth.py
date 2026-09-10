@@ -3,10 +3,10 @@
   service-account-key (default, recommended)
       A service-account JSON key on disk (config google.serviceAccountKey,
       or $GOOGLE_APPLICATION_CREDENTIALS). We build the OAuth JWT ourselves
-      and sign it with the `openssl` CLI, so there is no gcloud and no pip
-      dependency. Add the service account's email to your Search Console
-      property (Full user) and your GA4 property (Viewer) — that is all the
-      access it gets.
+      and sign it with node's crypto module, so there is no gcloud, no pip
+      dependency and no openssl binary. Add the service account's email to
+      your Search Console property (Full user) and your GA4 property
+      (Viewer) — that is all the access it gets.
 
   gcloud-impersonate
       `gcloud auth print-access-token --impersonate-service-account=<sa>`.
@@ -33,9 +33,10 @@ inspection, analytics.readonly for GA4.
 import base64
 import json
 import os
+import shutil
 import subprocess
-import tempfile
 import time
+from pathlib import Path
 
 import seo_config
 from http_util import curl_json
@@ -56,6 +57,50 @@ _cache: dict[str, tuple[str, float]] = {}
 
 def _b64url(b: bytes) -> str:
     return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+# RS256 without an openssl binary. Node is already required (the dashboard
+# runs on it) and its crypto module produces byte-identical signatures, so
+# signing through node drops an external dependency on every platform — and
+# makes Windows work, where openssl is not installed by default.
+#
+# Key and payload go in over stdin, never on the command line: argv is
+# readable by any other process on the machine.
+_NODE_SIGN_JS = (
+    "let s='';"
+    "process.stdin.setEncoding('utf8')"
+    ".on('data', d => s += d)"
+    ".on('end', () => {"
+    "  const { key, data } = JSON.parse(s);"
+    "  const sig = require('node:crypto')"
+    "    .sign('sha256', Buffer.from(data, 'base64'), key);"
+    "  process.stdout.write(sig.toString('base64'));"
+    "});"
+)
+
+
+def node_bin() -> str:
+    """The node executable. $NODE overrides, mirroring $PYTHON for the CLI."""
+    return os.environ.get("NODE") or "node"
+
+
+def _sign_rs256(private_key_pem: str, data: bytes) -> bytes:
+    """RSASSA-PKCS1-v1_5 over SHA-256, the `RS256` a Google JWT needs."""
+    node = node_bin()
+    if not shutil.which(node):
+        raise RuntimeError(
+            f"{node} is not on PATH, and the service-account JWT is signed with it. "
+            "Install Node 20+ (it is required for the dashboard anyway), or set "
+            "$NODE to its path.")
+    payload = json.dumps({"key": private_key_pem,
+                          "data": base64.b64encode(data).decode()})
+    p = subprocess.run([node, "-e", _NODE_SIGN_JS],
+                       input=payload, capture_output=True, text=True)
+    if p.returncode != 0 or not p.stdout.strip():
+        raise RuntimeError(
+            "could not sign the service-account JWT — the key file's "
+            f"private_key may be malformed: {(p.stderr or '').strip()[:200]}")
+    return base64.b64decode(p.stdout.strip())
 
 
 def key_path() -> str | None:
@@ -82,7 +127,7 @@ def _sa_key_token(scope: str) -> str:
         raise RuntimeError(
             "google.auth is service-account-key but no key file was found at "
             f"{kp or '(unset)'} — see docs/SETUP-GOOGLE.md")
-    key = json.loads(open(kp).read())
+    key = json.loads(Path(kp).read_text())
     # Backdate slightly: Google rejects a JWT issued in its future, so a
     # machine whose clock runs a few seconds fast otherwise fails to
     # authenticate at all, with an error that names nothing useful.
@@ -93,19 +138,7 @@ def _sa_key_token(scope: str) -> str:
         "iat": iat, "exp": iat + 3600,
     }).encode())
     signing_input = f"{header}.{claims}".encode()
-    # openssl needs the private key in a file; keep it 0600 and short-lived.
-    fd, tmp = tempfile.mkstemp(prefix="n-seo-", suffix=".pem")
-    try:
-        os.fchmod(fd, 0o600)
-        with os.fdopen(fd, "w") as f:
-            f.write(key["private_key"])
-        sig = subprocess.run(["openssl", "dgst", "-sha256", "-sign", tmp],
-                             input=signing_input, capture_output=True, check=True).stdout
-    finally:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
+    sig = _sign_rs256(key["private_key"], signing_input)
     assertion = signing_input.decode() + "." + _b64url(sig)
     resp = curl_json([
         "-X", "POST", "-d", f"grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion={assertion}",
@@ -222,7 +255,7 @@ def service_account_email() -> str | None:
     kp = key_path()
     if kp and os.path.exists(kp):
         try:
-            return json.loads(open(kp).read()).get("client_email")
+            return json.loads(Path(kp).read_text()).get("client_email")
         except (OSError, json.JSONDecodeError):
             return None
     return None

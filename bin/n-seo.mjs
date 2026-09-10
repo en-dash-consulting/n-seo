@@ -14,6 +14,7 @@
  *   n-seo upgrade         git pull + npm ci + npm run check, with a rollback hint
  */
 import { spawnSync, execFileSync } from "node:child_process";
+import { pythonBin } from "../ops/py.mjs";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -119,6 +120,15 @@ function tsxBin() {
   } catch {
     return null;
   }
+}
+
+/* npm, npx and similar arrive as `.cmd` batch shims on Windows, which
+ * spawnSync cannot execute without a shell — a bare `npm` fails there with
+ * ENOENT. (The Python interpreter has the same problem; ops/py.mjs solves
+ * it, and this file imports pythonBin from there so the CLI and the npm
+ * scripts resolve the interpreter identically.) */
+function npmBin(name = "npm") {
+  return process.platform === "win32" ? `${name}.cmd` : name;
 }
 
 function missingDeps(cmd, what) {
@@ -229,14 +239,14 @@ function upgrade(instance) {
   }
   if (sha256(path.join(ROOT, "package-lock.json")) !== lockBefore || !fs.existsSync(path.join(ROOT, "node_modules"))) {
     console.log("lockfile changed — npm ci");
-    r = spawnSync("npm", ["ci"], { cwd: ROOT, stdio: "inherit" });
+    r = spawnSync(npmBin(), ["ci"], { cwd: ROOT, stdio: "inherit" });
     if (r.status !== 0) {
       console.error(`npm ci failed. Roll back with:\n  git -C ${ROOT} reset --hard ${before}`);
       return r.status ?? 1;
     }
   }
   console.log("running the engine's checks");
-  r = spawnSync("npm", ["run", "check"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, N_SEO_INSTANCE: instance } });
+  r = spawnSync(npmBin(), ["run", "check"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, N_SEO_INSTANCE: instance } });
   if (r.status !== 0) {
     console.error(`\nengine checks FAILED at ${after ?? "?"}. Previous commit: ${before ?? "?"}. Roll back with:\n  git -C ${ROOT} reset --hard ${before}\n  (then npm ci in ${ROOT} if the lockfile moved)`);
     return 1;
@@ -249,7 +259,7 @@ function upgrade(instance) {
 
 const { cmd, instance: flag, rest } = parseArgs(process.argv.slice(2));
 const instance = resolveInstance(flag);
-const py = process.env.PYTHON ?? "python3";
+const py = pythonBin();
 let code = 0;
 
 switch (cmd) {
@@ -274,7 +284,7 @@ switch (cmd) {
   case "check":
     // The self-test needs devDependencies, which an npm install omits.
     code = resolvePkgDir("typescript")
-      ? run("npm", ["run", "check", "--silent", "--", ...rest], instance)
+      ? run(npmBin(), ["run", "check", "--silent", "--", ...rest], instance)
       : missingDeps(cmd, "the engine's dev dependencies (it is the engine's own test suite)");
     break;
   case "daily":
