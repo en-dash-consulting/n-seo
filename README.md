@@ -38,18 +38,60 @@ to **a model you choose**, and everything that changes a site is handed to you.
 ## Quickstart (5 minutes, no Google setup)
 
 > **n-seo is its own project — do not install it inside a website's repo.**
-> `n-seo init` creates a standalone directory holding your config, your action
-> queue and a `data/` tree the daily run rewrites every morning. It reads your
-> sites through the Search Console and GA4 APIs, so it never needs to live in
-> their code, and putting it there means committing and deploying all of that.
-> The command refuses to scaffold into an app directory or a foreign git repo.
+> It reads your sites the way Google sees them, through the Search Console and
+> GA4 APIs, so it never needs a copy of their code. `n-seo init` makes one
+> directory of its own and everything it writes stays there.
+
+**✗ Inside a site's repo** — what people do by accident:
+
+```
+~/code/my-website/
+├── .git/
+├── package.json
+├── src/
+└── my-sites/               ← init ran here
+    ├── n-seo.config.json   committed to your website
+    ├── config/backlog.json committed
+    ├── .env                committed
+    └── data/               rewritten every morning,
+                            committed, then deployed
+```
+
+**✓ Beside it** — one instance, watching every site you own:
+
+```
+~/
+├── code/
+│   ├── my-website/         untouched
+│   └── docs-site/          untouched
+└── my-sites/               ← n-seo init my-sites
+    ├── n-seo.config.json   lists both sites
+    ├── config/backlog.json your action queue
+    ├── content/            drafts, campaigns
+    ├── .claude/skills/     ask, don't read docs
+    └── data/               gitignored, regenerable
+```
+
+`n-seo init` refuses the first layout: it stops when the target holds a
+`package.json`, or when the directory it would create falls inside a git
+repository that is not itself an instance, and prints the command you wanted
+instead. `--force` overrides it.
+
+**What it touches.** Your site repos: never — when you ship a fix it is you,
+in your repo, on a branch. Google's APIs: read-only, through a service account
+you create. Its own directory: everything it writes. Delete that directory and
+nothing else on your machine changes.
 
 ```sh
-cd ~                # anywhere outside your site repos
-npm install -g n-seo
-n-seo init my-sites && cd my-sites
-n-seo demo          # a synthetic dataset for example.com
-n-seo start         # dashboard → http://localhost:4600
+npm install -g n-seo   # the engine, once — a CLI, not a dependency
+
+cd ~                   # stand somewhere that is NOT a site repo
+n-seo init my-sites    # creates ./my-sites: config, queue, content,
+cd my-sites            #   .mcp.json and seven skills
+
+n-seo demo             # synthetic data, so every page has something
+n-seo start            # the dashboard, reading this directory
+                       #   → http://localhost:4600
 ```
 
 Open http://localhost:4600. Every page is populated from the demo data, so you

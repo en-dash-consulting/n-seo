@@ -33,6 +33,14 @@ uses [Semantic Versioning](https://semver.org/).
   skills actually being present.
 
 ### Changed
+- **The site shows the setup instead of describing it.** Someone opened their
+  own website's repo and ran `n-seo init` inside it, which is a fair reading
+  of a quickstart that never says where the command should be run. There is
+  now a "Where it goes" section on n-seo.dev with the wrong filesystem layout
+  beside the right one, a breakdown of what each command in the quickstart
+  actually does, and three cards naming what n-seo touches: your repos never,
+  Google's APIs read-only, its own directory for everything it writes. The
+  README and `docs/INSTANCE.md` carry the same trees as text.
 - **Typography, self-hosted.** Montserrat and Merriweather replace DM Sans,
   DM Mono and the Google Fonts CDN on the marketing site; the dashboard's
   headings and brand mark move to Montserrat while its tables keep the system

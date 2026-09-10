@@ -1,12 +1,28 @@
 # Running n-seo as an engine + instance
 
 > **An instance is a standalone project.** It is never a subdirectory of a
-> website you are optimising, and `n-seo init` refuses to scaffold into an
-> application directory or a git repository it does not own (`--force`
-> overrides). n-seo reads your sites through the Search Console and GA4 APIs;
-> it has no reason to live in their code, and living there means committing
-> and deploying its config, its queue and a `data/` tree that is rewritten
-> every morning. One instance watches as many sites as you own.
+> website you are optimising. n-seo reads your sites through the Search
+> Console and GA4 APIs; it has no reason to live in their code, and living
+> there means committing and deploying its config, its queue and a `data/`
+> tree that is rewritten every morning.
+
+```
+~/
+├── code/
+│   ├── my-website/         a site you own — untouched
+│   └── docs-site/          another one — untouched
+└── my-sites/               the instance
+    ├── n-seo.config.json   both sites listed here
+    ├── config/backlog.json the curated queue
+    ├── content/            drafts, campaigns
+    ├── .claude/skills/     the operating skills
+    ├── CLAUDE.md           the operating rules
+    └── data/               the daily run's output, gitignored
+```
+
+One instance watches as many sites as you own, and `n-seo init` refuses to
+scaffold into an application directory or a git repository it does not own
+(`--force` overrides).
 
 n-seo can run two ways. In the simplest, you clone the repo, put your config
 in the checkout and run it there. In the second, the checkout is an **engine**

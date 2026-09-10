@@ -123,6 +123,39 @@
   section { padding: 84px 0; border-top: 1px solid var(--border); }
 
   /* nav */
+
+  /* ---- where it goes: the filesystem illustration ---- */
+  .where { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 36px; align-items: stretch; }
+  .fs { min-width: 0; border-radius: 14px; border: 1px solid var(--border); padding: 20px 22px; display: flex; flex-direction: column; }
+  .fs.bad  { border-color: rgba(255,120,140,0.32); background: rgba(255,90,110,0.05); }
+  .fs.good { border-color: rgba(0,255,179,0.30);  background: rgba(0,255,179,0.045); }
+  .fs-h { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 0.98rem; margin-bottom: 4px; }
+  .fs-mark { font-family: var(--font-display); width: 24px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; flex: none; }
+  .fs.bad .fs-mark  { background: rgba(255,90,110,0.18); color: #ff92a5; }
+  .fs.good .fs-mark { background: rgba(0,255,179,0.16); color: var(--teal); }
+  .fs-sub { font-size: 0.86rem; color: var(--dim); margin: 0 0 16px; }
+  .fs pre { background: transparent; border: 0; border-radius: 0; padding: 0; font-size: 0.83rem; line-height: 1.85; color: var(--muted); }
+  .fs pre b { font-weight: 500; color: var(--white); }
+  .fs pre .n  { color: var(--dim); }
+  .fs pre .no { color: #ff92a5; }
+  .fs pre .yes{ color: var(--teal); }
+  .fs-note { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--dim); }
+  .fs-note b { color: var(--muted); font-weight: 500; }
+
+  .touch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 22px; }
+  .touch > div { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .touch .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .touch .never { color: #ff92a5; }
+  .touch .read  { color: var(--purple); }
+  .touch .write { color: var(--teal); }
+  .touch h3 { font-size: 1rem; margin-bottom: 6px; }
+  .touch p { color: var(--dim); font-size: 0.9rem; margin: 0; }
+
+  @media (max-width: 900px) {
+    .where { grid-template-columns: 1fr; }
+    .touch { grid-template-columns: 1fr; }
+  }
+
   .nav { position: sticky; top: 0; z-index: 10; background: rgba(13,27,62,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
   .nav .wrap { display: flex; align-items: center; gap: 22px; height: 62px; }
   .logo { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--white); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
@@ -173,6 +206,7 @@
 
   /* quickstart */
   .qs { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; }
+  .qs > * { min-width: 0; }
   pre { margin: 0; background: #08122c; border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; font-size: 0.92rem; line-height: 1.7; color: var(--muted); overflow-x: auto; }
   pre .c { color: var(--dim); }
   pre .t { color: var(--teal); }
@@ -208,6 +242,7 @@
 
   /* agent */
   .agent { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .agent > * { min-width: 0; }
   .half { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; height: 100%; }
   .half .k { font-family: var(--font-mono); color: var(--teal); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .half h3 { margin: 8px 0 10px; font-size: 1.15rem; }
@@ -267,6 +302,7 @@
     </a>
     <div class="nav-links">
       <a href="#agent">Agentic</a>
+      <a href="#where">Setup</a>
       <a href="#how">How it works</a>
       <a href="#see">What you get</a>
       <a href="#rules">The rules</a>
@@ -339,27 +375,98 @@
   </div>
 </section>
 
+<section id="where">
+  <div class="wrap">
+    <div class="eyebrow">Where it goes</div>
+    <h2>n-seo sits beside your sites, not inside them</h2>
+    <p class="lede">It reads your sites the way Google sees them — through the Search Console and GA4 APIs — so it never needs a copy of their code. <code>n-seo init</code> makes one directory of its own and everything it writes stays there.</p>
+
+    <div class="where">
+      <div class="fs bad">
+        <div class="fs-h"><span class="fs-mark"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></span> Inside a site's repo</div>
+        <p class="fs-sub">Opening your website and running <code>init</code> there.</p>
+<pre>~/code/<b>my-website</b>/              <span class="n">your app</span>
+├── .git/
+├── package.json
+├── src/
+└── <b>my-sites</b>/                   <span class="no">← init ran here</span>
+    ├── n-seo.config.json   <span class="no">committed to your site</span>
+    ├── config/backlog.json <span class="no">committed</span>
+    ├── .env                <span class="no">committed</span>
+    └── data/               <span class="no">rewritten every morning,</span>
+                            <span class="no">committed, then deployed</span></pre>
+        <p class="fs-note"><b>This is the mistake people make</b>, so <code>n-seo init</code> now refuses it. It stops when the target holds a <code>package.json</code> or sits in a git repo it does not own, and prints the command you wanted instead.</p>
+      </div>
+
+      <div class="fs good">
+        <div class="fs-h"><span class="fs-mark"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span> Beside them</div>
+        <p class="fs-sub">One instance, watching every site you own.</p>
+<pre>~/
+├── code/
+│   ├── <b>my-website</b>/             <span class="n">untouched</span>
+│   └── <b>docs-site</b>/              <span class="n">untouched</span>
+└── <b>my-sites</b>/                   <span class="yes">← n-seo init my-sites</span>
+    ├── n-seo.config.json   <span class="n">lists both sites</span>
+    ├── config/backlog.json <span class="n">your action queue</span>
+    ├── content/            <span class="n">drafts, campaigns</span>
+    ├── .claude/skills/     <span class="n">ask, don't read docs</span>
+    └── data/               <span class="n">gitignored, regenerable</span></pre>
+        <p class="fs-note"><b>Put it anywhere outside your repos</b> — your home directory is fine. Give it a git repo of its own if you want the queue and the drafts to have history; the <code>.gitignore</code> that <code>init</code> writes already keeps the data out.</p>
+      </div>
+    </div>
+
+    <div class="touch">
+      <div>
+        <div class="k never">Your site repos</div>
+        <h3>Never touched</h3>
+        <p>n-seo has no path to them and no reason to. When you ship a fix it is you, in your repo, on a branch, the way you already work.</p>
+      </div>
+      <div>
+        <div class="k read">Google's APIs</div>
+        <h3>Read only</h3>
+        <p>A service account you create, added as a viewer on Search Console and GA4. It can read what Google already reports about your sites. That is all it can do.</p>
+      </div>
+      <div>
+        <div class="k write">Its own directory</div>
+        <h3>Everything it writes</h3>
+        <p>Config, the queue, drafts, the daily log, the JSON the morning run pulls down. Delete the directory and nothing else on your machine changes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="start">
   <div class="wrap">
     <div class="eyebrow">Quickstart</div>
     <h2>Five minutes, no Google setup</h2>
     <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+ and curl are all it needs, on macOS, Linux or Windows.</p>
-    <div class="aside" style="margin-top: 22px;"><b>n-seo is its own project — don't install it inside a website's repo.</b> <code>n-seo init</code> creates a standalone directory for your config, your queue and a <code>data/</code> tree the daily run rewrites every morning. It reads your sites through the Search Console and GA4 APIs, so it never needs to live in their code, and putting it there means committing and deploying all of that. The command refuses to scaffold into an app directory or someone else's git repo. One instance watches as many sites as you own.</div>
-    <div class="qs" style="margin-top: 30px;">
-<pre><span class="c"># see it working — from anywhere outside your site repos</span>
+    <div class="qs" style="margin-top: 36px;">
+<pre><span class="c"># 1. the engine, once — a CLI, not a dependency</span>
 npm install -g n-seo
-n-seo init my-sites &amp;&amp; cd my-sites
-n-seo demo          <span class="c"># synthetic data for example.com</span>
+
+<span class="c"># 2. stand somewhere that is NOT a site repo</span>
+cd ~
+
+<span class="c"># 3. make the instance: ./my-sites — config,</span>
+<span class="c">#    queue, content, .mcp.json, seven skills</span>
+n-seo init my-sites
+cd my-sites
+
+<span class="c"># 4. synthetic data, so every page has something</span>
+n-seo demo
+
+<span class="c"># 5. the dashboard, reading this directory</span>
 n-seo start         <span class="c"># → http://localhost:4600</span>
 
-<span class="c"># then just ask — init installed the skills</span>
+
+<span class="c"># then point it at your real sites — just ask</span>
 claude
 <span class="c">#  "set this up for my sites"</span>
 <span class="c">#  "what should I work on today?"</span>
 
-<span class="c"># or do it by hand</span>
-n-seo doctor        <span class="c"># checks key + access</span>
-n-seo daily         <span class="c"># the morning run</span></pre>
+<span class="c"># or by hand, after editing n-seo.config.json</span>
+n-seo doctor        <span class="c"># what access is missing</span>
+n-seo daily         <span class="c"># pull, probe, rank</span></pre>
       <div class="steps">
         <div class="step"><div><h3>Try it on demo data</h3><p>Every page, every card, every chart — populated. Poke around the queue, open a spec, toggle a module in Settings.</p></div></div>
         <div class="step"><div><h3>Give it read access</h3><p>One Google service account, added as a user on Search Console and GA4. The key is signed locally by node — no gcloud, no pip installs, no openssl. Say <em>"set this up for my sites"</em> and the <code>n-seo-setup</code> skill walks the whole thing, stopping at each decision that is yours. <a href="https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md">Step by step →</a></p></div></div>
