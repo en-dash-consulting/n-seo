@@ -28,8 +28,19 @@ proposals and verdicts to the opportunity scan and briefings to the digests.
 Nothing it produces is applied automatically.
 
 **Does it run on Windows?**
-Not supported. The scripts assume `curl`, `openssl`, POSIX paths and one of
-launchd / cron / systemd. WSL2 is likely to work but is untested.
+Yes, since 0.2.0, and CI runs the full test suite on Windows on every commit
+rather than taking the claim on trust. You need Node 20+ and Python 3.10+;
+`curl` ships with Windows 10 and later. There is no `openssl` requirement on
+any platform any more — the service-account JWT is signed with node's crypto
+module. Schedule the daily run with Task Scheduler, using the task definition
+in `ops/templates/n-seo-daily-task.xml` (see [SCHEDULING.md](SCHEDULING.md)).
+
+Two differences worth knowing. Commands in the `hooks` block go to `cmd.exe`
+rather than `/bin/sh`, so write them in its syntax or point them at a script.
+And use `n-seo daily` (or `npm run daily`) rather than `python3 ops/daily.py`:
+Windows installs Python as `python`, and the `python3.exe` it ships is a stub
+that opens the Microsoft Store instead of running anything. The CLI finds the
+real interpreter for you, and `$PYTHON` overrides it.
 
 **Where does my data go?**
 Into `data/` on the machine that runs the pipeline, as JSON. The only network
@@ -83,7 +94,7 @@ behind it; the page flags verdicts older than 90 days as stale. Request
 indexing and re-check rather than chasing a template bug.
 
 **A daily step failed. What now?**
-Open `/logs` (or `data/daily-ops.log`), then `python3 ops/doctor.py`. A 401
+Open `/logs` (or `data/daily-ops.log`), then run `n-seo doctor`. A 401
 or 403 from Google means the service account lost access or the key file
 moved. A run that fails every network step at once was offline; the next run
 will recover. Steps are independent — one failing does not stop the others.
