@@ -118,7 +118,7 @@ function probeActions(site: SiteCfg): Action[] {
   const mk = (key: string, title: string, how: string): Action => ({
     id: `gen-hygiene-${slug(site.host)}-${key}`,
     host: site.host, title, kind: "Config change", why: "Live probe failing on this check", how,
-    spec: [how, `Verify with: python3 probes/site_probe.py after deploy.`],
+    spec: [how, `Verify with: n-seo daily --only probe after deploy.`],
     impact: 5, effort: "S", tag: "hygiene", source: "rule",
   });
   if (!p.robots.exists) out.push(mk("robots", "Add robots.txt", "Serve robots.txt with a Sitemap: pointer and explicit AI-crawler allowances."));

@@ -105,7 +105,7 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
           <div class="s-title">Mode</div>
           <div class="mono">{cfg.google.auth}</div>
           <p class="sub">{cfg.google.auth === "service-account-key"
-            ? "A service-account JSON key, signed locally with openssl. No gcloud needed."
+            ? "A service-account JSON key. The JWT is signed locally with node's crypto module — no gcloud, no openssl, nothing to install."
             : cfg.google.auth === "metadata"
               ? "The runtime service account from the GCE / Cloud Run / GKE metadata server — no key file. It mints its own scoped tokens, which needs Token Creator on itself."
               : cfg.google.auth === "gcloud-impersonate"
@@ -122,7 +122,7 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
         <div class="s-card">
           <div class="s-title">Grant access to</div>
           <div class="mono">{sa.email ?? cfg.google.impersonate ?? (cfg.google.auth === "metadata" ? "the runtime service account" : "—")}</div>
-          <p class="sub">Add this email as a <b>Full</b> user on each Search Console property and a <b>Viewer</b> on each GA4 property. Then <code>python3 ops/doctor.py</code> confirms it can see them.</p>
+          <p class="sub">Add this email as a <b>Full</b> user on each Search Console property and a <b>Viewer</b> on each GA4 property. Then <code>n-seo doctor</code> confirms it can see them.</p>
         </div>
       </div>
 
@@ -254,7 +254,7 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
               <div class="mono">{lr.ts}</div>
               <p class="sub">{lr.failures.trim() ? <span class="chip bad">failed: {lr.failures}</span> : <span class="chip good">all steps OK</span>}</p>
             </>
-          ) : <p class="sub">never — run <code>python3 ops/daily.py</code></p>}
+          ) : <p class="sub">never — run <code>n-seo daily</code></p>}
         </div>
         <div class="s-card">
           <div class="s-title">Data freshness</div>

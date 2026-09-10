@@ -80,7 +80,7 @@ export interface Hooks {
   beforeRun: string[];
   /** … after the last step (and after last-run.json is written) */
   afterRun: string[];
-  /** … after a named step, e.g. { "daily-diff": ["python3 my_sync.py"] } */
+  /** … after a named step, e.g. { "daily-diff": ["node my_sync.mjs"] } */
   afterStep: Record<string, string[]>;
 }
 

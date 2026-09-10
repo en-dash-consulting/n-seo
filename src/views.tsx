@@ -215,7 +215,7 @@ export const SplitQueue: FC<{ actions: Action[]; idPrefix: string }> = ({ action
       {active.length ? (
         <ActionQueue actions={active} showHost idPrefix={`${idPrefix}-a`} />
       ) : (
-        <p class="empty">Nothing active. Either the data has no findings yet (run <code>python3 ops/daily.py</code>) or the queue is clear — add strategic items in <code>config/backlog.json</code>.</p>
+        <p class="empty">Nothing active. Either the data has no findings yet (run <code>n-seo daily</code>) or the queue is clear — add strategic items in <code>config/backlog.json</code>.</p>
       )}
       {watching.length > 0 && (
         <>
@@ -526,7 +526,7 @@ export const SiteDetail: FC<{ site: SiteCfg; days?: number }> = ({ site, days = 
       ) : (
         <p class="empty">
           {site.ga4Property || site.gscProperty
-            ? <>no time series yet — run <code>python3 ingest/pull_timeseries.py</code></>
+            ? <>no time series yet — run <code>n-seo daily --only timeseries</code></>
             : "no Search Console or GA4 property configured for this site"}
         </p>
       )}
@@ -614,11 +614,11 @@ export const SiteDetail: FC<{ site: SiteCfg; days?: number }> = ({ site, days = 
 
 export const Probes: FC = () => {
   const probe = data.latestProbe();
-  if (!probe) return <><h1>Live-site probe</h1><p class="empty">No probe snapshots yet — run <code>python3 probes/site_probe.py</code></p></>;
+  if (!probe) return <><h1>Live-site probe</h1><p class="empty">No probe snapshots yet — run <code>n-seo daily --only probe</code></p></>;
   return (
     <>
       <h1>Live-site probe</h1>
-      <p class="sub">Snapshot {probe.probed_at} · no-auth checks of what crawlers actually see. Re-run any time: <code>python3 probes/site_probe.py</code></p>
+      <p class="sub">Snapshot {probe.probed_at} · no-auth checks of what crawlers actually see. Re-run any time: <code>n-seo daily --only probe</code></p>
       <div class="tbl-wrap"><table>
         <thead>
           <tr><th>Site</th><th>robots</th><th>AI crawlers</th><th>sitemap</th><th>llms.txt</th><th>404</th><th>JSON-LD</th><th>visible text</th><th>Title</th></tr>
@@ -704,7 +704,7 @@ export const IndexingPage: FC = () => {
       <>
         <h1>Indexing</h1>
         <p class="empty">
-          No index snapshot yet — enable the <b>Index coverage sweep</b> module and run <code>python3 ingest/pull_index_status.py</code>
+          No index snapshot yet — enable the <b>Index coverage sweep</b> module and run <code>n-seo daily --only index-status</code>
         </p>
       </>
     );
@@ -890,7 +890,7 @@ export const InsightsPage: FC = () => {
           })()}
         </>
       ) : (
-        <p class="empty">No trend analysis yet — run <code>python3 ingest/analyze_trends.py</code> (the opportunity-scan module does this daily).</p>
+        <p class="empty">No trend analysis yet — run <code>n-seo daily --only opportunity-scan</code>, which refreshes it (the daily run does this for you when the module is on).</p>
       )}
     </>
   );
@@ -976,7 +976,7 @@ export const ContentPage: FC = () => {
                   ))}
                 </div>
               ) : (
-                <p class="empty">No fresh threads — the daily run refreshes this list (<code>python3 ops/hn_digest.py</code> any time).</p>
+                <p class="empty">No fresh threads — the daily run refreshes this list (<code>n-seo daily --only hn-digest</code> any time).</p>
               )}
             </>
           )}
@@ -1216,7 +1216,7 @@ export const LogsPage: FC = () => {
           <h2>{sec.heading}</h2>
           <ul class="log-lines">{sec.lines.map(logLine)}</ul>
         </div>
-      )) : <p class="empty">No daily-log entries yet — <code>python3 ops/daily.py</code> writes <code>docs/daily-log.md</code>.</p>}
+      )) : <p class="empty">No daily-log entries yet — <code>n-seo daily</code> writes <code>docs/daily-log.md</code>.</p>}
 
       <h2>Raw run output <small>(data/daily-ops.log, last 150 lines — look here if a run failed)</small></h2>
       <div class="tbl-wrap"><pre class="ops-log">{data.opsLogTail()}</pre></div>
@@ -1403,7 +1403,7 @@ export const TrendsPage: FC<{ days: number }> = ({ days }) => {
               <span class="domain">{site.host}</span>
               <span class="chip">{site.gscProperty ? "Search Console connected" : "no Search Console property"}</span>
               <span class="chip">{site.ga4Property ? "GA4 connected" : "no GA4 property"}</span>
-              <span class="trend-empty-note">no time series yet — run <code>python3 ingest/pull_timeseries.py</code></span>
+              <span class="trend-empty-note">no time series yet — run <code>n-seo daily --only timeseries</code></span>
             </div>
           );
         }
