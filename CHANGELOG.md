@@ -8,6 +8,18 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.3] - 2026-09-11
+
+### Fixed
+- **Every published mirror page claimed the daily run had not happened.**
+  `data/last-run.json` was written once, after all steps finished. But
+  `static-export` is itself a step, so when it stamped each page it read the
+  *previous* run's record — a mirror rebuilt at 07:44 carried a "daily run
+  OK" badge from the night before, which reads exactly like a run that never
+  fired. The record is now written after every step, so a later step sees the
+  run it is part of. It also means the dashboard's status advances during a
+  long run instead of sitting stale for its full duration.
+
 ## [0.3.2] - 2026-09-10
 
 ### Changed
@@ -341,7 +353,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.2.0...v0.3.0

@@ -202,6 +202,15 @@ def main():
         wait_for_network()
 
     results, failures = [], []
+
+    def write_last_run():
+        seo_config.DATA.mkdir(parents=True, exist_ok=True)
+        (seo_config.DATA / "last-run.json").write_text(json.dumps({
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
+            "failures": "; ".join(failures),
+            "steps": results,
+        }, indent=1), encoding="utf-8")
+
     if run_hooks_flag:
         run_hooks("before", hooks["beforeRun"], results, failures)
     for name, script in todo:
@@ -221,16 +230,15 @@ def main():
             failures.append(name)
             log(f"{name} FAILED")
         results.append({"name": name, "ok": ok, "seconds": round(time.time() - t0, 1)})
+        # After every step, not just at the end. static-export is itself a
+        # step, so a record written after the loop is not yet on disk when the
+        # export reads it — every published page carried the *previous* run's
+        # timestamp and said the daily run had not happened today. It also
+        # means the dashboard's status reflects a long run while it is still
+        # going, rather than staying stale for its full duration.
+        write_last_run()
         if run_hooks_flag:
             run_hooks(name, hooks["afterStep"].get(name, []), results, failures, step=name)
-
-    def write_last_run():
-        seo_config.DATA.mkdir(parents=True, exist_ok=True)
-        (seo_config.DATA / "last-run.json").write_text(json.dumps({
-            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
-            "failures": "; ".join(failures),
-            "steps": results,
-        }, indent=1), encoding="utf-8")
 
     write_last_run()
     if run_hooks_flag and hooks["afterRun"]:
