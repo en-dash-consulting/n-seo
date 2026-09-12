@@ -31,6 +31,7 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
   const sa = serviceAccountEmail(cfg.google.serviceAccountKey);
   const lr = data.lastRun();
   const eng = engineInfo();
+  const upd = data.updateCheck();
   const hookCount = cfg.hooks.beforeRun.length + cfg.hooks.afterRun.length + Object.values(cfg.hooks.afterStep).reduce((n, l) => n + l.length, 0);
   const str = (v: unknown) => (v == null ? "" : String(v));
   return (
@@ -51,7 +52,11 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
       <h2>Engine <small>— what is running, and where</small></h2>
       <div class="settings-grid">
         <div class="s-card">
-          <div class="s-title">n-seo {eng.version}{eng.commit ? ` · ${eng.commit}` : ""}</div>
+          <div class="s-title">
+            n-seo {eng.version}{eng.commit ? ` · ${eng.commit}` : ""}
+            {upd?.newer && <span class="chip warn" title={`checked ${upd.checked}`}> {upd.latest} available</span>}
+            {upd && !upd.newer && <span class="chip good" title={`checked ${upd.checked}`}> latest</span>}
+          </div>
           <p class="sub"><span class={`chip ${eng.mode === "instance" ? "good" : ""}`}>{eng.mode}</span> {eng.mode === "instance"
             ? "the engine and this instance live in separate directories; upgrading the engine does not touch your config, queue or data."
             : "config, queue and data live inside the engine checkout. Fine for one person; see docs/INSTANCE.md to split them."}</p>
@@ -59,7 +64,16 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
         <div class="s-card">
           <div class="s-title">Engine path</div>
           <div class="mono">{eng.root}</div>
-          <p class="sub">Upgrade: <code>n-seo upgrade</code> (git engine) or <code>npm update n-seo</code> (npm engine).</p>
+          <p class="sub">
+            Upgrade with <code>n-seo upgrade</code>, whatever way it was installed.
+            {" "}<code>n-seo upgrade --check</code> reports without changing anything.
+          </p>
+          {upd?.newer && (
+            <p class="sub">
+              <b>{upd.latest} is available.</b> Your config, queue and content are untouched by an upgrade.
+              {upd.notes && <> <a href={upd.notes} target="_blank" rel="noopener noreferrer">Release notes →</a></>}
+            </p>
+          )}
         </div>
         <div class="s-card">
           <div class="s-title">Instance path</div>

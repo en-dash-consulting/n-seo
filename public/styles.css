@@ -151,6 +151,7 @@ a { color: var(--accent); }
 .chip.ai, .chip.src { background: var(--accent-soft); color: var(--accent); }
 .chip.good { background: var(--good-soft); color: var(--good); }
 .chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
 .chip.impact { background: var(--good-soft); color: var(--good); }
 .chip.effort.e-S { background: var(--code-bg); color: var(--muted); }
 .chip.effort.e-M { background: var(--warn-soft); color: var(--warn); }

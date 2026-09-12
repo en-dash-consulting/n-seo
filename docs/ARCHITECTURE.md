@@ -200,7 +200,7 @@ the reports shows them.
 |---|---|
 | `n-seo init [dir]` | Scaffold an instance: config from the example, empty `config/`, `content/`, `.env`, `.gitignore`, `.mcp.json` pointing at this engine, README. Never overwrites |
 | `n-seo start` · `dev` · `daily` · `doctor` · `demo` · `mcp` · `check` · `export` | Run the engine's command against the instance (`--instance <path>`, else `$N_SEO_INSTANCE`, else cwd); remaining args pass through |
-| `n-seo upgrade` | Git engine: `git pull --ff-only`, `npm ci` if the lockfile changed, `npm run check`; prints the exact `git reset --hard <sha>` if the check fails. npm engine: says to `npm update n-seo` |
+| `n-seo upgrade` | Detects the install shape and does the upgrade. Git engine: `git pull --ff-only`, `npm ci` if the lockfile changed, `npm run check`; prints the exact `git reset --hard <sha>` if the check fails. npm engine (global, custom prefix, or local): installs the published latest with the right flags for that layout, then prints the new CHANGELOG section and the rollback command. `--check` reports without changing anything |
 | `n-seo version` | engine version, commit, engine path, instance path, mode |
 
 ## Operating rules the tooling encodes

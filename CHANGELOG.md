@@ -8,6 +8,41 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.4.0] - 2026-09-12
+
+Upgrading used to be something you found out about by accident. This release
+makes it visible and makes it one command.
+
+### Added
+- **`n-seo upgrade` does the upgrade.** It works out how the engine was
+  installed — a git checkout, a global npm install, a global install under a
+  custom prefix, or a local one — and runs the right thing for that layout.
+  It prints the versions either side, the new release's changelog section,
+  the exact rollback command, and a reminder that the dashboard needs a
+  restart. `--check` reports what is available and changes nothing.
+- **A daily update check, and a notice where you already look.** The new
+  `updateCheck` module asks the registry once per run whether a newer engine
+  shipped, and the Settings page and `n-seo doctor` show it. The dashboard
+  never makes that request itself — it reads `data/update-check.json` — so
+  every page still renders with the machine offline, and an unreachable
+  registry leaves the previous answer in place rather than failing the run.
+- **This is the only module that ships enabled**, so the claim that nothing
+  leaves the host was no longer strictly true. The README, the site and the
+  PRD now say exactly what it sends (nothing about you) and how to switch it
+  off. `CHANGELOG.md` is published with the package so the upgrade can show
+  you what you just got.
+
+### Fixed
+- **`n-seo upgrade` gave advice that silently did nothing.** For any npm
+  engine it printed `npm update n-seo`. That is correct for exactly one
+  layout — a consumer `package.json` with n-seo as a dependency — and wrong
+  for the global install the README recommends: run there it reports "up to
+  date", exits 0, upgrades nothing, and leaves a stray `package-lock.json` in
+  whatever directory you were standing in.
+- The Settings notice compares against the engine running now rather than the
+  version recorded in the file, so upgrading clears it immediately instead of
+  at the next daily run.
+
 ## [0.3.3] - 2026-09-11
 
 ### Fixed
@@ -353,7 +388,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.0...v0.3.1

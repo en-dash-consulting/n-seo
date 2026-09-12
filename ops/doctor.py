@@ -35,6 +35,24 @@ def check_engine():
            else "config, queue and data live inside the engine checkout (see docs/INSTANCE.md to split them)")
     report("OK", f"engine: {e['root']}")
     report("OK", f"instance: {e['instance']}")
+    # From the file the daily run writes, never a fresh request: doctor is
+    # something people run when something is already wrong, often offline,
+    # and it should not hang on a registry.
+    try:
+        u = json.loads((seo_config.DATA / "update-check.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        u = None
+    if u and u.get("latest"):
+        def parts(v):
+            bits = str(v).split(".")[:3]
+            return tuple(int(b) for b in bits) if len(bits) == 3 and all(b.isdigit() for b in bits) else None
+        cur, new_ = parts(e["version"]), parts(u["latest"])
+        if cur and new_ and new_ > cur:
+            report("WARN", f"n-seo {u['latest']} is available", "upgrade with: n-seo upgrade")
+        else:
+            report("OK", f"n-seo {e['version']} is current", f"checked {u.get('checked', '?')}")
+    elif seo_config.module("updateCheck").get("enabled"):
+        report("OK", "update check has not run yet", "it runs with the daily run")
 
 
 def check_config():

@@ -40,12 +40,18 @@ EXAMPLE_PATH = ROOT / "n-seo.config.example.json"
 MODULE_KEYS = [
     "indexStatus", "metadataAudit", "opportunityScan", "llm", "hackerNews",
     "reddit", "indexNow", "staticExport", "publish", "gitAutoCommit",
-    "notifications",
+    "notifications", "updateCheck",
 ]
 
 # Per-module defaults, so a half-written block cannot make a step guess.
 # Mirrors MODULE_DEFAULTS in src/config.ts.
 MODULE_DEFAULTS = {
+    # The one module that ships on. Everything else here is opt-in, but an
+    # engine that never mentions its own updates leaves people running old
+    # code without knowing it. One public metadata request a day, carrying
+    # nothing about this instance, and `"updateCheck": {"enabled": false}`
+    # stops it for good.
+    "updateCheck": {"enabled": True},
     "staticExport": {"signOutUrl": "", "signOutLabel": "Sign out"},
     "publish": {"target": "gcs", "destination": "", "command": "",
                 "delete": False, "dryRun": False, "env": {}},

@@ -39,6 +39,9 @@ LOG = seo_config.DATA / "daily-ops.log"
 
 # (name, script, module gate or None)
 STEPS = [
+    # First, and cheap: "a newer version exists" belongs at the top of the
+    # log, not buried under forty minutes of pulls.
+    ("update-check",     "ops/update_check.py",           "updateCheck"),
     ("probe",            "probes/site_probe.py",          None),
     ("gsc",              "ingest/pull_gsc.py",            None),
     ("ga4",              "ingest/pull_ga4.py",            None),

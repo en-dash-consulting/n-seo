@@ -107,6 +107,8 @@ export interface Config {
 /** Per-module defaults, so a half-written block cannot make a step guess.
  *  Mirrors MODULE_DEFAULTS in ingest/seo_config.py. */
 export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
+  // The one module that ships on — see the note in ingest/seo_config.py.
+  updateCheck: { enabled: true },
   staticExport: { signOutUrl: "", signOutLabel: "Sign out" },
   publish: { target: "gcs", destination: "", command: "", delete: false, dryRun: false, env: {} },
 };
@@ -123,6 +125,7 @@ export const MODULE_INFO: { key: string; title: string; blurb: string; needs?: s
   { key: "publish", title: "Publish the mirror", blurb: "Copy site/ to a bucket, an object store or a box over ssh after the export — a real pipeline step, so it is logged and retried like the rest. `dryRun` prints the command without running it, which is how you rehearse a cutover.", needs: "gcloud, aws or rsync on PATH, depending on the target" },
   { key: "gitAutoCommit", title: "Git auto-commit", blurb: "Commit the daily log and export after each run (and push if a remote is set)." },
   { key: "notifications", title: "Desktop notifications", blurb: "macOS notification when a daily step fails (osascript)." },
+  { key: "updateCheck", title: "Update check", blurb: "Once a day, during the run, ask the registry whether a newer engine has been published and note it on this page. The only module that is on by default. The dashboard itself never makes the request — it reads the result — so pages still render with no network. Nothing about this instance is sent." },
 ];
 
 function readJson<T>(p: string): T {

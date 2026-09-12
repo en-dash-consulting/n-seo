@@ -29,8 +29,13 @@ with evidence attached, and measure yesterday's changes.
 ## Principles (non-negotiable)
 
 1. **Local-first.** All data lives in files on the owner's machine. The only
-   outbound calls are to Google APIs the owner authorized and to a local LLM
-   command the owner configured.
+   outbound calls are to Google APIs the owner authorized, the LLM provider
+   the owner configured, and — once per daily run, from the `updateCheck`
+   module — a public registry query for the engine's own latest version. That
+   last one is the only thing enabled by default that talks to a third party;
+   it sends nothing about the instance and is disabled in one line. The
+   dashboard itself never makes a network request, so every page renders with
+   the machine offline.
 2. **It briefs; it never acts on the owner's behalf.** No module posts,
    sends, publishes, or edits a site. Community modules produce briefings,
    never comment text.
@@ -170,8 +175,12 @@ engine (e.g. `instance/src/extensions.ts`).
 # Epic: Modules (opt-in) [shipped]
 
 - Acceptance: each of indexStatus, metadataAudit, opportunityScan, llm,
-  hackerNews, reddit, indexNow, staticExport, gitAutoCommit, notifications is
-  gated by `modules.<key>.enabled`; a disabled digest exits 0 with a message.
+  hackerNews, reddit, indexNow, staticExport, gitAutoCommit, notifications,
+  updateCheck is gated by `modules.<key>.enabled`; a disabled digest exits 0
+  with a message.
+- Acceptance: `updateCheck` is the only module enabled by default. It writes
+  `data/update-check.json`, exits 0 when the registry is unreachable without
+  disturbing the previous result, and makes no request at all when disabled.
 - Acceptance: the LLM module runs any command that reads a prompt on stdin;
   when unavailable, the scan records candidates only and digests skip
   briefings.
@@ -229,10 +238,19 @@ instead of a CLI, with the key read from `.env`.
   scaffolds an instance; the `files` list excludes tests and the marketing
   site, and includes the instance-facing skills.
 
-## Feature: Scheduled upgrade with gate [planned]
+## Feature: Upgrading is visible and one command [shipped]
 
-A documented weekly job (`n-seo upgrade`) with notification on failure, so
-instances exercise the upgrade path routinely.
+- Acceptance: `n-seo upgrade` detects how the engine was installed — git
+  checkout, npm global (including a custom prefix), npm local — and performs
+  the upgrade itself rather than printing advice. It prints the old and new
+  versions, the section of the new CHANGELOG, the rollback command, and a
+  reminder to restart the dashboard.
+- Acceptance: `n-seo upgrade --check` reports what is available and changes
+  nothing.
+- Acceptance: a newer published version is shown on the Settings page and in
+  `doctor`, both read from `data/update-check.json` rather than the network,
+  and both compare against the engine running now — so an upgrade stops the
+  notice immediately rather than at the next daily run.
 
 # Epic: Quality [shipped]
 

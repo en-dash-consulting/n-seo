@@ -39,7 +39,8 @@ usage: n-seo <command> [--instance <dir>] [args...]
   mcp             the read-only MCP server on stdio (for .mcp.json)
   export          static export of the dashboard into <instance>/site/
   check           engine self-test: typecheck + unit tests
-  upgrade         update the engine (git pull / npm ci / check) with a rollback hint
+  upgrade         update the engine in place, whatever way it was installed;
+                  --check reports what is available without changing anything
   version         engine version, commit, paths, mode
   help            this text
 
@@ -377,9 +378,133 @@ setup guide: ${path.join(ROOT, "docs", "SETUP-GOOGLE.md")}
 
 const sha256 = (p) => (fs.existsSync(p) ? createHash("sha256").update(fs.readFileSync(p)).digest("hex") : "");
 
-function upgrade(instance) {
-  if (!isGitEngine()) {
-    console.log("engine installed from npm — run: npm update n-seo");
+/** Where this engine came from, and therefore how to upgrade it.
+ *
+ *  This used to print `npm update n-seo` for every npm install. That command
+ *  is right for exactly one layout — a consumer package.json with n-seo as a
+ *  dependency — and silently wrong for the global install the README
+ *  recommends: it reports "up to date", exits 0, upgrades nothing, and drops
+ *  a stray package-lock.json in whatever directory you ran it from. */
+function installKind() {
+  if (isGitEngine()) return { kind: "git", label: "git checkout" };
+
+  const modules = path.dirname(ROOT);              // .../node_modules
+  if (path.basename(modules) !== "node_modules") {
+    return { kind: "unknown", label: "unrecognised layout" };
+  }
+  let globalRoot = null;
+  try {
+    globalRoot = execFileSync(npmBin(), ["root", "-g"], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { /* npm not on PATH; fall through to the path-shape checks */ }
+
+  if (globalRoot && path.resolve(globalRoot) === path.resolve(modules)) {
+    return { kind: "npm-global", label: "npm, global", args: ["install", "-g"] };
+  }
+  // A global install under a custom prefix lives in <prefix>/lib/node_modules,
+  // and its bin symlink is in <prefix>/bin — so it has to be upgraded with -g
+  // against that prefix, not as a plain local install.
+  if (path.basename(path.dirname(modules)) === "lib") {
+    const prefix = path.dirname(path.dirname(modules));
+    return { kind: "npm-global", label: `npm, global (prefix ${prefix})`, args: ["install", "-g", "--prefix", prefix] };
+  }
+  const dir = path.dirname(modules);
+  return { kind: "npm-local", label: `npm, in ${dir}`, args: ["install", "--prefix", dir] };
+}
+
+/** The version the registry serves, or null if it cannot be reached.
+ *  `npm view` is used rather than a direct fetch so a private registry,
+ *  proxy or .npmrc scope configuration is honoured. */
+function registryVersion() {
+  try {
+    const out = execFileSync(npmBin(), ["view", `${PKG.name}@latest`, "version"],
+      { stdio: ["ignore", "pipe", "ignore"], timeout: 20_000 }).toString().trim();
+    return /^\d+\.\d+\.\d+/.test(out) ? out : null;
+  } catch {
+    return null;
+  }
+}
+
+const RELEASES = "https://github.com/en-dash-consulting/n-seo/releases/tag/v";
+
+/** One version's section of the engine's own CHANGELOG.md, if it ships one. */
+function changelogSection(version) {
+  const file = path.join(ROOT, "CHANGELOG.md");
+  if (!fs.existsSync(file)) return null;
+  const lines = fs.readFileSync(file, "utf8").split("\n");
+  const start = lines.findIndex((l) => l.startsWith(`## [${version}]`));
+  if (start === -1) return null;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (lines[i].startsWith("## ")) { end = i; break; }
+  }
+  const body = lines.slice(start + 1, end)
+    .filter((l) => !/^\[[^\]]+\]:\s/.test(l))
+    .join("\n").trim();
+  return body || null;
+}
+
+function upgradeNpm(install, check) {
+  const current = PKG.version;
+  console.log(`engine     ${PKG.name} ${current}   ${install.label}`);
+  const latest = registryVersion();
+  if (!latest) {
+    console.error("registry   unreachable — check the network, or your registry configuration");
+    return 1;
+  }
+  const upToDate = latest === current;
+  console.log(`registry   ${PKG.name} ${latest}   ${upToDate ? "— up to date" : "— newer"}`);
+
+  if (upToDate) return 0;
+  if (check) {
+    console.log(`\nupgrade with: n-seo upgrade`);
+    console.log(`release notes: ${RELEASES}${latest}`);
+    return 0;
+  }
+
+  const args = [...install.args, `${PKG.name}@${latest}`];
+  console.log(`\nupgrading  ${npmBin()} ${args.join(" ")}\n`);
+  const r = spawnSync(npmBin(), args, { stdio: "inherit" });
+  if (r.status !== 0) {
+    console.error(`\nupgrade failed. The engine is still ${current}; nothing in your instance was touched.`);
+    return r.status ?? 1;
+  }
+
+  console.log(`\n${PKG.name} ${current} → ${latest}`);
+  // Read the changelog from the *new* install: this is "what you just got".
+  const notes = changelogSection(latest);
+  if (notes) {
+    console.log("\nwhat changed\n");
+    for (const line of notes.split("\n")) console.log(`  ${line}`);
+  }
+  console.log(`\nfull notes  ${RELEASES}${latest}`);
+  console.log(`\nrestart the dashboard so it picks this up:`);
+  console.log(`  n-seo start${process.platform === "darwin" ? "   (or, if it runs under launchd: launchctl kickstart -k gui/$(id -u)/<label>)" : ""}`);
+  console.log(`\nroll back with:\n  ${npmBin()} ${[...install.args, `${PKG.name}@${current}`].join(" ")}`);
+  return 0;
+}
+
+function upgrade(instance, check = false) {
+  const install = installKind();
+  if (install.kind === "npm-global" || install.kind === "npm-local") {
+    return upgradeNpm(install, check);
+  }
+  if (install.kind === "unknown") {
+    console.error(`cannot tell how this engine was installed (${ROOT}).`);
+    console.error("upgrade it the way you installed it, then run: n-seo check");
+    return 1;
+  }
+  if (check) {
+    console.log(`engine     ${PKG.name} ${PKG.version}   git checkout at ${ROOT}`);
+    const r = spawnSync("git", ["-C", ROOT, "fetch", "--quiet"], { stdio: "inherit" });
+    if (r.status === 0) {
+      try {
+        const behind = execFileSync("git", ["-C", ROOT, "rev-list", "--count", "HEAD..@{u}"],
+          { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+        console.log(behind === "0" ? "remote     up to date" : `remote     ${behind} commit(s) ahead — run: n-seo upgrade`);
+      } catch {
+        console.log("remote     no upstream branch configured");
+      }
+    }
     return 0;
   }
   const before = gitCommit();
@@ -457,7 +582,7 @@ switch (cmd) {
     code = run(py, [path.join(ROOT, "ops", "export_static.py"), ...rest], instance);
     break;
   case "upgrade":
-    code = upgrade(instance);
+    code = upgrade(instance, rest.includes("--check"));
     break;
   case "version": {
     const mode = instance === ROOT ? "in-place" : "instance";

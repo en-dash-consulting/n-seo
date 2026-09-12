@@ -4,7 +4,7 @@
  *  long-lived process (dashboard, MCP server) honest about what is on disk. */
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT, INSTANCE, config, gscDataSlug, type SiteCfg } from "./config.js";
+import { ROOT, INSTANCE, ENGINE_VERSION, config, gscDataSlug, type SiteCfg } from "./config.js";
 import { BACKLOG_PATH } from "./backlog.js";
 
 const DATA = path.join(INSTANCE, "data");
@@ -735,6 +735,32 @@ export function opsLogTail(maxLines = 150): string {
 }
 
 export interface LastRun { ts: string; failures: string; steps?: { name: string; ok: boolean; seconds?: number }[] }
+
+export interface UpdateCheck { checked: string; current: string; latest: string; newer: boolean; notes: string }
+
+/** What ops/update_check.py last learned from the registry.
+ *
+ *  Read-only, from disk. The server makes no network request of its own —
+ *  a dashboard whose pages depend on reaching npmjs.com would be slower, and
+ *  would break the promise that this thing works with the network unplugged. */
+export function updateCheck(): UpdateCheck | null {
+  const r = readJson<Partial<UpdateCheck>>(path.join(DATA, "update-check.json"));
+  if (!r?.latest) return null;
+  // `newer` is recomputed against the engine running right now rather than
+  // trusted from the file. Upgrading does not rewrite it — only the next
+  // daily run does — so the stored flag would keep advertising an update you
+  // have already installed, for up to a day.
+  const parse = (v: string) => /^\d+\.\d+\.\d+/.test(v) ? v.split(".", 3).map(Number) : null;
+  const now = parse(ENGINE_VERSION), latest = parse(r.latest);
+  const newer = !!(now && latest && (latest[0] - now[0] || latest[1] - now[1] || latest[2] - now[2]) > 0);
+  return {
+    checked: r.checked ?? "",
+    current: ENGINE_VERSION,
+    latest: r.latest,
+    newer,
+    notes: r.notes ?? "",
+  };
+}
 
 export function lastRun(): LastRun | null {
   const r = readJson<Partial<LastRun>>(path.join(DATA, "last-run.json"));

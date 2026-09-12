@@ -31,7 +31,9 @@ to **a model you choose**, and everything that changes a site is handed to you.
 - **It proposes; it never acts.** No module edits a site, sends an email or
   posts a comment. Machine proposals wait in a holding area until you accept
   them. Your data stays on your hardware: nothing leaves the host except the
-  Google APIs you authorize and the provider you configured yourself.
+  Google APIs you authorize, the model provider you configured yourself, and
+  one daily version check against the npm registry that carries nothing about
+  you and turns off with `"updateCheck": {"enabled": false}`.
 
 ![Overview](docs/screenshots/overview.png)
 
@@ -164,6 +166,25 @@ merge. See [docs/INSTANCE.md](docs/INSTANCE.md).
 Adding another site later is one entry in the config —
 [docs/ADDING-A-SITE.md](docs/ADDING-A-SITE.md).
 
+## Upgrading
+
+```sh
+n-seo upgrade --check   # what is available, changes nothing
+n-seo upgrade           # do it
+```
+
+One command, whichever way you installed it: a git checkout, a global npm
+install, or a local one. It works out which, runs the right thing, prints
+what changed and the exact command to roll back, then reminds you to restart
+the dashboard. **Your config, queue, content and data are never touched** —
+that is the whole point of keeping the instance separate from the engine.
+
+You do not have to remember to check. Each daily run asks the registry once
+whether a newer version shipped and notes it on the Settings page and in
+`n-seo doctor`. The dashboard never makes that request itself, so pages still
+render with the machine offline. Turn the whole thing off with
+`"updateCheck": {"enabled": false}` in `n-seo.config.json`.
+
 Running several people's sites, or want upgrades to be a `git pull`? Keep your
 config in its own directory — see [docs/INSTANCE.md](docs/INSTANCE.md).
 
@@ -278,8 +299,8 @@ the data says whether it worked.
 
 ## Modules
 
-Everything below is off by default except the three data steps. Toggle them
-on the Settings page or in `n-seo.config.json`.
+Everything below is off by default except the three data steps and
+`updateCheck`. Toggle them on the Settings page or in `n-seo.config.json`.
 
 | Module | What it does | Needs | Default |
 |---|---|---|---|
@@ -293,6 +314,7 @@ on the Settings page or in `n-seo.config.json`.
 | `staticExport` | Snapshots the dashboard into `site/` as static HTML | nothing | off |
 | `gitAutoCommit` | Commits (and pushes) the daily log and export after each run | a git remote, if you want the push | off |
 | `notifications` | macOS notification when a daily step fails | macOS | off |
+| `updateCheck` | Once per run, asks the registry whether a newer engine shipped, and notes it on Settings and in `doctor` | nothing | **on** |
 
 ## Working with n-dx
 

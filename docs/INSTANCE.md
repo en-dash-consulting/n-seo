@@ -232,16 +232,17 @@ npx n-seo init .
     "daily": "n-seo daily",
     "doctor": "n-seo doctor",
     "export": "n-seo export",
-    "upgrade": "npm update n-seo && n-seo check"
+    "upgrade": "n-seo upgrade && n-seo check"
   },
   "dependencies": { "n-seo": "github:en-dash-consulting/n-seo" }
 }
 ```
 
 The engine lives in `node_modules/n-seo`; the instance is the current
-directory. `n-seo upgrade` recognizes an npm install and tells you to run
-`npm update n-seo` instead of pulling. Pin with a version or a commit
-(`github:en-dash-consulting/n-seo#<sha>`) when you need to.
+directory. `n-seo upgrade` recognizes this layout and installs the published
+latest into it; `n-seo upgrade --check` reports without changing anything.
+Pin with a version or a commit (`github:en-dash-consulting/n-seo#<sha>`) when
+you need to.
 
 Python is still required on the machine — the engine's ingest scripts run
 with `python3` from the package directory.
