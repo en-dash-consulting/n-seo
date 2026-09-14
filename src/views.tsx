@@ -1,6 +1,6 @@
 /** Server-rendered views (hono/jsx). */
 import type { FC, PropsWithChildren } from "hono/jsx";
-import { SITES, config, loadConfig, USING_EXAMPLE_CONFIG, type SiteCfg } from "./config.js";
+import { SITES, ENGINE_VERSION, config, loadConfig, USING_EXAMPLE_CONFIG, type SiteCfg } from "./config.js";
 import * as data from "./data.js";
 import { actionsFor, allActions, type Action } from "./actions.js";
 import { insights as loadInsights } from "./insights.js";
@@ -35,6 +35,7 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
   loadConfig(); // refresh USING_EXAMPLE_CONFIG
   const cfg = config();
   const sites = cfg.sites;
+  const upd = data.updateCheck();
   return (
     <html lang="en">
       <head>
@@ -87,7 +88,26 @@ export const Layout: FC<PropsWithChildren<{ title: string; active: string }>> = 
         )}
         <main>{children}</main>
         <footer>
-          Local controller · refreshed by <code>ops/daily.py</code> · queue in <code>config/backlog.json</code> · nothing here posts or publishes for you
+          {/* Which engine produced this page. On the static mirror that is
+              the only place it appears — /settings is not exported, because
+              it shows local paths and the service-account email — so without
+              this a published mirror named no version at all.
+
+              The update notice is baked in at export time from the file the
+              daily run writes. Polling the registry from the browser instead
+              would put every viewer of a shared mirror onto npmjs.com on
+              every page view, to learn something that changes once a day. */}
+          <span class="foot-ver">n-seo {ENGINE_VERSION}</span>
+          {upd?.newer && (
+            <>
+              {" "}
+              <span class="foot-upd">
+                {upd.latest} available — upgrade with <code>n-seo upgrade</code>
+                {upd.notes && <> · <a href={upd.notes} target="_blank" rel="noopener noreferrer">what changed</a></>}
+              </span>
+            </>
+          )}
+          {" · "}refreshed by <code>ops/daily.py</code> · queue in <code>config/backlog.json</code> · nothing here posts or publishes for you
         </footer>
         <script dangerouslySetInnerHTML={{ __html: `document.addEventListener('click',function(e){var d=e.target.closest('dialog');if(d&&e.target===d)d.close();});` }} />
       </body>

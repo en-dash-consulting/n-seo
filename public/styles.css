@@ -191,6 +191,10 @@ td.trunc { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-sp
 .flash { background: var(--good-soft); color: var(--good); font-weight: 600; font-size: 0.85rem; padding: 8px 14px; border-radius: 8px; }
 
 footer { max-width: 1480px; margin: 0 auto; padding: 16px 24px 40px; color: var(--muted); font-size: 0.75rem; border-top: 1px solid var(--line); }
+footer .foot-ver { font-weight: 600; color: var(--ink); }
+footer .foot-upd { background: var(--warn-soft); color: var(--warn); border-radius: 5px; padding: 1px 7px; font-weight: 600; }
+footer .foot-upd code { background: rgba(0,0,0,0.06); color: inherit; }
+footer .foot-upd a { color: inherit; text-decoration: underline; }
 
 /* ---- buttons + inline forms ---- */
 .btn {

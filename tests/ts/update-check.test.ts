@@ -57,6 +57,20 @@ describe("updateCheck()", () => {
     assert.equal(data.updateCheck().newer, false);
   });
 
+  test("the footer names the engine version and never reaches the network", () => {
+    // The static mirror does not export /settings — it shows local paths and
+    // the service-account email — so the footer is the only place a published
+    // page says which engine built it. And it must stay a disk read: polling
+    // the registry from the browser would put every viewer of a shared mirror
+    // onto npmjs.com on every page view.
+    const src = fs.readFileSync(path.join(sb.root, "src", "views.tsx"), "utf8");
+    assert.match(src, /foot-ver">n-seo \{ENGINE_VERSION\}/, "the footer must print the engine version");
+    assert.match(src, /upd\?\.newer &&/, "the upgrade notice must be gated on newer");
+    assert.match(src, /const upd = data\.updateCheck\(\)/, "the notice must come from the update-check file");
+    assert.ok(!/registry\.npmjs\.org|fetch\(|XMLHttpRequest/.test(src),
+      "views.tsx must not contain a network call");
+  });
+
   test("ordering is numeric, not lexical", () => {
     // Derived from whatever this engine is, so the assertion cannot rot when
     // the version moves. Adding 10 to the minor is deliberately a lexical

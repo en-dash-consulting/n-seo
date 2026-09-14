@@ -8,6 +8,19 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.4.1] - 2026-09-13
+
+### Added
+- **Every page says which engine built it.** The footer now carries
+  `n-seo <version>`, and when a newer one is published it carries the upgrade
+  command and a link to the release notes beside it. This matters most on a
+  published mirror: `/settings` is deliberately not exported, because it shows
+  local paths and the service-account email, so before this a mirror named no
+  version anywhere. The notice is baked in at export time from the file the
+  daily run writes — polling the registry from the browser would put every
+  viewer of a shared mirror onto npmjs.com on every page view, to learn
+  something that changes once a day.
+
 ## [0.4.0] - 2026-09-12
 
 Upgrading used to be something you found out about by accident. This release
@@ -388,7 +401,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.1...v0.3.2
