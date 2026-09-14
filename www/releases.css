@@ -1,0 +1,142 @@
+/* Release notes. Same palette and typography as the landing page; the fonts
+   are the two self-hosted variable files that page already preloads, so this
+   costs no extra request for anyone arriving from it. */
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/montserrat-latin-var.woff2') format('woff2-variations'),
+       url('/fonts/montserrat-latin-var.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Merriweather';
+  src: url('/fonts/merriweather-latin-var.woff2') format('woff2-variations'),
+       url('/fonts/merriweather-latin-var.woff2') format('woff2');
+  font-weight: 300 900;
+  font-stretch: 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --navy: #0d1b3e;
+  --navy-mid: #132247;
+  --teal: #00ffb3;
+  --purple: #a78bff;
+  --white: #ffffff;
+  --muted: #dde6f8;
+  --dim: #9fb0d6;
+  --border: rgba(255, 255, 255, 0.10);
+  --card: rgba(255, 255, 255, 0.05);
+  --font-display: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+}
+a { color: var(--teal); }
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+/* ---- nav ---- */
+.nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13, 27, 62, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-row { display: flex; align-items: center; gap: 22px; height: 62px; max-width: 1120px; }
+.logo {
+  display: flex; align-items: baseline; gap: 10px;
+  text-decoration: none; color: var(--white);
+  font-family: var(--font-display); font-weight: 900; font-size: 1.2rem;
+}
+.logo svg { align-self: center; }
+.logo .expand { font-family: var(--font-display); font-weight: 500; font-size: 0.78rem; color: var(--dim); white-space: nowrap; }
+.nav-links { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.nav-links a {
+  font-family: var(--font-display); font-weight: 500; font-size: 0.9rem;
+  color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 999px;
+}
+.nav-links a:hover { color: var(--white); background: var(--card); }
+.nav-links a[aria-current="page"] { color: var(--white); background: var(--card); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-weight: 600;
+  text-decoration: none; border: 1px solid var(--border); color: var(--white);
+  border-radius: 10px; padding: 8px 14px; font-size: 0.88rem;
+}
+.btn:hover { background: rgba(255, 255, 255, 0.09); }
+
+/* ---- page head ---- */
+main { padding: 64px 24px 40px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--teal); margin-bottom: 14px;
+}
+h1 {
+  font-family: var(--font-display); font-weight: 900; letter-spacing: -0.02em;
+  font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0;
+}
+.lede { color: var(--muted); font-size: 1.05rem; font-weight: 300; max-width: 62ch; margin-top: 14px; }
+
+.latest {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px;
+  margin: 28px 0 8px; padding: 14px 18px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+}
+.latest .k {
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--dim);
+}
+.latest strong { font-family: var(--font-display); font-size: 1.15rem; }
+.latest a { font-family: var(--font-display); font-size: 0.88rem; margin-left: auto; }
+
+/* ---- one release ---- */
+.rel { padding: 34px 0; border-top: 1px solid var(--border); }
+.rel:first-of-type { border-top: 0; }
+.rel-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 6px; }
+.rel-head h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
+.rel-head h2 a { color: var(--white); text-decoration: none; }
+.rel-head h2 a:hover { color: var(--teal); }
+.rel-head time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--dim); }
+.rel-head .rel-tag { font-family: var(--font-display); font-size: 0.82rem; margin-left: auto; text-decoration: none; }
+.rel-head .rel-tag:hover { text-decoration: underline; }
+
+.rel h3 {
+  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--purple);
+  margin: 22px 0 10px; font-weight: 500;
+}
+.rel p { color: var(--muted); margin: 0 0 12px; }
+.rel ul { margin: 0; padding-left: 20px; }
+.rel li { color: var(--muted); margin-bottom: 14px; }
+.rel li strong, .rel p strong { color: var(--white); font-weight: 700; }
+.rel a { overflow-wrap: anywhere; }
+
+/* ---- foot ---- */
+.site-foot { padding: 30px 24px 70px; border-top: 1px solid var(--border); margin-top: 30px; }
+.site-foot p { color: var(--dim); font-size: 0.88rem; margin: 0; }
+
+@media (max-width: 640px) {
+  main { padding-top: 44px; }
+  .nav-links a:not(.btn) { display: none; }
+  .rel-head .rel-tag { margin-left: 0; }
+  .latest a { margin-left: 0; }
+}

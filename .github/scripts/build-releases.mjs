@@ -1,0 +1,247 @@
+#!/usr/bin/env node
+/**
+ * Generate www/releases/index.html from CHANGELOG.md.
+ *
+ * Static, at deploy time, rather than fetching the GitHub API from the
+ * browser. Three reasons, and the first matters for this project in
+ * particular:
+ *
+ *   1. n-seo's own probe flags pages whose content exists only after
+ *      JavaScript runs, because AI crawlers do not run it. A JS-rendered
+ *      changelog on the marketing site for an SEO tool would be the tool
+ *      failing its own check.
+ *   2. api.github.com rate-limits unauthenticated requests per IP.
+ *   3. The page cannot drift from the repo: it is built from the same file
+ *      the release workflow already refuses to publish without.
+ *
+ * The changelog is written in a narrow, consistent subset of Markdown, so it
+ * is converted here rather than by pulling in a parser: headings, bullets
+ * with hanging indents, bold, inline code and links. Anything outside that
+ * subset is escaped and passed through as text — it will look plain, but it
+ * can never inject markup.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const SITE = "https://n-seo.dev";
+const GH = "https://github.com/en-dash-consulting/n-seo";
+
+const esc = (s) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Inline markdown, applied to already-escaped text.
+ *
+ *  Code spans are lifted out first and put back last, so asterisks or
+ *  brackets inside them are never treated as markup. The placeholder has to
+ *  be something prose cannot contain: an earlier version used a bare number,
+ *  which meant any digit in the text (there are plenty — "28 days", "90-day")
+ *  got swapped for a code span that did not exist.
+ */
+function inline(text) {
+  const code = [];
+  const MARK = "CODE";
+  let s = esc(text).replace(/`([^`]+)`/g, (_, c) => `${MARK}${code.push(`<code>${c}</code>`) - 1}`);
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/CODE(\d+)/g, (_, i) => code[Number(i)]);
+  return s;
+}
+
+/** One release: version, date, and the lines between its heading and the next. */
+function parseReleases(md) {
+  const out = [];
+  let cur = null;
+  for (const line of md.split("\n")) {
+    const head = /^## \[([^\]]+)\](?:\s*-\s*(\S+))?/.exec(line);
+    if (head) {
+      if (cur) out.push(cur);
+      cur = { version: head[1], date: head[2] ?? "", body: [] };
+      continue;
+    }
+    if (cur) cur.body.push(line);
+  }
+  if (cur) out.push(cur);
+  // Link-reference definitions at the bottom are markdown plumbing, not notes.
+  return out
+    .map((r) => ({ ...r, body: r.body.filter((l) => !/^\[[^\]]+\]:\s/.test(l)) }))
+    .filter((r) => r.body.join("\n").trim());
+}
+
+/** The narrow subset: ### headings, `- ` bullets with hanging indents, paragraphs. */
+function renderBody(lines) {
+  const html = [];
+  let list = null;
+  let para = [];
+
+  const flushPara = () => {
+    if (para.length) {
+      html.push(`<p>${inline(para.join(" "))}</p>`);
+      para = [];
+    }
+  };
+  const flushList = () => {
+    if (!list) return;
+    html.push("<ul>" + list.map((item) => `<li>${inline(item.join(" "))}</li>`).join("") + "</ul>");
+    list = null;
+  };
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, "");
+    if (!line.trim()) {
+      flushPara();
+      flushList();
+      continue;
+    }
+    const h = /^###\s+(.*)$/.exec(line);
+    if (h) {
+      flushPara();
+      flushList();
+      html.push(`<h3>${inline(h[1])}</h3>`);
+      continue;
+    }
+    const bullet = /^[-*]\s+(.*)$/.exec(line);
+    if (bullet) {
+      flushPara();
+      list = list ?? [];
+      list.push([bullet[1]]);
+      continue;
+    }
+    // A continuation line: indented under the bullet above it.
+    if (list && /^\s+\S/.test(raw)) {
+      list[list.length - 1].push(line.trim());
+      continue;
+    }
+    flushList();
+    para.push(line.trim());
+  }
+  flushPara();
+  flushList();
+  return html.join("\n        ");
+}
+
+const md = fs.readFileSync(path.join(REPO, "CHANGELOG.md"), "utf8");
+const releases = parseReleases(md).filter((r) => r.version.toLowerCase() !== "unreleased");
+if (!releases.length) {
+  console.error("build-releases: CHANGELOG.md produced no releases — refusing to write an empty page");
+  process.exit(1);
+}
+const latest = releases[0];
+
+const articles = releases
+  .map(
+    (r) => `
+      <article class="rel" id="v${esc(r.version)}">
+        <div class="rel-head">
+          <h2><a href="#v${esc(r.version)}">${esc(r.version)}</a></h2>
+          ${r.date ? `<time datetime="${esc(r.date)}">${esc(r.date)}</time>` : ""}
+          <a class="rel-tag" href="${GH}/releases/tag/v${esc(r.version)}">on GitHub ↗</a>
+        </div>
+        ${renderBody(r.body)}
+      </article>`,
+  )
+  .join("\n");
+
+const html = `<!-- Generated by .github/scripts/build-releases.mjs from CHANGELOG.md. Do not edit by hand. -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release notes — n-seo</title>
+<meta name="description" content="Every n-seo release, what changed and why. n-seo is an open-source, self-hosted SEO, AEO and GEO control plane: it reads Search Console and GA4, probes your sites, and ranks the moves worth making.">
+<link rel="canonical" href="${SITE}/releases/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d1b3e">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${SITE}/releases/">
+<meta property="og:title" content="Release notes — n-seo">
+<meta property="og:description" content="Every n-seo release, what changed and why.">
+<meta property="og:image" content="${SITE}/assets/og.png">
+<meta property="og:site_name" content="n-seo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Release notes — n-seo">
+<meta name="twitter:description" content="Every n-seo release, what changed and why.">
+<meta name="twitter:image" content="${SITE}/assets/og.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preload" href="/fonts/montserrat-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/merriweather-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "n-seo release notes",
+  "description": "Every n-seo release, what changed and why.",
+  "url": "${SITE}/releases/",
+  "isPartOf": { "@type": "WebSite", "name": "n-seo", "url": "${SITE}/" },
+  "publisher": { "@type": "Organization", "name": "En Dash Consulting", "url": "https://endash.us" }
+}
+</script>
+
+<script>
+  if (location.hostname === "n-seo.dev") {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-PEDHZMHL44");
+    var g = document.createElement("script");
+    g.async = true;
+    g.src = "https://www.googletagmanager.com/gtag/js?id=G-PEDHZMHL44";
+    document.head.appendChild(g);
+  }
+</script>
+
+<link rel="stylesheet" href="/releases.css">
+
+<header class="nav">
+  <div class="wrap nav-row">
+    <a class="logo" href="/">
+      <svg viewBox="0 0 64 64" width="26" height="26" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#00E5B9"/><path d="M14 42 L27 29 L36 38 L50 22" stroke="#001769" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="logo-name">n-seo</span> <span class="expand">En Dash SEO</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/#where">Setup</a>
+      <a href="/#how">How it works</a>
+      <a href="/releases/" aria-current="page">Releases</a>
+      <a class="btn small" href="${GH}">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">Release notes</div>
+  <h1>What changed, and why</h1>
+  <p class="lede">Every release, newest first. These same notes ship inside the package, so <code>n-seo upgrade</code> prints the section for the version you just installed.</p>
+
+  <div class="latest">
+    <span class="k">Current</span>
+    <strong>${esc(latest.version)}</strong>
+    <code>npm install -g n-seo</code>
+    <a href="${GH}/blob/main/CHANGELOG.md">Full changelog ↗</a>
+  </div>
+${articles}
+</main>
+
+<footer class="wrap site-foot">
+  <p>n-seo is <a href="${GH}">open source</a>, MIT licensed, from <a href="https://endash.us">En Dash</a>. From the makers of <a href="https://n-dx.dev">n-dx</a>.</p>
+</footer>
+`;
+
+const dir = path.join(REPO, "www", "releases");
+fs.mkdirSync(dir, { recursive: true });
+fs.writeFileSync(path.join(dir, "index.html"), html);
+console.log(
+  `build-releases: wrote www/releases/index.html — ${releases.length} releases, latest ${latest.version}`,
+);
+
+// Keep the sitemap honest: a page nothing links to is a page nothing reads.
+const today = new Date().toISOString().slice(0, 10);
+fs.writeFileSync(
+  path.join(REPO, "www", "sitemap.xml"),
+  `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod></url>
+  <url><loc>${SITE}/releases/</loc><lastmod>${latest.date || today}</lastmod></url>
+</urlset>
+`,
+);
+console.log("build-releases: sitemap.xml updated");

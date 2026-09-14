@@ -16,6 +16,7 @@
 ## Pages
 
 - [n-seo](https://n-seo.dev/) — marketing overview, what you get, quickstart
+- [Release notes](https://n-seo.dev/releases/) — every version, what changed and why
 - [README](https://github.com/en-dash-consulting/n-seo#readme) — setup and usage
 - [Google setup](https://github.com/en-dash-consulting/n-seo/blob/main/docs/SETUP-GOOGLE.md)
 - [Operating rules](https://github.com/en-dash-consulting/n-seo/blob/main/docs/OPERATING-RULES.md)
