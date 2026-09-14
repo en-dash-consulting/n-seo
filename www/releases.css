@@ -85,7 +85,11 @@ code {
 .btn:hover { background: rgba(255, 255, 255, 0.09); }
 
 /* ---- page head ---- */
-main { padding: 64px 24px 40px; }
+/* `main` carries both classes (`<main class="wrap">`), and a bare element
+   selector loses to `.wrap`'s `padding: 0 24px` — so the top padding here
+   silently did nothing and the eyebrow sat flush against the sticky nav.
+   Matching the class makes the intent win. */
+main.wrap { padding: 64px 24px 40px; }
 .eyebrow {
   font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--teal); margin-bottom: 14px;
@@ -135,7 +139,7 @@ h1 {
 .site-foot p { color: var(--dim); font-size: 0.88rem; margin: 0; }
 
 @media (max-width: 640px) {
-  main { padding-top: 44px; }
+  main.wrap { padding-top: 44px; }
   .nav-links a:not(.btn) { display: none; }
   .rel-head .rel-tag { margin-left: 0; }
   .latest a { margin-left: 0; }
