@@ -19,3 +19,7 @@ n-seo.config.json
 .rex/execution-log*.jsonl
 .n-dx.local.json
 claude_commands.log
+
+# Generated at deploy time by .github/scripts/build-releases.mjs, so it can
+# never drift from CHANGELOG.md.
+www/releases/
