@@ -27,3 +27,6 @@ www/releases/
 # A real export of the dashboard, rebuilt at deploy time from the commit
 # being deployed.
 www/demo/
+
+# macOS Finder metadata
+.DS_Store

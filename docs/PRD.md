@@ -10,16 +10,19 @@ check. Status markers: **[shipped]**, **[planned]**, **[idea]**.
 
 n-seo is a local-first control plane for organic growth across one or more
 websites: classic search (SEO), answer engines (AEO) and generative engines
-that cite sources (GEO). It replaces the monthly agency read-out with a loop
+that cite sources (GEO). It replaces the monthly read-out with a loop
 that runs every morning on the owner's machine: pull Search Console and GA4,
 probe the live sites, turn the data into a ranked queue of concrete actions
 with evidence attached, and measure yesterday's changes.
 
 ## Users
 
-- **A site owner or small team** who wants to hone their own SEO practice
-  without paying an agency: developers, indie makers, consultancies, small
-  businesses with a technical person.
+- **A site owner or small team** who wants to run their own search practice
+  and understand it: developers, indie makers, consultancies, small businesses
+  with a technical person. Note that agencies and consultancies are users
+  here, not the thing being displaced — the copy should never imply otherwise,
+  and the tool is as useful to someone doing this for clients as for
+  themselves.
 - **An operator running several sites** (a portfolio, an agency serving its
   own clients) who needs one queue across all of them.
 - **An AI agent** (Claude Code, Claude Desktop, any MCP client) acting for
@@ -135,6 +138,38 @@ a fresh checkout runs.
 - Acceptance: pages in `shippedWatch` render as *watching*.
 - Acceptance: `config/backlog.json` is merged and hot-reloaded without a
   restart, and a syntax error keeps the last good queue.
+
+## Feature: Profiles — a method you can install [idea]
+
+n-seo ships one operating model. A practitioner who does this for a living
+has their own, and today the only way to express it is to edit files in their
+instance and copy that instance for the next client. A **profile** packages a
+method so it can be published once and installed many times.
+
+A profile is a bundle of things that already exist separately:
+
+- `rules` thresholds (see the feature below), so "striking distance" can mean
+  positions 4–12 to one agency and 5–20 to another.
+- The operating rules themselves — the freeze window, the weekly batch size,
+  the decision window — as text the dashboard and the agent both read.
+- Skills, so the process an agency follows is enforced rather than described.
+- Queue and playbook templates: the cards a new client always starts with.
+- Module defaults.
+
+Distribution should be the same mechanism as the engine: an npm package
+(`n-seo-profile-*`) or a git URL, named in one config key. An instance
+declares a profile and overrides anything it disagrees with, so a client can
+see exactly where their setup departs from the agency's default.
+
+- Acceptance: `"profile": "<package or git url>"` in the config applies all of
+  the above, and every value remains overridable per instance.
+- Acceptance: the Settings page shows which profile is active, its version,
+  and every setting the instance overrides.
+- Acceptance: `n-seo doctor` reports a profile that cannot be resolved rather
+  than silently falling back to the defaults.
+- Open question: whether a profile may ship executable code (a custom rule) or
+  only declarative configuration. Executable code is more useful and much
+  harder to trust; declarative is the safer first version.
 
 ## Feature: Rule thresholds in config [planned]
 

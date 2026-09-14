@@ -8,7 +8,7 @@
 
 An agentic, local-first control plane for growing organic traffic to your own
 sites — classic search (SEO), answer engines (AEO) and AI assistants that cite
-sources (GEO) — without paying an agency to read Search Console for you.
+sources (GEO). Your sites, your data, your call.
 
 It pulls Search Console and GA4 into local JSON, probes your live sites for the
 things that quietly break (robots, sitemap, soft 404s, blocked AI crawlers,
