@@ -1,0 +1,15 @@
+{
+  "name": "Aggressive",
+  "description": "For a large site with traffic to spare, where the cost of missing an opportunity beats the cost of a wasted afternoon. A wider striking-distance band, a lower impression floor, and a longer queue. Keeps the 28-day freeze: that one is not a preference, it is how Google reads title churn.",
+  "version": "1.0.0",
+  "operatingRules": {
+    "metadataChangesPerWeek": 15
+  },
+  "rules": {
+    "strikingDistance": { "minPosition": 4, "maxPosition": 20, "minImpressions": 5, "maxRows": 25 },
+    "ctrGap": { "minImpressions": 15, "belowExpectedRatio": 0.65 },
+    "engagement": { "minSessions": 15, "maxCards": 6 },
+    "trafficDrop": { "minPriorSessions": 25, "dropRatio": 0.85 },
+    "metadata": { "maxFindings": 10 }
+  }
+}

@@ -1,5 +1,6 @@
 {
   "name": "My sites",
+  "_profile": "Optional. A method to inherit: a name shipped with the engine (default, patient, aggressive), a path, or an installed package. Anything you set below still wins. See docs/PROFILES.md.",
   "port": 4600,
   "google": {
     "auth": "service-account-key",

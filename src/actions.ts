@@ -4,22 +4,27 @@
  *  then merged with the curated queue in config/backlog.json. Pages listed in
  *  the backlog's `shippedWatch` map turn their rule-derived cards into
  *  "watching" entries — the fix shipped; the data decides what happens next. */
-import { SITES, type SiteCfg } from "./config.js";
+import { SITES, config, type SiteCfg } from "./config.js";
 import * as data from "./data.js";
 import { BACKLOG, SHIPPED_WATCH, slug, type Action, type Effort } from "./backlog.js";
 
 export type { Action, Effort } from "./backlog.js";
 
-const EFFORT_WEIGHT: Record<Effort, number> = { S: 1, M: 2.5, L: 5 };
+/** Read per call, not captured at import: the config is a live view, so a
+ *  profile change or a hand edit takes effect without a restart. */
+const rules = () => config().rules;
 
 /** Impact per unit of effort. Never returns NaN: one unrecognised effort or a
  *  non-numeric impact would otherwise make the sort comparator return NaN and
  *  leave the order of the entire queue undefined. backlog.ts coerces on load;
  *  this is the second line of defence for any other producer. */
-export const score = (a: Action) =>
-  (Number.isFinite(a.impact) ? a.impact : 0) / (EFFORT_WEIGHT[a.effort] ?? EFFORT_WEIGHT.M);
+export const score = (a: Action) => {
+  const w = rules().effortWeight;
+  return (Number.isFinite(a.impact) ? a.impact : 0) / (w[a.effort] ?? w.M);
+};
 
-const WINDOW_MONTHS = 3; // decision window = trailing 90 days
+/** The decision window in months, from operatingRules.decisionWindowDays. */
+const windowMonths = () => Math.max(1, config().operatingRules.decisionWindowDays / 30);
 
 const pathOf = (url: string): string => "/" + url.split("/").slice(3).join("/");
 const gid = (tag: string, page: string) => `gen-${tag}-${slug(page) || "root"}`;
@@ -45,7 +50,7 @@ function ctrGapActions(site: SiteCfg): Action[] {
     byPage.set(page, [...(byPage.get(page) ?? []), g]);
   }
   return [...byPage.entries()].map(([page, qs]) => {
-    const missed = qs.reduce((s, q) => s + (q.impressions / WINDOW_MONTHS) * (q.expected - q.ctr), 0);
+    const missed = qs.reduce((s, q) => s + (q.impressions / windowMonths()) * (q.expected - q.ctr), 0);
     const top = qs.slice(0, 3).map((q) => `“${q.keys[0]}” (${q.impressions.toLocaleString()} imps, ${(100 * q.ctr).toFixed(1)}% CTR at pos ${q.position.toFixed(1)})`);
     const watching = watch[page];
     return {
@@ -73,7 +78,8 @@ function ctrGapActions(site: SiteCfg): Action[] {
 }
 
 function strikingActions(site: SiteCfg): Action[] {
-  const rows = data.strikingDistance(site).slice(0, 12);
+  const r = rules().strikingDistance;
+  const rows = data.strikingDistance(site).slice(0, r.maxRows);
   if (!rows.length) return [];
   const watch = SHIPPED_WATCH();
   const pageFor = topPageForQueries(site);
@@ -84,7 +90,7 @@ function strikingActions(site: SiteCfg): Action[] {
   }
   return [...byPage.entries()].map(([page, qs]) => {
     const imps = qs.reduce((s, q) => s + q.impressions, 0);
-    const impact = Math.round((imps / WINDOW_MONTHS) * 0.06);
+    const impact = Math.round((imps / windowMonths()) * r.impactPerImpression);
     const top = qs.slice(0, 3).map((q) => `“${q.keys[0]}” pos ${q.position.toFixed(1)} (${q.impressions.toLocaleString()} imps)`);
     const watching = watch[page];
     return {
@@ -127,17 +133,18 @@ function probeActions(site: SiteCfg): Action[] {
   if (!p.soft_404.real_404) out.push(mk("soft404", "Fix soft 404s", "Unknown paths must return HTTP 404, not 200 — soft 404s waste crawl budget and dilute the index."));
   if ((p.robots.ai_crawlers_blocked?.length ?? 0) > 0)
     out.push(mk("ai-block", `Unblock AI crawlers (${p.robots.ai_crawlers_blocked!.join(", ")})`, "Remove the Disallow rules — blocked AI crawlers can't cite the site."));
-  if ((p.homepage.visible_text_bytes ?? 0) < 500 && p.homepage.status === 200)
+  if ((p.homepage.visible_text_bytes ?? 0) < rules().probe.minVisibleTextBytes && p.homepage.status === 200)
     out.push({ ...mk("ssr", "Server-render homepage content", "AI crawlers don't run JS — add static H1 + intro text to the shell."), impact: 15, effort: "M" });
   return out;
 }
 
 function engagementActions(site: SiteCfg): Action[] {
+  const e = rules().engagement;
   const watch = SHIPPED_WATCH();
   return data
     .landingPages(site)
-    .filter((l) => l.sessions >= 30 && l.engagement < 0.25 && l.page !== "(not set)")
-    .slice(0, 3)
+    .filter((l) => l.sessions >= e.minSessions && l.engagement < e.maxEngagement && l.page !== "(not set)")
+    .slice(0, e.maxCards)
     .map((l) => {
       const url = `https://${site.gscHost}${l.page}`;
       // GA landing paths carry no trailing slash; shippedWatch keys may have one
@@ -167,7 +174,8 @@ function engagementActions(site: SiteCfg): Action[] {
 
 function trendActions(site: SiteCfg): Action[] {
   const t = data.sessionTrend(site);
-  if (t.prior >= 50 && t.recent < t.prior * 0.75) {
+  const d = rules().trafficDrop;
+  if (t.prior >= d.minPriorSessions && t.recent < t.prior * d.dropRatio) {
     return [{
       id: `gen-trend-${slug(site.host)}`,
       host: site.host,
@@ -199,7 +207,7 @@ function metadataActions(site: SiteCfg): Action[] {
   const audit = data.metadataAudit();
   const findings = audit?.sites[site.host] ?? audit?.sites[site.gscHost] ?? [];
   const watch = SHIPPED_WATCH();
-  return findings.slice(0, 5).map((f) => {
+  return findings.slice(0, rules().metadata.maxFindings).map((f) => {
     const pagePath = f.page.replace(/^https?:\/\/[^/]+/, "") || "/";
     const monthly = Math.max(1, Math.round(f.missed_clicks_window / 3)); // audit window is 90d
     const watching = watch[f.page];

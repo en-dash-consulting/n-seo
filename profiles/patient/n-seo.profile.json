@@ -1,0 +1,16 @@
+{
+  "name": "Patient",
+  "description": "For a site with low traffic, a long sales cycle, or an owner who would rather ship three good changes a month than thirty. Longer freeze, smaller batches, a higher bar before anything is called a problem, and a shorter queue so the list stays readable.",
+  "version": "1.0.0",
+  "operatingRules": {
+    "titleFreezeDays": 56,
+    "metadataChangesPerWeek": 3
+  },
+  "rules": {
+    "strikingDistance": { "minImpressions": 40, "maxRows": 6 },
+    "ctrGap": { "minImpressions": 100, "belowExpectedRatio": 0.4 },
+    "engagement": { "minSessions": 100, "maxCards": 2 },
+    "trafficDrop": { "minPriorSessions": 150, "dropRatio": 0.6 },
+    "metadata": { "maxFindings": 3 }
+  }
+}

@@ -139,46 +139,34 @@ a fresh checkout runs.
 - Acceptance: `config/backlog.json` is merged and hot-reloaded without a
   restart, and a syntax error keeps the last good queue.
 
-## Feature: Profiles — a method you can install [idea]
+## Feature: Profiles — a method you can install [shipped]
 
-n-seo ships one operating model. A practitioner who does this for a living
-has their own, and today the only way to express it is to edit files in their
-instance and copy that instance for the next client. A **profile** packages a
-method so it can be published once and installed many times.
+n-seo ships one operating model; a practitioner has their own. A **profile**
+packages thresholds, policy numbers and module defaults so a method can be
+published once and installed many times. Full reference: `docs/PROFILES.md`.
 
-A profile is a bundle of things that already exist separately:
+- Acceptance: `"profile": "<built-in | path | package>"` resolves in that
+  order, and every value remains overridable by the instance.
+- Acceptance: a profile that cannot be resolved fails the load with a message
+  naming each location tried, rather than falling back to the defaults.
+- Acceptance: `n-seo profile` prints the active profile and every value this
+  instance overrides; the Settings page shows the same, and `doctor` reports
+  an unresolvable profile before the daily run reaches it.
+- Acceptance: the TypeScript and Python loaders resolve every shipped profile
+  to identical numbers, asserted by a test that runs both.
+- Acceptance: `default`, `patient` and `aggressive` ship with the engine, and
+  `default` restates the engine defaults exactly — asserted, so the two cannot
+  drift.
+- Decided: a profile is data only and may not ship executable code. Installing
+  a method should not mean running its author's code on the machine holding
+  your Search Console credentials. Custom *rules* — new kinds of card rather
+  than new numbers — remain a fork, and are the open question.
 
-- `rules` thresholds (see the feature below), so "striking distance" can mean
-  positions 4–12 to one agency and 5–20 to another.
-- The operating rules themselves — the freeze window, the weekly batch size,
-  the decision window — as text the dashboard and the agent both read.
-- Skills, so the process an agency follows is enforced rather than described.
-- Queue and playbook templates: the cards a new client always starts with.
-- Module defaults.
+## Feature: Rule thresholds in config [shipped]
 
-Distribution should be the same mechanism as the engine: an npm package
-(`n-seo-profile-*`) or a git URL, named in one config key. An instance
-declares a profile and overrides anything it disagrees with, so a client can
-see exactly where their setup departs from the agency's default.
-
-- Acceptance: `"profile": "<package or git url>"` in the config applies all of
-  the above, and every value remains overridable per instance.
-- Acceptance: the Settings page shows which profile is active, its version,
-  and every setting the instance overrides.
-- Acceptance: `n-seo doctor` reports a profile that cannot be resolved rather
-  than silently falling back to the defaults.
-- Open question: whether a profile may ship executable code (a custom rule) or
-  only declarative configuration. Executable code is more useful and much
-  harder to trust; declarative is the safer first version.
-
-## Feature: Rule thresholds in config [planned]
-
-Move the numeric thresholds (min impressions, position band, engagement
-floor, drop percentage, effort weights) into an optional `rules` block of
-the config with the current values as defaults.
-
-- Acceptance: every threshold has a documented default and a config
-  override; tests cover an override changing a rule's output.
+- Acceptance: every threshold the action engine ranks by lives in `rules`,
+  with the engine defaults documented in `src/config.ts` and mirrored in
+  `ingest/seo_config.py`; tests cover an override changing a rule's output.
 
 # Epic: Dashboard [shipped]
 

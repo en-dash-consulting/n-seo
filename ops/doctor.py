@@ -55,6 +55,30 @@ def check_engine():
         report("OK", "update check has not run yet", "it runs with the daily run")
 
 
+def check_profile(cfg):
+    """A profile that cannot be resolved must be loud.
+
+    Someone running a client's portfolio on their agency's method should never
+    discover it quietly stopped applying and the engine defaults took over.
+    """
+    spec = cfg.get("profile")
+    if not spec:
+        return
+    print("profile")
+    d = seo_config.profile_dir(spec)
+    if not d:
+        report("FAIL", f"profile {spec!r} not found",
+               "install it, fix the path, or remove \"profile\" from the config")
+        return
+    try:
+        meta = json.loads((d / "n-seo.profile.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        report("FAIL", f"profile {spec!r} is unreadable", str(exc)[:120])
+        return
+    report("OK", f"{meta.get('name', spec)}" + (f" {meta['version']}" if meta.get("version") else ""))
+    report("OK", f"from {d}")
+
+
 def check_config():
     print("config")
     if seo_config.using_example():
@@ -309,6 +333,8 @@ def check_modules(cfg):
 def main():
     check_engine()
     cfg = check_config()
+    if cfg is not None:
+        check_profile(cfg)
     check_tools()
     if cfg is None:
         return 1

@@ -7,6 +7,7 @@ import path from "node:path";
 import type { FC } from "hono/jsx";
 import { CONFIG_PATH, MODULE_INFO, config, saveConfig, USING_EXAMPLE_CONFIG, loadConfig, engineInfo } from "./config.js";
 import * as data from "./data.js";
+import { profileReport, builtinProfiles } from "./profile-report.js";
 
 const expand = (p: string) => (p.startsWith("~") ? path.join(os.homedir(), p.slice(1)) : p);
 
@@ -32,6 +33,8 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
   const lr = data.lastRun();
   const eng = engineInfo();
   const upd = data.updateCheck();
+  const prof = profileReport();
+  const builtins = builtinProfiles();
   const hookCount = cfg.hooks.beforeRun.length + cfg.hooks.afterRun.length + Object.values(cfg.hooks.afterStep).reduce((n, l) => n + l.length, 0);
   const str = (v: unknown) => (v == null ? "" : String(v));
   return (
@@ -73,6 +76,34 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
               <b>{upd.latest} is available.</b> Your config, queue and content are untouched by an upgrade.
               {upd.notes && <> <a href={upd.notes} target="_blank" rel="noopener noreferrer">Release notes →</a></>}
             </p>
+          )}
+        </div>
+        <div class="s-card">
+          <div class="s-title">
+            Profile: {prof.name}{prof.version ? ` ${prof.version}` : ""}
+            {prof.departures.length > 0 && <span class="chip"> {prof.departures.length} override{prof.departures.length === 1 ? "" : "s"}</span>}
+          </div>
+          {prof.description && <p class="sub">{prof.description}</p>}
+          {!prof.spec && (
+            <p class="sub">
+              No profile set, so the engine defaults apply. Shipped with this engine:{" "}
+              {builtins.map((b, i) => <>{i > 0 ? ", " : ""}<code>{b.spec}</code></>)}. Set one with{" "}
+              <code>"profile"</code> in the config, or point it at a directory or an installed package.
+            </p>
+          )}
+          {prof.departures.length > 0 && (
+            <>
+              <p class="sub">Changed here, against the {prof.spec ? "profile" : "engine defaults"}:</p>
+              <ul class="prof-diff">
+                {prof.departures.map((d) => (
+                  <li>
+                    <span class="mono">{d.key}</span>
+                    <span class="prof-was">{JSON.stringify(d.inherited)}</span>
+                    <span class="prof-now">{JSON.stringify(d.instance)}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
         <div class="s-card">
