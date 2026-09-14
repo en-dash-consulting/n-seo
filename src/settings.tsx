@@ -91,6 +91,16 @@ export const SettingsPage: FC<{ saved?: boolean; error?: string }> = ({ saved, e
               <code>"profile"</code> in the config, or point it at a directory or an installed package.
             </p>
           )}
+          {prof.principles.length > 0 && (
+            <>
+              <p class="sub">{prof.principles.length} principle{prof.principles.length === 1 ? "" : "s"}, shown in full on <a href="/actions">Actions</a>.</p>
+              <ul class="prof-princ">
+                {prof.principles.map((pr) => (
+                  <li><span class={`chip ${pr.kind === "hard" ? "bad" : ""}`}>{pr.kind === "hard" ? "hard" : "guide"}</span> {pr.title}</li>
+                ))}
+              </ul>
+            </>
+          )}
           {prof.departures.length > 0 && (
             <>
               <p class="sub">Changed here, against the {prof.spec ? "profile" : "engine defaults"}:</p>

@@ -2,6 +2,7 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { SITES, ENGINE_VERSION, config, loadConfig, USING_EXAMPLE_CONFIG, type SiteCfg } from "./config.js";
 import * as data from "./data.js";
+import { profileReport } from "./profile-report.js";
 import { actionsFor, allActions, type Action } from "./actions.js";
 import { insights as loadInsights } from "./insights.js";
 
@@ -265,6 +266,9 @@ const ProposalCard: FC<{ p: data.ScanOutput["proposals"][number]; index: number 
 
 export const ActionsPage: FC<{ flash?: string }> = ({ flash }) => {
   const scan = data.opportunityScan();
+  const prof = profileReport();
+  const principles = prof.principles;
+  const profileName = prof.name;
   return (
     <>
       <div class="strip-head">
@@ -274,6 +278,21 @@ export const ActionsPage: FC<{ flash?: string }> = ({ flash }) => {
       <p class="sub">Data-derived rules (90-day window) + your curated queue (<code>config/backlog.json</code>). Click any item for the full spec. Impact numbers rank the queue — they are estimates for ordering, not forecasts.</p>
       {flash && <p class="flash">{flash}</p>}
 
+      {principles.length > 0 && (
+        <details class="wb-fold princ">
+          <summary>
+            Operating principles <small>— from the {profileName} profile; {principles.filter((p) => p.kind === "hard").length} are constraints, not advice</small>
+          </summary>
+          <div class="princ-list">
+            {principles.map((p) => (
+              <div class={`princ-item ${p.kind === "hard" ? "hard" : ""}`}>
+                <div class="princ-h"><span class={`chip ${p.kind === "hard" ? "bad" : ""}`}>{p.kind === "hard" ? "hard" : "guide"}</span> <b>{p.title}</b></div>
+                <p>{p.body}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
       {scan && (scan.proposals.length > 0 || scan.verdicts.length > 0) && (
         <div class="scan-panel" id="proposed">
           <h2>Proposed by the opportunity scan <small>· {scan.generated} — rising queries no queue item covers, turned into candidate moves. Accepting copies a proposal into your queue; nothing self-modifies it.</small></h2>

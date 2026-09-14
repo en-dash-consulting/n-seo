@@ -144,6 +144,41 @@ function missingDeps(cmd, what) {
   return 1;
 }
 
+/** A profile's principles, as markdown for the instance CLAUDE.md.
+ *
+ *  The whole point of writing a method down is that the agent follows it too.
+ *  A principle that lives only in the dashboard is a principle the thing
+ *  doing the work never reads. */
+function profilePrinciples(dir) {
+  const cfgPath = path.join(dir, "n-seo.config.json");
+  let spec;
+  try {
+    spec = JSON.parse(fs.readFileSync(cfgPath, "utf8")).profile;
+  } catch { return ""; }
+  if (!spec) return "";
+
+  const candidates = [
+    path.join(ROOT, "profiles", spec),
+    path.isAbsolute(spec) ? spec : path.resolve(dir, spec),
+    path.join(dir, "node_modules", spec),
+    path.join(ROOT, "node_modules", spec),
+  ];
+  const found = candidates.find((c) => fs.existsSync(path.join(c, "n-seo.profile.json")));
+  if (!found) return "";
+
+  let profile;
+  try {
+    profile = JSON.parse(fs.readFileSync(path.join(found, "n-seo.profile.json"), "utf8"));
+  } catch { return ""; }
+  const list = (profile.principles ?? []).filter((p) => p?.title && p?.body);
+  if (!list.length) return "";
+
+  const lines = list.map((p) => `- **${p.title}**${p.kind === "hard" ? " (hard rule)" : ""}\n  ${p.body}`);
+  return `\n## From the ${profile.name} profile\n\n` +
+    `These came with the profile this instance runs. Hard rules are constraints, not advice.\n\n` +
+    lines.join("\n") + "\n";
+}
+
 /* ---------- init ---------- */
 
 /** Files that mean "this directory is an application", not a place to keep
@@ -304,7 +339,7 @@ Skills in \`.claude/skills/\` cover the routine work — start with
   /actions until a human accepts them.
 - **Site changes ship as branches and pull requests** in the site's own repo,
   never committed straight to its main branch.
-`);
+${profilePrinciples(dir)}`);
 
   const envExample = path.join(ROOT, ".env.example");
   put(".env", fs.existsSync(envExample) ? fs.readFileSync(envExample, "utf8") : "");

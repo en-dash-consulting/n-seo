@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   CONFIG_PATH, EXAMPLE_CONFIG_PATH, PROFILE_FILE, DEFAULT_RULES, DEFAULT_OPERATING_RULES,
-  ROOT, config, loadProfile, type Profile,
+  ROOT, config, loadProfile, type Profile, type ProfilePrinciple,
 } from "./config.js";
 
 export interface Departure {
@@ -28,6 +28,7 @@ export interface ProfileReport {
   version?: string;
   dir?: string;
   departures: Departure[];
+  principles: ProfilePrinciple[];
 }
 
 /** Flatten a nested tree to dotted leaves, so two layers can be diffed. */
@@ -89,6 +90,7 @@ export function profileReport(): ProfileReport {
     version: profile?.version,
     dir: loaded?.dir,
     departures,
+    principles: (profile?.principles ?? []).filter((p) => p?.title && p?.body),
   };
 }
 

@@ -75,9 +75,39 @@ this instance overrides 2 value(s):
   // Module defaults. The instance can still switch any of them.
   "modules": {
     "indexNow": { "enabled": true }
-  }
+  },
+
+  // The parts of a method that are not a number.
+  "principles": [
+    {
+      "kind": "hard",
+      "title": "Never write to a CMS without per-item approval",
+      "body": "Show the exact before and after, get a yes on each one, then write."
+    },
+    { "title": "Judge by the path to a signup, not by clicks", "body": "..." }
+  ]
 }
 ```
+
+### Principles
+
+The most useful thing we learned building the first real profile: a
+practitioner's method is barely distinguishable from ours in *thresholds* and
+almost entirely distinguishable in *judgement*. The striking-distance floor
+turned out never to bind once rows are sorted by impressions. What actually
+differed was what to optimise for, what needs a human's approval, and what to
+never automate.
+
+None of that is a number, so `principles` carries it. Each has a `title`, a
+`body`, and a `kind`:
+
+- **`hard`** — a constraint. An agent must not cross it.
+- **`guide`** — judgement it should apply.
+
+They appear at the top of the action queue, on the Settings page, and — this
+is the part that matters — `n-seo init` writes them into the instance's
+`CLAUDE.md`. A principle the agent never reads is not an operating rule, it is
+a note to yourself.
 
 Set only what you disagree with. Anything absent is inherited, so a profile
 that changes one threshold is three lines long.
