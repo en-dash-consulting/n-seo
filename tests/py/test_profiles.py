@@ -102,6 +102,66 @@ class LayeringTests(unittest.TestCase):
             self.assertFalse(c2["m"]["indexNow"], "the instance should turn it back off")
 
 
+class PrincipleTests(unittest.TestCase):
+    """The part of a method that is not a number.
+
+    Building the first real profile is what showed the format needed these:
+    the thresholds turned out to be the engine's, and everything that made the
+    method distinctive was judgement.
+    """
+
+    def test_principles_need_a_title_and_a_body(self):
+        for p in PROFILES.glob("*/n-seo.profile.json"):
+            meta = json.loads(p.read_text(encoding="utf-8"))
+            for pr in meta.get("principles") or []:
+                self.assertTrue(pr.get("title"), f"{p.parent.name}: a principle with no title")
+                self.assertTrue(pr.get("body"), f"{p.parent.name}: a principle with no body")
+                if "kind" in pr:
+                    self.assertIn(pr["kind"], ("hard", "guide"), f"{p.parent.name}: bad kind {pr['kind']}")
+
+    def test_a_profile_with_principles_writes_them_into_claude_md(self):
+        """A principle the agent never reads is not an operating rule."""
+        with TemporaryDirectory() as tmp:
+            prof = Path(tmp) / "prof"
+            prof.mkdir()
+            (prof / "n-seo.profile.json").write_text(json.dumps({
+                "name": "Testco",
+                "principles": [
+                    {"kind": "hard", "title": "Never do the bad thing", "body": "Because it is bad."},
+                    {"title": "Prefer the good thing", "body": "It is better."},
+                ],
+            }), encoding="utf-8")
+            inst = Path(tmp) / "inst"
+            cli = REPO / "bin" / "n-seo.mjs"
+            subprocess.run(["node", str(cli), "init", str(inst)], capture_output=True, timeout=60)
+            cfg = inst / "n-seo.config.json"
+            d = json.loads(cfg.read_text(encoding="utf-8"))
+            d["profile"] = str(prof)
+            cfg.write_text(json.dumps(d), encoding="utf-8")
+            (inst / "CLAUDE.md").unlink()
+            subprocess.run(["node", str(cli), "init", str(inst)], capture_output=True, timeout=60)
+
+            md = (inst / "CLAUDE.md").read_text(encoding="utf-8")
+            self.assertIn("From the Testco profile", md)
+            self.assertIn("Never do the bad thing", md)
+            self.assertIn("(hard rule)", md, "hard rules must be marked as constraints")
+            self.assertIn("Prefer the good thing", md)
+            self.assertNotIn("Prefer the good thing** (hard rule)", md, "a guide is not a hard rule")
+
+    def test_a_profile_without_principles_adds_nothing(self):
+        with TemporaryDirectory() as tmp:
+            inst = Path(tmp) / "inst"
+            cli = REPO / "bin" / "n-seo.mjs"
+            subprocess.run(["node", str(cli), "init", str(inst)], capture_output=True, timeout=60)
+            cfg = inst / "n-seo.config.json"
+            d = json.loads(cfg.read_text(encoding="utf-8"))
+            d["profile"] = "patient"
+            cfg.write_text(json.dumps(d), encoding="utf-8")
+            (inst / "CLAUDE.md").unlink()
+            subprocess.run(["node", str(cli), "init", str(inst)], capture_output=True, timeout=60)
+            self.assertNotIn("profile", (inst / "CLAUDE.md").read_text(encoding="utf-8").split("## Rules")[-1])
+
+
 class ResolutionTests(unittest.TestCase):
     def test_a_builtin_resolves_by_bare_name(self):
         self.assertIsNotNone(seo_config.profile_dir("patient"))

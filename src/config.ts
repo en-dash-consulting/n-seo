@@ -144,6 +144,28 @@ export interface Profile {
   modules?: Record<string, ModuleCfg>;
   /** Directory of SKILL.md folders, relative to the profile, copied by `n-seo init`. */
   skills?: string;
+  /** The parts of a method that are not a number.
+   *
+   *  Building the first real profile is what surfaced this. A practitioner's
+   *  method turned out to be barely distinguishable from ours in thresholds —
+   *  the striking-distance floor never binds once rows are sorted by
+   *  impressions — and almost entirely distinguishable in judgement: what to
+   *  optimise for, what needs a human's approval, what never to automate.
+   *  None of that is expressible as a threshold, and a profile that cannot
+   *  carry it is not a method, just a settings file.
+   *
+   *  Shown on the dashboard and written into the instance's CLAUDE.md, so the
+   *  owner and their agent read the same rules. */
+  principles?: ProfilePrinciple[];
+}
+
+export interface ProfilePrinciple {
+  title: string;
+  body: string;
+  /** `hard` rules are constraints an agent must not cross; `guide` is
+   *  judgement it should apply. The dashboard shows them apart because they
+   *  are different kinds of claim. */
+  kind?: "hard" | "guide";
 }
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };

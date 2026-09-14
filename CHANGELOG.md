@@ -6,7 +6,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **Profiles carry principles, not just numbers.** Building the first real
+  profile is what showed the format was too thin. En Dash's method turned out
+  to be barely distinguishable from the engine's in *thresholds* — measured
+  against ten sites, the striking-distance floor never binds once rows are
+  sorted by impressions, and lowering it would only have deleted the one
+  marginal site's two cards — and almost entirely distinguishable in
+  *judgement*: what to optimise for, what needs a human's approval, what never
+  to automate. `principles` carries that. Each is a title, a body, and a kind:
+  `hard` for a constraint an agent must not cross, `guide` for judgement it
+  should apply.
+- They appear at the top of the action queue and on Settings, and `n-seo init`
+  writes them into the instance's `CLAUDE.md`. A principle the agent never
+  reads is a note to yourself, not an operating rule.
 
 ## [0.5.0] - 2026-09-14
 
