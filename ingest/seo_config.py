@@ -57,6 +57,62 @@ MODULE_DEFAULTS = {
                 "delete": False, "dryRun": False, "env": {}},
 }
 
+PROFILE_FILE = "n-seo.profile.json"
+
+# Mirrors DEFAULT_RULES / DEFAULT_OPERATING_RULES in src/config.ts. The
+# TypeScript side is where the action engine reads them; Python needs them so
+# the daily log, the digests and doctor state the same numbers the dashboard
+# does, rather than a second set that drifts.
+DEFAULT_RULES = {
+    "effortWeight": {"S": 1, "M": 2.5, "L": 5},
+    "strikingDistance": {"minPosition": 5, "maxPosition": 15, "minImpressions": 10,
+                         "maxRows": 12, "impactPerImpression": 0.06},
+    "ctrGap": {"minImpressions": 30, "belowExpectedRatio": 0.5},
+    "engagement": {"minSessions": 30, "maxEngagement": 0.25, "maxCards": 3},
+    "trafficDrop": {"minPriorSessions": 50, "dropRatio": 0.75},
+    "probe": {"minVisibleTextBytes": 500},
+    "metadata": {"maxFindings": 5},
+}
+
+DEFAULT_OPERATING_RULES = {
+    "titleFreezeDays": 28,
+    "metadataChangesPerWeek": 8,
+    "decisionWindowDays": 90,
+    "historyMonths": 16,
+}
+
+
+def profile_dir(spec):
+    """Where a profile spec resolves to, or None. Mirrors resolveProfileDir."""
+    if not spec:
+        return None
+    if "/" not in spec and "\\" not in spec:
+        built = ROOT / "profiles" / spec
+        if (built / PROFILE_FILE).exists():
+            return built
+    as_path = Path(spec) if Path(spec).is_absolute() else (INSTANCE / spec)
+    if (as_path / PROFILE_FILE).exists():
+        return as_path.resolve()
+    # An installed package, without importing node: node_modules beside the
+    # instance, then beside the engine.
+    for base in (INSTANCE, ROOT):
+        cand = base / "node_modules" / spec
+        if (cand / PROFILE_FILE).exists():
+            return cand.resolve()
+    return None
+
+
+def _merge(base, over):
+    """Deep merge; `over` wins, and None never overwrites."""
+    out = dict(base)
+    for k, v in (over or {}).items():
+        if v is None:
+            continue
+        cur = out.get(k)
+        out[k] = _merge(cur, v) if isinstance(cur, dict) and isinstance(v, dict) else v
+    return out
+
+
 _cache = None
 
 
@@ -73,9 +129,22 @@ def load(force: bool = False) -> dict:
         return _cache
     path = CONFIG_PATH if CONFIG_PATH.exists() else EXAMPLE_PATH
     raw = json.loads(path.read_text(encoding="utf-8"))
-    modules = {k: {"enabled": False, **MODULE_DEFAULTS.get(k, {})} for k in MODULE_KEYS}
-    for k, v in (raw.get("modules") or {}).items():
-        modules[k] = {"enabled": False, **MODULE_DEFAULTS.get(k, {}), **(v or {})}
+    # engine defaults <- profile <- this instance, for modules and both rule
+    # blocks. The instance always wins.
+    prof = {}
+    pdir = profile_dir(raw.get("profile"))
+    if pdir:
+        try:
+            prof = json.loads((pdir / PROFILE_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            prof = {}
+
+    pmods = prof.get("modules") or {}
+    modules = {k: {"enabled": False, **MODULE_DEFAULTS.get(k, {}), **(pmods.get(k) or {})}
+               for k in MODULE_KEYS}
+    for k, v in {**pmods, **(raw.get("modules") or {})}.items():
+        modules[k] = {"enabled": False, **MODULE_DEFAULTS.get(k, {}),
+                      **(pmods.get(k) or {}), **((raw.get("modules") or {}).get(k) or {})}
     sites = []
     for s in raw.get("sites") or []:
         if not s.get("host"):
@@ -109,6 +178,10 @@ def load(force: bool = False) -> dict:
         "conversions": conv if conv.get("site") else None,
         "participation": raw.get("participation") or {},
         "modules": modules,
+        "profile": raw.get("profile"),
+        "rules": _merge(_merge(DEFAULT_RULES, prof.get("rules")), raw.get("rules")),
+        "operatingRules": _merge(_merge(DEFAULT_OPERATING_RULES, prof.get("operatingRules")),
+                                 raw.get("operatingRules")),
         "gscExtraProperties": str_list(raw.get("gscExtraProperties")),
         "hooks": hooks,
     }

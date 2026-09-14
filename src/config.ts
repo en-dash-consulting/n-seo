@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 import { execFileSync } from "node:child_process";
 
@@ -84,6 +85,86 @@ export interface Hooks {
   afterStep: Record<string, string[]>;
 }
 
+
+/** The numbers the action engine ranks by.
+ *
+ *  These were literals scattered through actions.ts and data.ts, which meant
+ *  disagreeing with any of them required editing the engine — and then living
+ *  with the merge every time you upgraded. A practitioner's judgement about
+ *  what counts as striking distance is exactly the thing they should be able
+ *  to change without forking. */
+export interface Rules {
+  /** Impact is divided by this to rank. Higher = the effort costs more. */
+  effortWeight: { S: number; M: number; L: number };
+  strikingDistance: {
+    minPosition: number;
+    maxPosition: number;
+    minImpressions: number;
+    /** How many query rows to consider per site. */
+    maxRows: number;
+    /** Monthly clicks assumed per impression if the query moves into the top 5. */
+    impactPerImpression: number;
+  };
+  ctrGap: {
+    minImpressions: number;
+    /** Flagged when actual CTR is below expected × this. */
+    belowExpectedRatio: number;
+  };
+  engagement: { minSessions: number; maxEngagement: number; maxCards: number };
+  trafficDrop: {
+    minPriorSessions: number;
+    /** Flagged when recent < prior × this. */
+    dropRatio: number;
+  };
+  probe: { minVisibleTextBytes: number };
+  metadata: { maxFindings: number };
+}
+
+/** The policy a human follows, as opposed to the numbers a rule sorts by.
+ *
+ *  Read by the dashboard, the daily log and the agent skills, so changing the
+ *  freeze here changes it everywhere it is stated — rather than in six places
+ *  that drift apart. */
+export interface OperatingRules {
+  titleFreezeDays: number;
+  metadataChangesPerWeek: number;
+  /** Decisions ride this window; the long history is for totals only. */
+  decisionWindowDays: number;
+  historyMonths: number;
+}
+
+/** A named bundle of the two above, plus module defaults and skills.
+ *  Resolved from `profile` in the config. See docs/PROFILES.md. */
+export interface Profile {
+  name: string;
+  description?: string;
+  version?: string;
+  operatingRules?: Partial<OperatingRules>;
+  rules?: DeepPartial<Rules>;
+  modules?: Record<string, ModuleCfg>;
+  /** Directory of SKILL.md folders, relative to the profile, copied by `n-seo init`. */
+  skills?: string;
+}
+
+type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
+
+export const DEFAULT_RULES: Rules = {
+  effortWeight: { S: 1, M: 2.5, L: 5 },
+  strikingDistance: { minPosition: 5, maxPosition: 15, minImpressions: 10, maxRows: 12, impactPerImpression: 0.06 },
+  ctrGap: { minImpressions: 30, belowExpectedRatio: 0.5 },
+  engagement: { minSessions: 30, maxEngagement: 0.25, maxCards: 3 },
+  trafficDrop: { minPriorSessions: 50, dropRatio: 0.75 },
+  probe: { minVisibleTextBytes: 500 },
+  metadata: { maxFindings: 5 },
+};
+
+export const DEFAULT_OPERATING_RULES: OperatingRules = {
+  titleFreezeDays: 28,
+  metadataChangesPerWeek: 8,
+  decisionWindowDays: 90,
+  historyMonths: 16,
+};
+
 export interface Config {
   name: string;
   port: number;
@@ -102,6 +183,10 @@ export interface Config {
   /** extra Search Console properties pulled into data/gsc/<slug>/ but not shown as sites */
   gscExtraProperties: string[];
   hooks: Hooks;
+  /** Built-in name ("default"), a path, or an installed package. */
+  profile?: string;
+  rules: Rules;
+  operatingRules: OperatingRules;
 }
 
 /** Per-module defaults, so a half-written block cannot make a step guess.
@@ -133,10 +218,82 @@ function readJson<T>(p: string): T {
 }
 
 /** Fill in defaults so the rest of the app can assume the shape. */
+
+/** Where a profile spec resolves to, or null if it does not.
+ *
+ *  Three forms, in the order they are tried:
+ *    "default"            a profile shipped with the engine
+ *    "./x" or "/x"        a directory in or near the instance
+ *    "n-seo-profile-acme" an installed package
+ *
+ *  Resolution is deliberately explicit rather than clever: a profile that
+ *  cannot be found must be an error the owner sees, never a silent fallback
+ *  to our defaults. Someone running a client's portfolio on their agency's
+ *  method should not discover it quietly stopped applying. */
+export function resolveProfileDir(spec: string): string | null {
+  const builtin = path.join(ROOT, "profiles", spec);
+  if (!spec.includes("/") && !spec.includes("\\") && fs.existsSync(path.join(builtin, PROFILE_FILE))) return builtin;
+
+  const asPath = path.isAbsolute(spec) ? spec : path.resolve(INSTANCE, spec);
+  if (fs.existsSync(path.join(asPath, PROFILE_FILE))) return asPath;
+
+  try {
+    const req = createRequire(path.join(INSTANCE, "package.json"));
+    return path.dirname(req.resolve(`${spec}/${PROFILE_FILE}`));
+  } catch {
+    return null;
+  }
+}
+
+export const PROFILE_FILE = "n-seo.profile.json";
+
+/** The resolved profile, or null when none is configured. Throws when one is
+ *  configured and cannot be found — see resolveProfileDir. */
+export function loadProfile(spec: string | undefined): { profile: Profile; dir: string } | null {
+  if (!spec) return null;
+  const dir = resolveProfileDir(spec);
+  if (!dir) {
+    throw new Error(
+      `profile "${spec}" could not be resolved.\n` +
+      `  tried: a profile shipped with the engine (${path.join(ROOT, "profiles", spec)}),\n` +
+      `         a directory relative to the instance (${path.resolve(INSTANCE, spec)}),\n` +
+      `         and an installed package.\n` +
+      `  install it, fix the path, or remove "profile" from the config.`,
+    );
+  }
+  const profile = readJson<Profile>(path.join(dir, PROFILE_FILE));
+  return { profile: { ...profile, name: profile.name || spec }, dir };
+}
+
+/** Recursive merge for the plain-object config trees. Later wins; undefined
+ *  never overwrites, so a profile may set one threshold without restating the
+ *  block it lives in. */
+function merge<T>(base: T, ...layers: unknown[]): T {
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const layer of layers) {
+    if (!layer || typeof layer !== "object") continue;
+    for (const [k, v] of Object.entries(layer as Record<string, unknown>)) {
+      if (v === undefined) continue;
+      const cur = out[k];
+      out[k] = cur && typeof cur === "object" && !Array.isArray(cur) && v && typeof v === "object" && !Array.isArray(v)
+        ? merge(cur, v)
+        : v;
+    }
+  }
+  return out as T;
+}
+
 function normalize(raw: Partial<Config>): Config {
+  const loaded = loadProfile(raw.profile);
+  const fromProfile = loaded?.profile;
+
   const modules: Record<string, ModuleCfg> = {};
-  for (const m of MODULE_INFO) modules[m.key] = { enabled: false, ...(MODULE_DEFAULTS[m.key] ?? {}), ...(raw.modules?.[m.key] ?? {}) };
-  for (const [k, v] of Object.entries(raw.modules ?? {})) if (!modules[k]) modules[k] = { ...v, enabled: !!v?.enabled };
+  for (const m of MODULE_INFO) {
+    modules[m.key] = { enabled: false, ...(MODULE_DEFAULTS[m.key] ?? {}), ...(fromProfile?.modules?.[m.key] ?? {}), ...(raw.modules?.[m.key] ?? {}) };
+  }
+  for (const [k, v] of Object.entries({ ...(fromProfile?.modules ?? {}), ...(raw.modules ?? {}) })) {
+    if (!modules[k]) modules[k] = { ...v, enabled: !!v?.enabled };
+  }
   const sites = (raw.sites ?? []).map((s) => ({
     ...s,
     label: s.label || s.host,
@@ -160,6 +317,12 @@ function normalize(raw: Partial<Config>): Config {
     modules,
     gscExtraProperties: strList(raw.gscExtraProperties),
     hooks: { beforeRun: strList(rawHooks.beforeRun), afterRun: strList(rawHooks.afterRun), afterStep },
+    profile: raw.profile,
+    // engine defaults <- profile <- this instance. The instance always wins,
+    // so a client can always see, and override, where they depart from the
+    // method they installed.
+    rules: merge(DEFAULT_RULES, fromProfile?.rules, raw.rules),
+    operatingRules: merge(DEFAULT_OPERATING_RULES, fromProfile?.operatingRules, raw.operatingRules),
   };
 }
 

@@ -96,10 +96,14 @@ export function gscSummary(site: SiteCfg): GscSummary {
 }
 
 /** Position 5–15 queries with meaningful impressions — the cheapest ranking wins. */
-export function strikingDistance(site: SiteCfg, minImpressions = 10): GscRow[] {
-  // Recent window: decisions ride the last 90 days, not 16-month history.
+export function strikingDistance(site: SiteCfg, minImpressions?: number): GscRow[] {
+  // Recent window: decisions ride the trailing window, not 16-month history.
+  // The band is a rule, so a practitioner who thinks striking distance is
+  // 4-12 rather than 5-15 changes a config key instead of the engine.
+  const r = config().rules.strikingDistance;
+  const min = minImpressions ?? r.minImpressions;
   return queries(site, true)
-    .filter((r) => r.position >= 5 && r.position <= 15 && r.impressions >= minImpressions)
+    .filter((q) => q.position >= r.minPosition && q.position <= r.maxPosition && q.impressions >= min)
     .sort((a, b) => b.impressions - a.impressions);
 }
 
@@ -114,12 +118,14 @@ export const EXPECTED_CTR: Record<number, number> = {
 };
 
 /** Ranking well but rarely clicked — title/snippet problems. */
-export function ctrGaps(site: SiteCfg, minImpressions = 30): (GscRow & { expected: number })[] {
+export function ctrGaps(site: SiteCfg, minImpressions?: number): (GscRow & { expected: number })[] {
+  const rule = config().rules.ctrGap;
+  const min = minImpressions ?? rule.minImpressions;
   // Recent window: a page fixed last week must stop being accused within 90 days.
   return queries(site, true)
     .flatMap((r) => {
       const expected = EXPECTED_CTR[Math.round(r.position)];
-      return expected && r.impressions >= minImpressions && r.ctr < expected * 0.5
+      return expected && r.impressions >= min && r.ctr < expected * rule.belowExpectedRatio
         ? [{ ...r, expected }]
         : [];
     })

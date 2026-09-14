@@ -41,6 +41,7 @@ usage: n-seo <command> [--instance <dir>] [args...]
   check           engine self-test: typecheck + unit tests
   upgrade         update the engine in place, whatever way it was installed;
                   --check reports what is available without changing anything
+  profile         the active profile, and every value this instance overrides
   version         engine version, commit, paths, mode
   help            this text
 
@@ -548,6 +549,7 @@ switch (cmd) {
   case "init":
     code = init(rest.find((a) => !a.startsWith("-")) ?? flag ?? process.cwd(), rest.includes("--force"));
     break;
+  case "profile":
   case "start":
   case "dev":
   case "mcp": {
@@ -558,7 +560,9 @@ switch (cmd) {
       code = missingDeps(cmd, "the engine's dependencies");
       break;
     }
-    const entry = cmd === "mcp" ? "src/mcp-stdio.ts" : "src/server.tsx";
+    const entry = cmd === "mcp" ? "src/mcp-stdio.ts"
+      : cmd === "profile" ? "src/profile-cli.ts"
+      : "src/server.tsx";
     const args = cmd === "dev" ? ["watch", entry] : [entry];
     code = run(process.execPath, [bin, ...args, ...rest], instance);
     break;

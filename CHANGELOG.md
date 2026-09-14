@@ -8,6 +8,49 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.5.0] - 2026-09-14
+
+The operating model was ours, hardcoded. Now it is a file you can install.
+
+### Added
+- **Profiles.** One config key — `"profile"` — swaps every threshold and
+  policy the engine uses for someone else's. Resolves a name shipped with the
+  engine, a path, or an installed package, in that order. Three ship:
+  `default` (the engine's own model, written out so you can read what a
+  profile controls), `patient` and `aggressive`.
+- **Three layers, and the instance always wins**: engine defaults, then the
+  profile, then this instance. That is the part that makes a profile usable
+  for client work — a client running their agency's method can always see,
+  and change, exactly where their setup departs from it. `n-seo profile`
+  prints that list; the Settings page shows it beside the profile's name.
+- **A profile that cannot be resolved fails the load**, naming every location
+  tried, rather than falling back to the defaults. Discovering months later
+  that a client's instance quietly stopped applying your method is worse than
+  an error on the morning you typed the name wrong. `doctor` reports it too.
+- **`rules` in config.** Every number the action engine ranks by — the
+  striking-distance band, the impression floors, the CTR ratio, the
+  engagement thresholds, the drop percentage, the effort weights — was a
+  literal in `src/actions.ts` and `src/data.ts`. Disagreeing with any of them
+  meant editing the engine and then living with the merge on every upgrade.
+- **`operatingRules` in config**: the freeze window, the weekly batch size,
+  the decision window, the history length. One place, so changing the freeze
+  changes it everywhere it is stated rather than in six that drift.
+- `docs/PROFILES.md`, and a section on the site for people who do this for a
+  living.
+
+### Decided
+- A profile is data and may not ship executable code. Installing someone's
+  method should not mean running their code on the machine that holds your
+  Search Console credentials. Custom rules — new kinds of card rather than new
+  numbers for existing ones — remain a fork, and the PRD carries the open
+  question.
+
+### Fixed
+- The TypeScript and Python loaders now resolve profiles identically, asserted
+  by a test that runs both against every shipped profile. A dashboard saying
+  the freeze is 28 days while the daily log says 56 would be worse than either
+  number being wrong.
+
 ## [0.4.1] - 2026-09-13
 
 ### Added
@@ -401,7 +444,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.2...v0.3.3

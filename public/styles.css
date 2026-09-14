@@ -582,7 +582,13 @@ footer .foot-upd a { color: inherit; text-decoration: underline; }
 .s-help { margin: 0; font-size: 0.75rem; color: var(--muted); }
 .s-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-top: 4px; flex: 1; }
 .s-field small { font-weight: 500; }
-.s-field input[type="text"], .s-field textarea {
+.s-field input[type="text"], .prof-diff { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.prof-diff li { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 0.76rem; }
+.prof-diff .mono { flex: 1 1 100%; color: var(--muted); }
+.prof-was { font-family: var(--mono); color: var(--muted); text-decoration: line-through; }
+.prof-now { font-family: var(--mono); font-weight: 700; color: var(--accent); }
+
+.s-field textarea {
   font: inherit; font-size: 0.84rem; color: var(--ink); background: var(--panel);
   border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; font-weight: 400;
 }
