@@ -5,7 +5,18 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ["www/**", "CHANGELOG.md", ".github/scripts/build-releases.mjs", ".github/workflows/pages.yml"]
+    paths:
+      - "www/**"
+      - "CHANGELOG.md"
+      - ".github/scripts/build-releases.mjs"
+      - ".github/scripts/build-demo.mjs"
+      - ".github/workflows/pages.yml"
+      # The demo is exported from the dashboard, so a change to the app is
+      # a change to the marketing site.
+      - "src/**"
+      - "public/**"
+      - "ops/export_static.py"
+      - "ops/demo_data.py"
   workflow_dispatch:
 
 permissions:
@@ -32,11 +43,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: npm ci
+
       # www/releases/ is generated here rather than committed, so the page
       # cannot drift from CHANGELOG.md — there is one source of truth and no
       # commit discipline to remember at release time.
       - name: Build the release notes from CHANGELOG.md
         run: node .github/scripts/build-releases.mjs
+
+      # www/demo/ is a real export of the dashboard from this very commit, so
+      # what a visitor clicks is what they would install. It also means a
+      # commit that breaks the dashboard fails the marketing deploy, which is
+      # the right way round.
+      - name: Build the live demo
+        run: node .github/scripts/build-demo.mjs
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
