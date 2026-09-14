@@ -23,3 +23,7 @@ claude_commands.log
 # Generated at deploy time by .github/scripts/build-releases.mjs, so it can
 # never drift from CHANGELOG.md.
 www/releases/
+
+# A real export of the dashboard, rebuilt at deploy time from the commit
+# being deployed.
+www/demo/

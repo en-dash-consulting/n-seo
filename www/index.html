@@ -64,6 +64,7 @@
 }
 </script>
 
+<script>document.documentElement.classList.add("js");</script>
 <style>
   /* One variable file per family carries every weight the page uses, so this
      is two requests, not six. font-display: swap paints in the fallback
@@ -108,11 +109,14 @@
     --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--navy); color: var(--white); font-family: var(--font-body); font-size: 16px; line-height: 1.7; }
   a { color: var(--teal); }
   img { max-width: 100%; height: auto; display: block; }
   code, pre, .mono { font-family: var(--font-mono); }
+  /* The nav is sticky, so an anchor jump has to stop short of it or the
+     heading lands underneath. */
+  html { scroll-padding-top: 78px; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
   h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: 800; }
@@ -195,6 +199,65 @@
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
   .hero-shot { margin-top: 56px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--navy-mid); box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
   .hero-shot img { width: 100%; }
+  /* ---- motion ----
+     The hidden state is scoped to .js, added by an inline script at the top
+     of the document. With JavaScript off nothing is hidden, which matters
+     here more than most places: this is the marketing site for a tool whose
+     own probe flags pages that need JS to show their content. */
+  .js .reveal { opacity: 0; transform: translateY(16px); }
+  .js .reveal.in { opacity: 1; transform: none; transition: opacity .6s cubic-bezier(.22,.61,.36,1), transform .6s cubic-bezier(.22,.61,.36,1); }
+  .js .reveal.d1.in { transition-delay: .06s; }
+  .js .reveal.d2.in { transition-delay: .12s; }
+  .js .reveal.d3.in { transition-delay: .18s; }
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal, .js .reveal.in { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ---- live demo ---- */
+  .demo {
+    margin-top: 56px; border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; background: var(--navy-mid);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+  }
+  .demo-chrome {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; background: rgba(0,0,0,0.28);
+    border-bottom: 1px solid var(--border);
+  }
+  .demo-chrome .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .demo-chrome .dot.r { background: #ff5f57; }
+  .demo-chrome .dot.y { background: #febc2e; }
+  .demo-chrome .dot.g { background: #28c840; }
+  .demo-url {
+    flex: 1; text-align: center; font-family: var(--font-mono);
+    font-size: 0.76rem; color: var(--dim);
+  }
+  .demo-live {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--teal);
+    border: 1px solid rgba(0,255,179,0.35); background: rgba(0,255,179,0.08);
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .demo-tabs {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.14);
+  }
+  .demo-tabs button {
+    font-family: var(--font-display); font-weight: 500; font-size: 0.82rem;
+    color: var(--muted); background: transparent; border: 0; cursor: pointer;
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .demo-tabs button:hover { color: var(--white); background: var(--card); }
+  .demo-tabs button[aria-selected="true"] { color: var(--navy); background: var(--teal); font-weight: 700; }
+  .demo-open { margin-left: auto; font-family: var(--font-display); font-size: 0.8rem; text-decoration: none; }
+  .demo-open:hover { text-decoration: underline; }
+  #demo-frame { display: block; width: 100%; height: 660px; border: 0; background: #0f1117; }
+  .demo noscript img { width: 100%; display: block; }
+  @media (max-width: 760px) {
+    #demo-frame { height: 460px; }
+    .demo-open { display: none; }
+  }
   .shot-caption { font-family: var(--font-mono); font-size: 0.78rem; color: var(--dim); margin-top: 12px; text-align: center; }
 
   /* three promises */
@@ -301,12 +364,9 @@
       n-seo <span class="expand">En&nbsp;Dash&nbsp;SEO</span>
     </a>
     <div class="nav-links">
-      <a href="#agent">Agentic</a>
-      <a href="#where">Setup</a>
+      <a href="#demo">Live demo</a>
       <a href="#how">How it works</a>
-      <a href="#see">What you get</a>
-      <a href="#rules">The rules</a>
-      <a href="#free">Free</a>
+      <a href="#where">Setup</a>
       <a href="/releases/">Releases</a>
       <a class="btn small" href="https://github.com/en-dash-consulting/n-seo">GitHub ↗</a>
     </div>
@@ -326,12 +386,31 @@
     </div>
     <p class="install"><code>npm install -g n-seo</code> <span>then <code>n-seo init my-sites</code></span></p>
 
-    <div class="hero-shot">
-      <img src="assets/shot-overview-dark.png" alt="n-seo overview: the Today board grouping what is waiting on you — Fix, Approve, Ship — above a per-site strip of sessions, clicks, AI-referral share and search share" width="1400" height="900" loading="eager">
+    <div class="demo" id="demo">
+      <div class="demo-chrome">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="demo-url" id="demo-url">localhost:4600</span>
+        <span class="demo-live">live</span>
+      </div>
+      <div class="demo-tabs" role="tablist" aria-label="Demo pages">
+        <button type="button" data-page="/demo/" aria-selected="true">Overview</button>
+        <button type="button" data-page="/demo/actions/" aria-selected="false">Actions</button>
+        <button type="button" data-page="/demo/trends/30/" aria-selected="false">Trends</button>
+        <button type="button" data-page="/demo/indexing/" aria-selected="false">Indexing</button>
+        <button type="button" data-page="/demo/site/example.com/" aria-selected="false">One site</button>
+        <a class="demo-open" href="/demo/" target="_blank" rel="noopener">Open full size ↗</a>
+      </div>
+      <!-- The real dashboard, exported from the commit being deployed. The
+           noscript fallback is the screenshot, so the hero still shows the
+           product with JavaScript off and to a crawler that does not run it. -->
+      <iframe id="demo-frame" src="/demo/" title="n-seo dashboard, running on demo data" loading="eager"></iframe>
+      <noscript>
+        <img src="assets/shot-overview-dark.png" alt="n-seo overview: the Today board grouping what is waiting on you — Fix, Approve, Ship — above a per-site strip of sessions, clicks, AI-referral share and search share" width="1400" height="900">
+      </noscript>
     </div>
-    <p class="shot-caption">The overview on demo data. Every row is a link; every number is derived live from files on your disk.</p>
+    <p class="shot-caption">This is the actual dashboard, built from this commit, on the synthetic dataset <code>n-seo demo</code> gives you. Click anything.</p>
 
-    <div class="promises">
+    <div class="promises reveal">
       <div class="promise"><div class="k">Data</div><h3>Yours, on your hardware</h3><p>Laptop, VPS, NAS or a VM in your own cloud. No account, no SaaS, no telemetry. The only things that leave the host are the Google APIs you authorize, the model provider you configure, and one daily <code>npm view</code> to see whether a new version shipped — that last one switchable off in a line.</p></div>
       <div class="promise"><div class="k">Model</div><h3>Yours, whichever you pick</h3><p>Proposals, verdicts and briefings come from the provider you configure — Anthropic, any OpenAI-compatible endpoint, or a CLI on your machine. No key ships with n-seo and nothing is called that you did not set up.</p></div>
       <div class="promise"><div class="k">Judgment</div><h3>Evidence first</h3><p>Every card shows the queries, positions and impressions behind it, then the move, then a spec. You learn what actually moves the numbers.</p></div>
@@ -342,10 +421,10 @@
 
 <section id="agent">
   <div class="wrap">
-    <div class="eyebrow">Agentic by design</div>
-    <h2>Your model does the thinking. Your agent does the work.</h2>
+    <div class="eyebrow reveal">Agentic by design</div>
+    <h2 class="reveal">Your model does the thinking. Your agent does the work.</h2>
     <p class="lede">n-seo is deterministic where it should be — the pulls, the probes and the ranking rules are plain code you can read. Everything that needs judgment is handed to a model you choose, and everything that changes a site is handed to you.</p>
-    <div class="agent" style="margin-top: 34px;">
+    <div class="agent reveal" style="margin-top: 34px;">
       <div class="half">
         <div class="k">Inside n-seo</div>
         <h3>Your model, on your findings</h3>
@@ -378,11 +457,11 @@
 
 <section id="where">
   <div class="wrap">
-    <div class="eyebrow">Where it goes</div>
-    <h2>n-seo sits beside your sites, not inside them</h2>
+    <div class="eyebrow reveal">Where it goes</div>
+    <h2 class="reveal">n-seo sits beside your sites, not inside them</h2>
     <p class="lede">It reads your sites the way Google sees them — through the Search Console and GA4 APIs — so it never needs a copy of their code. <code>n-seo init</code> makes one directory of its own and everything it writes stays there.</p>
 
-    <div class="where">
+    <div class="where reveal">
       <div class="fs bad">
         <div class="fs-h"><span class="fs-mark"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></span> Inside a site's repo</div>
         <p class="fs-sub">Opening your website and running <code>init</code> there.</p>
@@ -416,7 +495,7 @@
       </div>
     </div>
 
-    <div class="touch">
+    <div class="touch reveal d1">
       <div>
         <div class="k never">Your site repos</div>
         <h3>Never touched</h3>
@@ -438,10 +517,10 @@
 
 <section id="start">
   <div class="wrap">
-    <div class="eyebrow">Quickstart</div>
-    <h2>Five minutes, no Google setup</h2>
+    <div class="eyebrow reveal">Quickstart</div>
+    <h2 class="reveal">Five minutes, no Google setup</h2>
     <p class="lede">The demo dataset populates every page, so you can see what the tool does before you connect anything. Node 20+, Python 3.10+ and curl are all it needs, on macOS, Linux or Windows.</p>
-    <div class="qs" style="margin-top: 36px;">
+    <div class="qs reveal" style="margin-top: 36px;">
 <pre><span class="c"># 1. the engine, once — a CLI, not a dependency</span>
 npm install -g n-seo
 
@@ -480,10 +559,10 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section id="how">
   <div class="wrap">
-    <div class="eyebrow">How it works</div>
-    <h2>What an agency does every month, as a loop that runs every morning</h2>
+    <div class="eyebrow reveal">How it works</div>
+    <h2 class="reveal">What an agency does every month, as a loop that runs every morning</h2>
     <p class="lede">Four planes. The first two are code; the third is you and your agent; the fourth is what keeps the second one honest.</p>
-    <div class="loop">
+    <div class="loop reveal">
       <div><div class="n">01 · awareness</div><h3>Pull everything</h3><p>Search Console (16 months and the trailing 90 days), GA4 sessions, sources and landing pages, per-page time series, URL Inspection verdicts for every sitemap URL, and a no-auth probe of each site: robots, sitemap, llms.txt, soft 404s, blocked AI crawlers, JS-only shells.</p></div>
       <div><div class="n">02 · analysis</div><h3>Rank the moves</h3><p>Rules over the 90-day window turn snapshots into actions: metadata that misses the ranking language, pages that rank well but rarely get clicked, queries sitting at position 5–15, landing pages that don't deliver what the click promised, traffic drops. Impact per unit of effort orders the queue. With the LLM module on, rising queries nothing covers become drafted proposals too.</p></div>
       <div><div class="n">03 · action</div><h3>You ship</h3><p>Each card opens to the evidence, the move and a build spec. You change the title, add the section, fix the 404 — in your repo, on a branch, your way. Accept machine proposals into your queue with one click; nothing self-modifies it.</p></div>
@@ -494,10 +573,10 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section id="see">
   <div class="wrap">
-    <div class="eyebrow">What you get</div>
-    <h2>A dashboard that leads with what to do next</h2>
+    <div class="eyebrow reveal">What you get</div>
+    <h2 class="reveal">A dashboard that leads with what to do next</h2>
     <p class="lede">Server-rendered, no bundler, light and dark. Compact, searchable, and split cleanly into active work and shipped work being measured.</p>
-    <div class="gallery">
+    <div class="gallery reveal">
       <div class="tile"><img src="assets/shot-actions-dark.png" alt="The action queue: proposals from the opportunity scan with Accept buttons, then active cards ranked by impact per effort" loading="lazy"><div class="t"><h3>The action queue</h3><p>Proposed → active → watching. Each card carries its evidence, the move, a spec and a success criterion. Filter by title, site, tag or kind.</p></div></div>
       <div class="tile"><img src="assets/shot-trends-dark.png" alt="Trends: daily Google clicks and GA4 sessions as band charts above a per-page heatmap on the same time axis" loading="lazy"><div class="t"><h3>Trends</h3><p>One window drives everything: clicks per day, sessions per day, and which pages were hit on which days. Hover a day to highlight it across every row.</p></div></div>
       <div class="tile"><img src="assets/shot-indexing-dark.png" alt="Indexing: Search Console's verdict on every sitemap URL, grouped by coverage state, with stale verdicts flagged" loading="lazy"><div class="t"><h3>Indexing</h3><p>Search Console's verdict on every URL in your sitemap. Tells "nobody searches for this" apart from "Google has never fetched this" — they look identical in performance data.</p></div></div>
@@ -509,8 +588,8 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section id="rules">
   <div class="wrap">
-    <div class="eyebrow">The rules</div>
-    <h2>The principles an agency charges for, written down — and yours to edit</h2>
+    <div class="eyebrow reveal">The rules</div>
+    <h2 class="reveal">The principles an agency charges for, written down — and yours to edit</h2>
     <p class="lede">n-seo ships with an opinionated operating model. Each rule is a few lines you can read, argue with and change. The queue shows you why it thinks so, every time.</p>
     <div class="rules">
       <div class="rule"><div class="r"><span>28-day</span> title freeze</div><p>After you rewrite a page's title or description, leave it alone for four weeks. Churn reads as manipulation and resets Google's evaluation. Measure, then move.</p></div>
@@ -527,8 +606,8 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section id="modules">
   <div class="wrap">
-    <div class="eyebrow">Modules</div>
-    <h2>Opt in, and honest about what each one touches</h2>
+    <div class="eyebrow reveal">Modules</div>
+    <h2 class="reveal">Opt in, and honest about what each one touches</h2>
     <p class="lede">Everything beyond the core pulls is off until you turn it on. Nothing here posts, sends or publishes on your behalf.</p>
     <div class="tbl-wrap">
     <table>
@@ -552,8 +631,8 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section id="free">
   <div class="wrap">
-    <div class="eyebrow">Cost</div>
-    <h2>Free means free</h2>
+    <div class="eyebrow reveal">Cost</div>
+    <h2 class="reveal">Free means free</h2>
     <div class="free">
       <div><b>No SaaS, no account, no seat price.</b> MIT licensed. Clone it, run it, fork it, ship it inside your company.</div>
       <div><b>Google's APIs are free within quota.</b> Search Console and GA4 reporting cost nothing at this scale; the index sweep is capped well under the daily limit.</div>
@@ -565,7 +644,7 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
 
 <section class="cta">
   <div class="wrap">
-    <h2>Stop paying someone to read Search Console for you.</h2>
+    <h2 class="reveal">Stop paying someone to read Search Console for you.</h2>
     <p class="lede" style="margin: 14px auto 0;">Run the demo, connect a site, read the queue tomorrow morning.</p>
     <div class="hero-actions">
       <a class="btn primary" href="https://github.com/en-dash-consulting/n-seo">Get n-seo on GitHub ↗</a>
@@ -589,5 +668,56 @@ n-seo daily         <span class="c"># pull, probe, rank</span></pre>
   </div>
 </footer>
 
+<script>
+  // Demo tabs. Progressive enhancement: with JavaScript off the iframe still
+  // shows the overview and every link inside it works, so nothing here is
+  // load-bearing. The address bar is cosmetic — it echoes what the page would
+  // be on a real install, not where the frame actually points.
+  (function () {
+    var frame = document.getElementById("demo-frame");
+    var url = document.getElementById("demo-url");
+    var tabs = document.querySelectorAll(".demo-tabs button");
+    if (!frame || !tabs.length) return;
+    var label = {
+      "/demo/": "localhost:4600",
+      "/demo/actions/": "localhost:4600/actions",
+      "/demo/trends/30/": "localhost:4600/trends/30",
+      "/demo/indexing/": "localhost:4600/indexing",
+      "/demo/site/example.com/": "localhost:4600/site/example.com"
+    };
+    tabs.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var page = b.getAttribute("data-page");
+        frame.src = page;
+        tabs.forEach(function (o) { o.setAttribute("aria-selected", String(o === b)); });
+        if (url) url.textContent = label[page] || "localhost:4600";
+        var open = document.querySelector(".demo-open");
+        if (open) open.setAttribute("href", page);
+      });
+    });
+  })();
+</script>
+<script>
+  // Reveal on scroll. Everything is already visible in the markup; this only
+  // animates the arrival, and bails to "just show it" if the browser has no
+  // IntersectionObserver or the visitor asked for less motion.
+  (function () {
+    var els = document.querySelectorAll(".reveal");
+    if (!els.length) return;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) {
+      els.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
 </body>
 </html>
