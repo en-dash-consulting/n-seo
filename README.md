@@ -3,7 +3,7 @@
 **An SEO, self-hosted.** Website: https://n-seo.dev/ · From the makers of [n-dx](https://n-dx.dev).
 
 [![npm](https://img.shields.io/npm/v/n-seo)](https://www.npmjs.com/package/n-seo)
-[![downloads](https://img.shields.io/npm/dm/n-seo)](https://www.npmjs.com/package/n-seo)
+[![downloads](https://img.shields.io/npm/dw/n-seo)](https://www.npmjs.com/package/n-seo)
 [![CI](https://github.com/en-dash-consulting/n-seo/actions/workflows/ci.yml/badge.svg)](https://github.com/en-dash-consulting/n-seo/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/n-seo)](LICENSE)
 

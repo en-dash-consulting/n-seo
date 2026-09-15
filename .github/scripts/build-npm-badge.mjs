@@ -2,6 +2,9 @@
 /**
  * Stamp the current npm download count into www/index.html at deploy time.
  *
+ * Trailing week, matching the figure npmjs.com shows on the package page, so
+ * a reader who checks finds the same number.
+ *
  * The obvious way to show this is a shields.io <img>. We don't, for one
  * reason that matters on this site in particular: it currently makes **zero**
  * third-party requests. The fonts are self-hosted, the release notes are
@@ -35,15 +38,25 @@ const CLOSE = "<!--/npm:downloads-->";
 
 const log = (m) => console.log(`build-npm-badge: ${m}`);
 
-/** Downloads in the trailing month, or null. */
+/** Downloads in the trailing week, or null.
+ *
+ *  Summed from the per-version endpoint rather than read from
+ *  `downloads/point/last-week`. Both are api.npmjs.org and they disagree:
+ *  the point endpoint lagged four days behind and reported 997 while the
+ *  package page — and this endpoint — said 1,589. A number on a marketing
+ *  page that is visibly lower than the one on npmjs.com is worse than no
+ *  number, so use the source that matches what a reader can check.
+ *
+ *  Trailing week, not month, for the same reason: it is the figure npmjs.com
+ *  puts on the package page. */
 async function downloads() {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 15_000);
   try {
     // Overridable so the unreachable-registry path can actually be tested,
     // rather than assumed to work because it is in a try/catch.
-    const base = process.env.NPM_DOWNLOADS_API || "https://api.npmjs.org/downloads/point/last-month";
-    const r = await fetch(`${base}/${PKG}`, {
+    const base = process.env.NPM_DOWNLOADS_API || "https://api.npmjs.org/versions";
+    const r = await fetch(`${base}/${PKG}/last-week`, {
       signal: ctrl.signal,
       headers: { accept: "application/json" },
     });
@@ -51,8 +64,13 @@ async function downloads() {
       log(`registry answered ${r.status} — leaving the page as it is`);
       return null;
     }
-    const n = (await r.json())?.downloads;
-    return Number.isFinite(n) && n > 0 ? n : null;
+    const perVersion = (await r.json())?.downloads;
+    if (!perVersion || typeof perVersion !== "object") {
+      log("registry returned no per-version data — leaving the page as it is");
+      return null;
+    }
+    const n = Object.values(perVersion).reduce((a, b) => a + (Number(b) || 0), 0);
+    return n > 0 ? n : null;
   } catch (e) {
     log(`could not reach the registry (${e.name}) — leaving the page as it is`);
     return null;
@@ -80,7 +98,7 @@ if (start === -1 || end === -1 || end < start) {
   process.exit(1);
 }
 
-const replacement = `${human(n)} downloads/month`;
+const replacement = `${human(n)} downloads/week`;
 html = html.slice(0, start + OPEN.length) + replacement + html.slice(end);
 fs.writeFileSync(PAGE, html);
 log(`stamped "${replacement}" (${n.toLocaleString()} raw)`);
