@@ -6,7 +6,21 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+- **`doctor` reported a model command as healthy when it could not run.** The
+  check was `shutil.which`: the file exists, therefore fine. An expired OAuth
+  session, a revoked key and a lapsed subscription all leave the binary
+  exactly where it was. It now sends a trivial prompt and reports what came
+  back, so a dead session is caught before a run wastes a dozen calls on it.
+  `--offline` still skips the call and says it did so.
+- **The daily log threw away the reason a model call failed.** The llm module
+  logged `stderr` only. `claude` exits 1 and writes "Failed to authenticate:
+  OAuth session expired" to *stdout*, so the log read `llm: exit 1:` with
+  nothing after it — eleven times in one run, the cause discarded each time.
+  It now falls back to stdout.
+
+Found by running a real daily run: the scan recorded six candidates and
+drafted no proposals, and the reason was not in the log.
 
 ## [0.6.0] - 2026-09-15
 

@@ -79,6 +79,36 @@ def check_profile(cfg):
     report("OK", f"from {d}")
 
 
+def probe_llm(cmd):
+    """Actually call the model and see whether it answers.
+
+    `shutil.which` only proves a file exists. An expired OAuth session, a
+    revoked key or a missing subscription all leave the binary exactly where
+    it was, so the old check reported OK while every call in the daily run
+    failed — eleven of them, silently, because the llm module degrades rather
+    than failing the run. A green tick for something that cannot work is
+    worse than no check at all.
+
+    Returns (ok, detail). Never raises.
+    """
+    try:
+        p = subprocess.run(cmd, input="Reply with the single word: ok",
+                           capture_output=True, text=True, timeout=90, encoding="utf-8")
+    except subprocess.TimeoutExpired:
+        return False, "timed out after 90s"
+    except OSError as exc:
+        return False, str(exc)[:120]
+    if p.returncode != 0:
+        detail = (p.stderr or p.stdout or "").strip().splitlines()
+        return False, (detail[0][:160] if detail else f"exit {p.returncode}, no output")
+    out = (p.stdout or "").strip()
+    if not out:
+        # Some CLIs report an auth failure on stdout and still exit 0.
+        err = (p.stderr or "").strip().splitlines()
+        return False, (err[0][:160] if err else "exited 0 but said nothing")
+    return True, out.splitlines()[0][:60]
+
+
 def check_config():
     print("config")
     if seo_config.using_example():
@@ -301,8 +331,15 @@ def check_modules(cfg):
                 elif key == "command" and not http and not llm.get("http"):
                     report("FAIL", "llm has neither http nor command configured")
                 continue
-            report("OK" if shutil.which(cmd[0]) else "FAIL", f"llm.{key}: {cmd[0]}",
-                   "" if shutil.which(cmd[0]) else "not on PATH")
+            if not shutil.which(cmd[0]):
+                report("FAIL", f"llm.{key}: {cmd[0]}", "not on PATH")
+                continue
+            if OFFLINE:
+                report("OK", f"llm.{key}: {cmd[0]}", "on PATH — not called (offline)")
+                continue
+            ok, detail = probe_llm(cmd)
+            report("OK" if ok else "FAIL", f"llm.{key}: {raw[:48]}",
+                   detail if not ok else f"answered: {detail}")
     hn = cfg["modules"].get("hackerNews", {})
     if hn.get("enabled"):
         user = (hn.get("user") or "").strip()
