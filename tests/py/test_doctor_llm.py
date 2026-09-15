@@ -6,9 +6,6 @@ the old check reported OK while every call in the daily run failed. Eleven of
 them in one run, silently, because the llm module degrades rather than
 failing. A green tick for something that cannot work is worse than no check.
 """
-import os
-import stat
-import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -21,19 +18,24 @@ sys.path.insert(0, str(REPO / "ops"))
 import doctor  # noqa: E402
 
 
-def fake_cli(dirpath: Path, name: str, body: str) -> Path:
-    """A stand-in CLI, so these tests never call a real model."""
-    p = dirpath / name
-    p.write_text("#!/bin/sh\n" + body, encoding="utf-8")
-    p.chmod(p.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-    return p
+def fake_cli(dirpath: Path, name: str, body: str) -> list[str]:
+    """A stand-in CLI, so these tests never call a real model.
+
+    Written in Python and invoked through this interpreter rather than as a
+    shell script with a shebang: Windows has neither, and the behaviour being
+    tested — how a failing command is reported — matters on every platform.
+    Returns argv, which is what probe_llm takes.
+    """
+    p = dirpath / f"{name}.py"
+    p.write_text(body, encoding="utf-8")
+    return [sys.executable, str(p)]
 
 
 class ProbeTests(unittest.TestCase):
     def test_a_working_command_passes_and_quotes_the_reply(self):
         with TemporaryDirectory() as tmp:
-            cli = fake_cli(Path(tmp), "good", 'cat > /dev/null; echo "ok"')
-            ok, detail = doctor.probe_llm([str(cli)])
+            cli = fake_cli(Path(tmp), "good", "import sys; sys.stdin.read(); print('ok')")
+            ok, detail = doctor.probe_llm(cli)
             self.assertTrue(ok)
             self.assertEqual(detail, "ok")
 
@@ -45,24 +47,27 @@ class ProbeTests(unittest.TestCase):
         """
         with TemporaryDirectory() as tmp:
             cli = fake_cli(Path(tmp), "expired",
-                           'cat > /dev/null; echo "Failed to authenticate: OAuth session expired"; exit 1')
-            ok, detail = doctor.probe_llm([str(cli)])
+                           "import sys; sys.stdin.read();"
+                           " print('Failed to authenticate: OAuth session expired'); sys.exit(1)")
+            ok, detail = doctor.probe_llm(cli)
             self.assertFalse(ok, "a non-zero exit must not pass")
             self.assertIn("OAuth session expired", detail,
                           "the reason is on stdout and must still be reported")
 
     def test_an_error_on_stderr_is_caught(self):
         with TemporaryDirectory() as tmp:
-            cli = fake_cli(Path(tmp), "bad", 'cat > /dev/null; echo "no credit" >&2; exit 2')
-            ok, detail = doctor.probe_llm([str(cli)])
+            cli = fake_cli(Path(tmp), "bad",
+                           "import sys; sys.stdin.read();"
+                           " print('no credit', file=sys.stderr); sys.exit(2)")
+            ok, detail = doctor.probe_llm(cli)
             self.assertFalse(ok)
             self.assertIn("no credit", detail)
 
     def test_exit_zero_with_no_output_is_a_failure(self):
         """Some CLIs fail quietly. Silence is not a reply."""
         with TemporaryDirectory() as tmp:
-            cli = fake_cli(Path(tmp), "silent", "cat > /dev/null; exit 0")
-            ok, detail = doctor.probe_llm([str(cli)])
+            cli = fake_cli(Path(tmp), "silent", "import sys; sys.stdin.read()")
+            ok, detail = doctor.probe_llm(cli)
             self.assertFalse(ok)
             self.assertIn("said nothing", detail)
 
@@ -74,8 +79,9 @@ class ProbeTests(unittest.TestCase):
     def test_the_prompt_goes_in_on_stdin(self):
         """The module pipes the prompt in; a CLI that reads argv would break."""
         with TemporaryDirectory() as tmp:
-            cli = fake_cli(Path(tmp), "echoer", 'read line; echo "got:$line"')
-            ok, detail = doctor.probe_llm([str(cli)])
+            cli = fake_cli(Path(tmp), "echoer",
+                           "import sys; print('got:' + sys.stdin.read().strip())")
+            ok, detail = doctor.probe_llm(cli)
             self.assertTrue(ok)
             self.assertTrue(detail.startswith("got:"), detail)
 
