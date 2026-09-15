@@ -6,21 +6,25 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
-- **`doctor` reported a model command as healthy when it could not run.** The
-  check was `shutil.which`: the file exists, therefore fine. An expired OAuth
-  session, a revoked key and a lapsed subscription all leave the binary
-  exactly where it was. It now sends a trivial prompt and reports what came
-  back, so a dead session is caught before a run wastes a dozen calls on it.
-  `--offline` still skips the call and says it did so.
-- **The daily log threw away the reason a model call failed.** The llm module
-  logged `stderr` only. `claude` exits 1 and writes "Failed to authenticate:
-  OAuth session expired" to *stdout*, so the log read `llm: exit 1:` with
-  nothing after it — eleven times in one run, the cause discarded each time.
-  It now falls back to stdout.
+Nothing yet.
 
-Found by running a real daily run: the scan recorded six candidates and
-drafted no proposals, and the reason was not in the log.
+## [0.6.1] - 2026-09-15
+
+### Fixed
+- **The daily log threw away the reason a model call failed.** The llm module
+  reported `stderr` only, but a CLI may put its failure on stdout — `claude`
+  exits 1 and writes "Failed to authenticate" there — so the log read
+  `llm: exit 1:` with nothing after the colon. Every call, cause discarded.
+  It now falls back to stdout. This is the bug that matters here: it turned a
+  one-line diagnosis into a long one, and produced a confident wrong answer
+  along the way.
+- **`doctor` reported a model command as healthy when it could not run.** The
+  check was `shutil.which`: the file exists, therefore fine. A revoked key, a
+  lapsed subscription or an unreadable credential store all leave the binary
+  exactly where it was. It now sends a trivial prompt and reports what came
+  back. Note the limitation — it reports what happens *in the environment you
+  run it in*. A stripped environment that cannot reach the system credential
+  store will fail this check while the scheduled job, which can, is fine.
 
 ## [0.6.0] - 2026-09-15
 
@@ -500,7 +504,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...v0.4.1
