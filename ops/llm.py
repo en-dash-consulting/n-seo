@@ -155,7 +155,12 @@ def infer(prompt: str, fast: bool = False) -> str | None:
         print(f"  llm: {exc}", file=sys.stderr)
         return None
     if p.returncode != 0:
-        print(f"  llm: exit {p.returncode}: {p.stderr.strip()[:200]}", file=sys.stderr)
+        # Not every CLI reports its failure on stderr. `claude` exits 1 and
+        # writes "Failed to authenticate: OAuth session expired" to stdout,
+        # so logging stderr alone produced "llm: exit 1:" with nothing after
+        # it — eleven times in one run, with the reason thrown away each time.
+        detail = (p.stderr.strip() or p.stdout.strip() or "no output")
+        print(f"  llm: exit {p.returncode}: {detail[:200]}", file=sys.stderr)
         return None
     out = p.stdout.strip()
     return out or None
