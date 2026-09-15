@@ -4,7 +4,7 @@
  *  then merged with the curated queue in config/backlog.json. Pages listed in
  *  the backlog's `shippedWatch` map turn their rule-derived cards into
  *  "watching" entries — the fix shipped; the data decides what happens next. */
-import { SITES, config, type SiteCfg } from "./config.js";
+import { SITES, config, type SiteCfg, type Priority } from "./config.js";
 import * as data from "./data.js";
 import { BACKLOG, SHIPPED_WATCH, slug, type Action, type Effort } from "./backlog.js";
 
@@ -250,12 +250,80 @@ export function actionsFor(site: SiteCfg): Action[] {
   return [...generated, ...backlog].sort((a, b) => score(b) - score(a));
 }
 
+/** The page a card is about, if it names one. Rule-derived cards put
+ *  "Page: <url>" first in their spec; hygiene and trend cards are about a
+ *  whole site and have no path to match. */
+function pageOf(a: Action): string | null {
+  const line = a.spec?.find((l) => l.startsWith("Page: "));
+  if (!line) return null;
+  const url = line.slice("Page: ".length).trim();
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url.startsWith("/") ? url : null;
+  }
+}
+
+function matches(p: Priority, a: Action): boolean {
+  const w = p.when ?? {};
+  if (w.host && w.host !== a.host) return false;
+  if (w.tag && w.tag !== a.tag) return false;
+  if (w.kind && !a.kind?.toLowerCase().includes(w.kind.toLowerCase())) return false;
+  if (w.pathMatches) {
+    const path = pageOf(a);
+    if (path === null) return false;
+    try {
+      if (!new RegExp(w.pathMatches).test(path)) return false;
+    } catch {
+      // A bad pattern must not silently match everything, and must not take
+      // the queue down either.
+      return false;
+    }
+  }
+  // A priority with no conditions would apply to the whole queue, which is
+  // never what someone means and is a very confusing way to find out.
+  return Object.keys(w).length > 0;
+}
+
+/** Apply the configured priorities: drop, reweight, and always explain.
+ *
+ *  Order is preserved as a pipeline — later priorities see the impact earlier
+ *  ones produced — so two boosts on the same card compound, which is what
+ *  reading them top to bottom implies. */
+export function prioritize(actions: Action[]): Action[] {
+  const priorities = (config().rules.priorities ?? []).filter((p) => p?.why && p?.when);
+  if (!priorities.length) return actions;
+
+  const out: Action[] = [];
+  for (const a of actions) {
+    let card = a;
+    let dropped = false;
+    const notes: string[] = [];
+    for (const p of priorities) {
+      if (!matches(p, card)) continue;
+      if (p.drop) { dropped = true; break; }
+      const by = Number(p.multiply);
+      if (!Number.isFinite(by) || by <= 0 || by === 1) continue;
+      const before = Number.isFinite(card.impact) ? card.impact : 0;
+      card = { ...card, impact: Math.max(0, Math.round(before * by)) };
+      notes.push(`${by > 1 ? "Raised" : "Lowered"} ${before} → ${card.impact}: ${p.why}`);
+    }
+    if (dropped) continue;
+    // The card carries its own adjustment. Ordering you cannot see the reason
+    // for is ordering you cannot argue with.
+    if (notes.length) card = { ...card, spec: [...(card.spec ?? []), ...notes], priorityNotes: notes };
+    out.push(card);
+  }
+  return out;
+}
+
 export function allActions(): Action[] {
   const sites = SITES();
   const known = new Set(sites.map((s) => s.host));
   // Backlog items for hosts no longer in the config still deserve a place.
   const orphans = BACKLOG().filter((b) => !known.has(b.host));
-  return [...sites.flatMap((s) => actionsFor(s)), ...orphans].sort((a, b) => score(b) - score(a));
+  const all = [...sites.flatMap((s) => actionsFor(s)), ...orphans];
+  return prioritize(all).sort((a, b) => score(b) - score(a));
 }
 
 export function actionById(id: string): Action | undefined {

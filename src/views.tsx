@@ -141,7 +141,18 @@ export const ActionModal: FC<{ a: Action; id: string }> = ({ a, id }) => (
       <span class={`chip effort e-${a.effort}`}>{effortLabel(a.effort, true)}</span>
       <span class="chip tag">{a.tag}</span>
       <span class="chip">{a.source === "backlog" ? "curated" : a.source === "proposal" ? "proposed" : "data-derived"}</span>
+      {a.priorityNotes?.length ? (
+        <span class="chip warn" title="a configured priority changed where this sits in the queue">reweighted</span>
+      ) : null}
     </div>
+    {a.priorityNotes?.length ? (
+      // The impact number decides the order, so a card whose number was
+      // adjusted has to say so on its face. Ordering you cannot see the
+      // reason for is ordering you cannot argue with.
+      <ul class="prio-notes">
+        {a.priorityNotes.map((n) => <li>{n}</li>)}
+      </ul>
+    ) : null}
     {a.watching && <p class="action-watching">⏳ {a.watching}</p>}
     <h4>Why (the data)</h4>
     <p>{a.why}</p>

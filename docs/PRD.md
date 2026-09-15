@@ -157,10 +157,19 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
 - Acceptance: `default`, `patient` and `aggressive` ship with the engine, and
   `default` restates the engine defaults exactly — asserted, so the two cannot
   drift.
+- Acceptance: `rules.priorities` reweights or drops queue cards by host,
+  path, tag or kind; a matched card carries the reason in its spec and a
+  *reweighted* chip; a priority with no `why` or no conditions is ignored; a
+  bad regex or a nonsense multiplier is ignored rather than throwing or
+  corrupting the sort.
+- Acceptance: a priority can never create a card. Everything in the queue
+  still came from data.
 - Decided: a profile is data only and may not ship executable code. Installing
   a method should not mean running its author's code on the machine holding
-  your Search Console credentials. Custom *rules* — new kinds of card rather
-  than new numbers — remain a fork, and are the open question.
+  your Search Console credentials. `priorities` covers reordering and hiding
+  declaratively, which is what practitioners actually asked to express. A
+  genuinely new *kind* of card — one reading data no existing rule reads —
+  remains a fork, and is the open question.
 
 ## Feature: Rule thresholds in config [shipped]
 
