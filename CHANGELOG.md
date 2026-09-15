@@ -6,20 +6,49 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.6.0] - 2026-09-15
+
 ### Added
-- **Profiles carry principles, not just numbers.** Building the first real
-  profile is what showed the format was too thin. En Dash's method turned out
-  to be barely distinguishable from the engine's in *thresholds* — measured
-  against ten sites, the striking-distance floor never binds once rows are
-  sorted by impressions, and lowering it would only have deleted the one
-  marginal site's two cards — and almost entirely distinguishable in
-  *judgement*: what to optimise for, what needs a human's approval, what never
-  to automate. `principles` carries that. Each is a title, a body, and a kind:
-  `hard` for a constraint an agent must not cross, `guide` for judgement it
-  should apply.
-- They appear at the top of the action queue and on Settings, and `n-seo init`
+- **Profiles carry principles.** Building the first real profile showed the
+  format was too thin. Measured against ten sites, one practitioner's method
+  was barely distinguishable from the engine's in *thresholds* — rows sort by
+  impressions before the cap, so the striking-distance floor never binds where
+  there is data, and lowering it would only have deleted the one marginal
+  site's two cards — and almost entirely distinguishable in *judgement*.
+  `principles` carries that: a title, a body, and a kind. `hard` is a
+  constraint an agent must not cross; `guide` is judgement it should apply.
+  They render at the top of the action queue and on Settings, and `n-seo init`
   writes them into the instance's `CLAUDE.md`. A principle the agent never
   reads is a note to yourself, not an operating rule.
+- **`rules.priorities` — custom rules, declaratively.** A threshold says what
+  counts as a finding; a priority says what you care about. Match on `host`,
+  `pathMatches`, `tag` or `kind`, then `multiply` the impact that orders the
+  queue, or `drop` the card. Several compound in the order written.
+- Two constraints the design will not bend on. **A priority may reorder or
+  hide, never invent** — it cannot create a card, so it cannot manufacture
+  evidence. And **every card it touches says so**, carrying the reason in its
+  spec and a *reweighted* chip; `why` is required and a priority without one
+  is ignored. Ordering you cannot see the reason for is ordering you cannot
+  argue with.
+- A priority with no conditions matches nothing, a bad regular expression
+  matches nothing rather than throwing, and a nonsense multiplier is ignored
+  rather than corrupting the sort.
+
+### Decided
+- **Profiles still may not ship executable code.** The obvious version of
+  custom rules is letting a profile carry a function. Installing someone's
+  method would then mean running their program on the machine holding your
+  Search Console credentials and your service-account key — a large amount of
+  trust for a list of thresholds. Matching and weighting turned out to cover
+  what people actually wanted to express. A genuinely new *kind* of card, one
+  reading data no existing rule reads, remains a fork and remains the open
+  question.
+
+### Fixed
+- `.chip` ellipsizes at 34ch and shrinks as a flex item, which rendered the
+  word "hard" as "h…" on every principle.
 
 ## [0.5.0] - 2026-09-14
 
@@ -457,7 +486,8 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.3.3...v0.4.0

@@ -118,6 +118,8 @@ export interface Rules {
   };
   probe: { minVisibleTextBytes: number };
   metadata: { maxFindings: number };
+  /** Ordering adjustments. Applied after the rules run, before the sort. */
+  priorities: Priority[];
 }
 
 /** The policy a human follows, as opposed to the numbers a rule sorts by.
@@ -178,6 +180,7 @@ export const DEFAULT_RULES: Rules = {
   trafficDrop: { minPriorSessions: 50, dropRatio: 0.75 },
   probe: { minVisibleTextBytes: 500 },
   metadata: { maxFindings: 5 },
+  priorities: [],
 };
 
 export const DEFAULT_OPERATING_RULES: OperatingRules = {
@@ -186,6 +189,42 @@ export const DEFAULT_OPERATING_RULES: OperatingRules = {
   decisionWindowDays: 90,
   historyMonths: 16,
 };
+
+/** A declarative adjustment to the queue's ordering.
+ *
+ *  This is n-seo's answer to "custom rules", and it is deliberately not a
+ *  plugin API. Building the first real profile showed what a practitioner
+ *  actually wants to express: "prefer pages that lead somewhere", "stop
+ *  showing me /legal". That is matching and weighting, not arbitrary code —
+ *  and a profile that ships code means installing someone's method runs their
+ *  program next to your Search Console credentials.
+ *
+ *  Two hard constraints on the design:
+ *
+ *    - A priority may reorder or hide, never invent. It cannot fabricate a
+ *      card, so it cannot manufacture evidence.
+ *    - Every card it touches says so, and says why. A queue that silently
+ *      reorders itself is a queue whose order you cannot trust, and the whole
+ *      product rests on showing its working. */
+export interface Priority {
+  /** Shown on every card this touches. Required: an unexplained boost is the
+   *  one thing this must never be. */
+  why: string;
+  when: {
+    /** Exact host, e.g. "example.com". */
+    host?: string;
+    /** Regular expression against the URL path of the page the card is about. */
+    pathMatches?: string;
+    /** Rule tag: metadata, striking, ctr-gap, engagement, hygiene, trend. */
+    tag?: string;
+    /** Substring of the card's `kind`, case-insensitive. */
+    kind?: string;
+  };
+  /** Multiply the impact used for ordering. 1.5 = half again; 0.5 = half. */
+  multiply?: number;
+  /** Remove the card entirely. For pages you have decided not to work on. */
+  drop?: boolean;
+}
 
 export interface Config {
   name: string;
@@ -343,6 +382,9 @@ function normalize(raw: Partial<Config>): Config {
     // engine defaults <- profile <- this instance. The instance always wins,
     // so a client can always see, and override, where they depart from the
     // method they installed.
+    // `merge` replaces arrays rather than concatenating, so an instance that
+    // sets `priorities` replaces the profile's outright. Appending would make
+    // a profile's priority impossible to remove without forking it.
     rules: merge(DEFAULT_RULES, fromProfile?.rules, raw.rules),
     operatingRules: merge(DEFAULT_OPERATING_RULES, fromProfile?.operatingRules, raw.operatingRules),
   };

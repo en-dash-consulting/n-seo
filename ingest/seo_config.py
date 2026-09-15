@@ -72,6 +72,9 @@ DEFAULT_RULES = {
     "trafficDrop": {"minPriorSessions": 50, "dropRatio": 0.75},
     "probe": {"minVisibleTextBytes": 500},
     "metadata": {"maxFindings": 5},
+    # Ordering adjustments. Applied by the TypeScript action engine; mirrored
+    # here so the two loaders resolve identical config, which a test asserts.
+    "priorities": [],
 }
 
 DEFAULT_OPERATING_RULES = {
@@ -103,7 +106,12 @@ def profile_dir(spec):
 
 
 def _merge(base, over):
-    """Deep merge; `over` wins, and None never overwrites."""
+    """Deep merge; `over` wins, None never overwrites, and lists replace.
+
+    Lists replace rather than concatenate so an instance that sets
+    `priorities` replaces the profile's outright. Appending would make a
+    profile's priority impossible to remove without forking the profile.
+    """
     out = dict(base)
     for k, v in (over or {}).items():
         if v is None:

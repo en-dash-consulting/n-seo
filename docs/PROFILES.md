@@ -145,6 +145,61 @@ Then `npm i n-seo-profile-acme` in the instance and name it in the config.
 Versioning the package versions the method, which is the point: "we moved you
 to Acme Search 2.0" is a sentence a client can check.
 
+## Priorities — the declarative half of custom rules
+
+A threshold says *what counts as a finding*. A priority says *what you care
+about*. They are different questions, and the second one is where a method
+usually lives.
+
+```jsonc
+"rules": {
+  "priorities": [
+    {
+      "why": "leads somewhere: a signup, a tool, an account",
+      "when": { "pathMatches": "^/(tools|pricing|signup)" },
+      "multiply": 1.5
+    },
+    {
+      "why": "we have decided not to work on these",
+      "when": { "pathMatches": "^/legal/" },
+      "drop": true
+    }
+  ]
+}
+```
+
+`when` matches on `host`, `pathMatches` (a regular expression against the
+page's path), `tag`, and `kind`. A priority with no conditions matches
+nothing — applying to the whole queue is never what anyone means, and is a
+miserable way to learn the shape of the config.
+
+`multiply` scales the impact that orders the queue. `drop` removes the card.
+Several priorities compound, in the order they are written.
+
+### Two rules the design will not bend on
+
+**A priority may reorder or hide, never invent.** It cannot create a card, so
+it cannot manufacture evidence. Everything in the queue still came from data.
+
+**Every card it touches says so.** The impact number decides the order, so a
+card whose number was adjusted carries the reason on its face and a
+*reweighted* chip. `why` is required; a priority without one is ignored.
+Ordering you cannot see the reason for is ordering you cannot argue with, and
+the whole product rests on showing its working.
+
+### Why this is not a plugin API
+
+The obvious version of "custom rules" is letting a profile ship code. We are
+not doing that, and the reason is not squeamishness about JavaScript:
+installing someone's method would mean running their program on the machine
+that holds your Search Console credentials and your service-account key. That
+is a large amount of trust to ask for a list of thresholds.
+
+Matching and weighting turned out to cover what people actually want to
+express. A genuinely new *kind* of card — one that reads data no existing rule
+reads — is still a fork, and `docs/PRD.md` carries that as an open question
+rather than a decided one.
+
 ## When a profile cannot be found
 
 The run fails, loudly, naming every location that was tried. It does **not**

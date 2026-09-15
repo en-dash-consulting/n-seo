@@ -39,6 +39,8 @@ export interface Action {
   tag: string;
   /** set when a fix already shipped and the data is being watched */
   watching?: string;
+  /** why a configured priority raised or lowered this card's impact */
+  priorityNotes?: string[];
   /** rule = derived from data each request; backlog = curated in config/backlog.json */
   source?: "rule" | "backlog" | "proposal";
 }
