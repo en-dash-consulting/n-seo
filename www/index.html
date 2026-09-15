@@ -213,6 +213,23 @@
     .js .reveal, .js .reveal.in { opacity: 1; transform: none; transition: none; }
   }
 
+  /* npm pill — the download count is stamped in at deploy time */
+  .npm-pill {
+    display: inline-flex; align-items: stretch; margin-top: 18px;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    text-decoration: none; font-family: var(--font-mono); font-size: 0.78rem;
+    line-height: 1; background: var(--card);
+  }
+  .npm-pill:hover { border-color: rgba(255,255,255,0.24); background: var(--card-hover); }
+  .npm-pill span { padding: 7px 10px; display: inline-flex; align-items: center; }
+  .npm-pill .k { background: #cb3837; color: #fff; font-weight: 700; }
+  .npm-pill .n { color: var(--white); border-right: 1px solid var(--border); }
+  .npm-pill .d { color: var(--teal); }
+  /* Empty until the deploy stamps it — an empty cell would show as a stray
+     border, so collapse it entirely. */
+  .npm-pill .d:empty { display: none; }
+  .npm-pill .d:empty + * , .npm-pill .n:last-child { border-right: 0; }
+
   /* ---- live demo ---- */
   .demo {
     margin-top: 56px; border: 1px solid var(--border); border-radius: 14px;
@@ -379,6 +396,15 @@
   <div class="hero-grid"></div>
   <div class="wrap">
     <div class="badge"><span>● open source · MIT · your infrastructure</span><span>·</span><b>from the makers of <a href="https://n-dx.dev">n-dx</a></b></div>
+    <!-- The download count is written in at deploy time by
+         .github/scripts/build-npm-badge.mjs. Deliberately not a shields.io
+         image: this page makes no third-party requests, and a badge that can
+         hang or 404 is a poor trade for a number that moves once a day. -->
+    <a class="npm-pill" href="https://www.npmjs.com/package/n-seo">
+      <span class="k">npm</span>
+      <span class="n">n-seo</span>
+      <span class="d"><!--npm:downloads--><!--/npm:downloads--></span>
+    </a>
     <h1>An SEO, self-hosted<span>.</span></h1>
     <p class="sub">n-seo reads Search Console and GA4 every morning, probes your sites for what quietly broke, and ranks the moves worth making. Your model — Claude, GPT, something local, your choice — turns those findings into proposals and briefings. Your coding agent works the queue over MCP. It proposes; it never posts, publishes or edits a site.</p>
     <div class="hero-actions">
