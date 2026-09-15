@@ -1,6 +1,6 @@
 {
   "name": "n-seo default",
-  "description": "The model n-seo ships with. Evidence before advice, a 28-day freeze after any metadata change, roughly eight of those a week, and decisions on the trailing 90 days. Every value here is the engine default, written out so you can see what a profile controls.",
+  "description": "The model n-seo ships with. Evidence before advice, a 28-day freeze after any metadata change, roughly eight of those a week, and decisions on the trailing 90 days. Every value here is the engine default, written out so you can see what a profile controls. It sets no priorities: an out-of-the-box queue should be ordered by the data alone.",
   "version": "1.0.0",
   "operatingRules": {
     "titleFreezeDays": 28,
@@ -9,12 +9,37 @@
     "historyMonths": 16
   },
   "rules": {
-    "effortWeight": { "S": 1, "M": 2.5, "L": 5 },
-    "strikingDistance": { "minPosition": 5, "maxPosition": 15, "minImpressions": 10, "maxRows": 12, "impactPerImpression": 0.06 },
-    "ctrGap": { "minImpressions": 30, "belowExpectedRatio": 0.5 },
-    "engagement": { "minSessions": 30, "maxEngagement": 0.25, "maxCards": 3 },
-    "trafficDrop": { "minPriorSessions": 50, "dropRatio": 0.75 },
-    "probe": { "minVisibleTextBytes": 500 },
-    "metadata": { "maxFindings": 5 }
+    "effortWeight": {
+      "S": 1,
+      "M": 2.5,
+      "L": 5
+    },
+    "strikingDistance": {
+      "minPosition": 5,
+      "maxPosition": 15,
+      "minImpressions": 10,
+      "maxRows": 12,
+      "impactPerImpression": 0.06
+    },
+    "ctrGap": {
+      "minImpressions": 30,
+      "belowExpectedRatio": 0.5
+    },
+    "engagement": {
+      "minSessions": 30,
+      "maxEngagement": 0.25,
+      "maxCards": 3
+    },
+    "trafficDrop": {
+      "minPriorSessions": 50,
+      "dropRatio": 0.75
+    },
+    "probe": {
+      "minVisibleTextBytes": 500
+    },
+    "metadata": {
+      "maxFindings": 5
+    },
+    "priorities": []
   }
 }
