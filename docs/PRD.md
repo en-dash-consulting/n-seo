@@ -226,6 +226,23 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
   conversions, campaigns, settings and engine info; docs exposed as
   resources.
 
+## Feature: Indexing problems on the individual site page [planned]
+
+`/site/:host` says nothing about indexing today, so someone looking at one
+site has to leave for `/indexing` and find their host in a list. The data is
+already keyed by host — `indexStatus()` carries problems, never-crawled,
+indexed and checked per site — so this is surfacing, not a new pull.
+
+- Acceptance: the site page shows that host's indexed/checked counts, its
+  problems grouped by coverage state, and its never-crawled count.
+- Acceptance: each problem keeps its coverage-state explanation and whether
+  Request Indexing helps — true only where Google has formed no judgement,
+  false where it fetched and declined.
+- Acceptance: a host that is all clear, or has no sitemap coverage, says so
+  explicitly rather than rendering an empty panel; it links through to
+  `/indexing` for the cross-site view.
+- Acceptance: renders from demo data with no server error, in both themes.
+
 ## Feature: Custom pages and rules in instance mode [idea]
 
 Allow an instance to register extra routes and rules without forking the

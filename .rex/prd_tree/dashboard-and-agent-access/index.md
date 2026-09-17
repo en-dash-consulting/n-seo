@@ -14,6 +14,6 @@ lastModifiedBy: "Nick Daniel <nick@endash.us>"
 | Title | Status |
 |-------|--------|
 | [Custom pages and rules in instance mode](./custom-pages-and-rules-in-instance-mode/index.md) | pending |
+| [Routes and the Today board](./routes-and-the-today-board/index.md) | pending |
 | [Read-only MCP over stdio and authenticated HTTP](./read-only-mcp-over-stdio-and.md) | completed |
-| [Routes and the Today board](./routes-and-the-today-board.md) | completed |
 | [Settings page](./settings-page.md) | completed |
