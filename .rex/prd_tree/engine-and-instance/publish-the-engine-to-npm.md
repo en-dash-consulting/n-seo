@@ -7,7 +7,8 @@ source: "manual"
 startedAt: "2026-09-17T16:21:44.913Z"
 completedAt: "2026-09-17T16:21:44.913Z"
 endedAt: "2026-09-17T16:21:44.913Z"
-acceptanceCriteria: []
+acceptanceCriteria:
+  - "`npm i n-seo` installs a working engine; `npx n-seo init` scaffolds an instance; the `files` list excludes tests and the marketing site, and includes the instance-facing skills."
 description: "npm i n-seo installs a working engine."
 lastModified: "2026-09-17T16:21:44.923Z"
 ---

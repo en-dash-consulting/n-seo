@@ -4,7 +4,9 @@ level: "feature"
 title: "Weekly upgrade check on a schedule"
 status: "pending"
 source: "manual"
-acceptanceCriteria: []
+acceptanceCriteria:
+  - "a launchd plist and a cron line in `ops/templates/`, beside the daily-run templates, running `n-seo upgrade --check` weekly. The check reports; it never installs unattended."
+  - "documented beside the daily run in `docs/SCHEDULING.md`, and the VM case (`manage upgrade`) in the Upgrades section of `docs/DEPLOY.md`."
 description: "The gate and the one-command upgrade shipped in 0.4.0: 'n-seo upgrade' installs, 'n-seo upgrade --check' reports and changes nothing, and Settings and doctor both read data/update-check.json. What remains is running the check on a schedule rather than by hand."
 lastModified: "2026-09-17T16:22:49.902Z"
 ---

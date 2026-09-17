@@ -6,6 +6,7 @@ status: "completed"
 source: "manual"
 startedAt: "2026-09-08T03:58:58.700Z"
 completedAt: "2026-09-08T03:58:58.700Z"
-acceptanceCriteria: []
+acceptanceCriteria:
+  - "`daily`, `sources`, `landing` per configured property id; a `funnel` report only for `conversions.site`, falling back when the custom dimension is unregistered."
 description: "Daily, sources, landing pages and the optional conversions report per numeric property id."
 ---
