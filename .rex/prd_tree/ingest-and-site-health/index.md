@@ -7,7 +7,6 @@ source: "manual"
 startedAt: "2026-09-08T03:58:58.700Z"
 completedAt: "2026-09-08T03:58:58.700Z"
 lastModified: "2026-09-17T16:22:21.477Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---
 
 ## Children

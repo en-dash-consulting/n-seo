@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "An instance/src/extensions.ts the engine loads if present, so an instance can extend without forking and without carrying a merge on every upgrade."
 lastModified: "2026-09-17T16:23:03.510Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

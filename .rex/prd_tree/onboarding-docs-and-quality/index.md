@@ -6,7 +6,6 @@ status: "in_progress"
 source: "manual"
 startedAt: "2026-09-17T16:23:25.657Z"
 lastModified: "2026-09-17T16:22:22.003Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---
 
 ## Children

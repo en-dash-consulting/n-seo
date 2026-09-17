@@ -8,7 +8,6 @@ startedAt: "2026-09-17T16:21:45.619Z"
 completedAt: "2026-09-17T16:21:45.619Z"
 endedAt: "2026-09-17T16:21:45.619Z"
 lastModified: "2026-09-17T16:21:45.629Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---
 
 ## Children

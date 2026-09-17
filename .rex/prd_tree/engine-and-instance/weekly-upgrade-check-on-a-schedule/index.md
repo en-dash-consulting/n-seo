@@ -7,7 +7,6 @@ source: "manual"
 acceptanceCriteria: []
 description: "The gate and the one-command upgrade shipped in 0.4.0: 'n-seo upgrade' installs, 'n-seo upgrade --check' reports and changes nothing, and Settings and doctor both read data/update-check.json. What remains is running the check on a schedule rather than by hand."
 lastModified: "2026-09-17T16:22:49.902Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---
 
 ## Children

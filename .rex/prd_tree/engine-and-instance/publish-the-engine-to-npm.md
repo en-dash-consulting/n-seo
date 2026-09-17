@@ -10,5 +10,4 @@ endedAt: "2026-09-17T16:21:44.913Z"
 acceptanceCriteria: []
 description: "npm i n-seo installs a working engine."
 lastModified: "2026-09-17T16:21:44.923Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

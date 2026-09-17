@@ -10,5 +10,4 @@ endedAt: "2026-09-17T16:21:45.225Z"
 acceptanceCriteria: []
 description: "Move the numeric thresholds into an optional rules block with the current values as defaults."
 lastModified: "2026-09-17T16:21:45.235Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

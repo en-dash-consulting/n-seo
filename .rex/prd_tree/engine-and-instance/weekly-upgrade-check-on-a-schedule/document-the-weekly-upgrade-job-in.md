@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Add the weekly job beside the daily run in docs/SCHEDULING.md, and cover the VM case ('manage upgrade') in the Upgrades section of docs/DEPLOY.md."
 lastModified: "2026-09-17T16:22:50.575Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Open question. A CWV finding is a real problem but rarely the highest-impact one; ranking it beside striking-distance cards needs an impact model the engine does not have yet."
 lastModified: "2026-09-17T16:23:02.786Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

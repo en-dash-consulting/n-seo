@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "A flag on the existing scaffold, not a separate command; re-running it on an existing instance stays allowed."
 lastModified: "2026-09-17T16:22:50.924Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

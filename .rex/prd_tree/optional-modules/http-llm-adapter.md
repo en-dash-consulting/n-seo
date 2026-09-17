@@ -10,5 +10,4 @@ endedAt: "2026-09-17T16:21:45.944Z"
 acceptanceCriteria: []
 description: "Call an OpenAI-compatible or Anthropic HTTP endpoint instead of a CLI."
 lastModified: "2026-09-17T16:21:45.955Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

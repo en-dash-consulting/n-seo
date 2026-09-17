@@ -10,5 +10,4 @@ endedAt: "2026-09-17T16:21:45.579Z"
 acceptanceCriteria: []
 description: "CNAME and URL updates once a domain is chosen."
 lastModified: "2026-09-17T16:21:45.589Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

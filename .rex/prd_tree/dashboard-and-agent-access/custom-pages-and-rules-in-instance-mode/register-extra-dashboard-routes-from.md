@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Extra pages beside the engine's own routes, without editing the engine's router."
 lastModified: "2026-09-17T16:23:03.895Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

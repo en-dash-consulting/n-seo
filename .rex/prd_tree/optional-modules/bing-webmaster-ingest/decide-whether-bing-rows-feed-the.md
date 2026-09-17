@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Open question, not yet settled. The rules and their thresholds are tuned on Search Console data; feeding a second engine's rows through them unexamined would change what the queue ranks without saying so."
 lastModified: "2026-09-17T16:23:01.710Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

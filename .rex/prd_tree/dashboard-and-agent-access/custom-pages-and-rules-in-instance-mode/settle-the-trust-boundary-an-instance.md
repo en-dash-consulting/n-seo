@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "0.5.0 and 0.6.0 both decided a profile is data only — installing someone's method must not mean running their code on the machine holding your Search Console credentials. An instance's own extensions are a different case: it is the owner's own code on the owner's own machine. State that difference before designing the hook."
 lastModified: "2026-09-17T16:23:03.143Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

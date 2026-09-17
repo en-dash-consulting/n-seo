@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Ask for the values that cannot be guessed and write them into the instance config, leaving everything else at the example defaults."
 lastModified: "2026-09-17T16:22:51.272Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---

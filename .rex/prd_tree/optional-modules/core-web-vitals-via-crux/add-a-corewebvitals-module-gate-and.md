@@ -7,5 +7,4 @@ priority: "low"
 acceptanceCriteria: []
 description: "Gated by modules.coreWebVitals.enabled, key from .env, consistent with the other optional modules."
 lastModified: "2026-09-17T16:23:02.067Z"
-lastModifiedBy: "Nick Daniel <nick@endash.us>"
 ---
