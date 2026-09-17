@@ -17,6 +17,7 @@ n-seo.config.json
 .sourcevision/
 .rex/n-dx_workflow.md
 .rex/execution-log*.jsonl
+.rex/.backups/
 .n-dx.local.json
 claude_commands.log
 

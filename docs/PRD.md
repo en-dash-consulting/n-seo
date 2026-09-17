@@ -218,10 +218,15 @@ engine (e.g. `instance/src/extensions.ts`).
   briefings.
 - Acceptance: briefing prompts forbid generating comment text.
 
-## Feature: HTTP LLM adapter [planned]
+## Feature: HTTP LLM adapter [shipped]
 
 Optional adapter that calls an OpenAI-compatible or Anthropic HTTP endpoint
 instead of a CLI, with the key read from `.env`.
+
+- Acceptance: `modules.llm.http` takes `provider` (`anthropic` or `openai`),
+  `model`, an optional `baseUrl` and a key resolved from the environment;
+  `http` wins when configured and its key resolves, otherwise the CLI command
+  runs, and with neither the scan records candidates only.
 
 ## Feature: Bing Webmaster ingest [idea]
 
