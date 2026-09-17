@@ -6,6 +6,13 @@ deliberately does not do, and the capabilities that exist or are planned.
 Each feature lists acceptance criteria in the form a test or a reviewer can
 check. Status markers: **[shipped]**, **[planned]**, **[idea]**.
 
+Some capabilities are stated as epic-level acceptance criteria rather than as
+their own `## Feature:` section — the epic *is* the capability, and splitting
+it would add a heading without adding a claim. Those still appear as features
+in the `.rex/` tree, which needs a node to schedule work against. The two
+files agree on what exists and on its status; the tree is simply finer-grained
+in places.
+
 ## Purpose
 
 n-seo is a local-first control plane for organic growth across one or more
@@ -89,7 +96,8 @@ a fresh checkout runs.
 - Acceptance: `ops/doctor.py` reports the exact email to add in Search
   Console and GA4 and which configured properties are not yet accessible.
 
-# Epic: Ingest [shipped]
+# Epic: Ingest and site health [shipped]
+
 
 ## Feature: Search Console pulls [shipped]
 
@@ -105,7 +113,7 @@ a fresh checkout runs.
   `funnel` report only for `conversions.site`, falling back when the custom
   dimension is unregistered.
 
-## Feature: Time series, index coverage, metadata audit, trend analysis [shipped]
+## Feature: Time series, index coverage, metadata audit and trend analysis [shipped]
 
 - Acceptance: date × page series for 180 days from both sources.
 - Acceptance: URL Inspection verdict for every sitemap URL (sitemap indexes
@@ -119,7 +127,8 @@ a fresh checkout runs.
 - Acceptance: trend file with branded/generic split, rising/falling queries
   (84d vs prior 84d), monthly trajectory and AI-referral sessions by month.
 
-# Epic: Live-site probe [shipped]
+## Feature: No-auth health probe with regression alerts [shipped]
+
 
 - Acceptance: robots.txt (incl. AI-crawler disallows), sitemap.xml, llms.txt
   and llms-full.txt, homepage metadata/JSON-LD/visible-text bytes, and a real
@@ -127,7 +136,8 @@ a fresh checkout runs.
 - Acceptance: the daily diff raises an ALERT line on any regression versus
   the previous snapshot.
 
-# Epic: Action engine [shipped]
+# Epic: Action engine and profiles [shipped]
+
 
 - Acceptance: six rules over the 90-day window (metadata findings, CTR
   gaps, striking distance, probe hygiene, engagement mismatch, traffic drop)
@@ -164,6 +174,11 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
   corrupting the sort.
 - Acceptance: a priority can never create a card. Everything in the queue
   still came from data.
+- Acceptance: `principles` carries the part of a method that is not a number —
+  a title, a body, and a kind. `hard` is a constraint an agent must not cross;
+  `guide` is judgement it should apply. They render at the top of the action
+  queue and on Settings, and `n-seo init` writes them into the instance's
+  `CLAUDE.md`, so the owner and their agent read the same rules.
 - Decided: a profile is data only and may not ship executable code. Installing
   a method should not mean running its author's code on the machine holding
   your Search Console credentials. `priorities` covers reordering and hiding
@@ -177,7 +192,8 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
   with the engine defaults documented in `src/config.ts` and mirrored in
   `ingest/seo_config.py`; tests cover an override changing a rule's output.
 
-# Epic: Dashboard [shipped]
+# Epic: Dashboard and agent access [shipped]
+
 
 - Acceptance: routes `/`, `/actions`, `/insights`, `/trends[/N]`,
   `/content`, `/drafts/:slug`, `/campaigns/:slug`, `/site/:host`,
@@ -199,12 +215,24 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
   pages and conversions, and writes the config file (creating it from the
   example on first save); invalid topic lines are rejected with a message.
 
+## Feature: Read-only MCP over stdio and authenticated HTTP [shipped]
+
+
+- Acceptance: stdio transport with no secret; HTTP transport that returns
+  503 with no token configured and compares tokens in constant time.
+- Acceptance: every tool is annotated read-only; tools cover the queue, a
+  single action, sites, per-site report, top queries, striking distance, CTR
+  gaps, metadata audit, time series, ops status, daily log, proposals,
+  conversions, campaigns, settings and engine info; docs exposed as
+  resources.
+
 ## Feature: Custom pages and rules in instance mode [idea]
 
 Allow an instance to register extra routes and rules without forking the
 engine (e.g. `instance/src/extensions.ts`).
 
-# Epic: Modules (opt-in) [shipped]
+# Epic: Optional modules [shipped]
+
 
 - Acceptance: each of indexStatus, metadataAudit, opportunityScan, llm,
   hackerNews, reddit, indexNow, staticExport, gitAutoCommit, notifications,
@@ -232,27 +260,8 @@ instead of a CLI, with the key read from `.env`.
 
 ## Feature: Core Web Vitals via CrUX [idea]
 
-# Epic: Daily run and scheduling [shipped]
-
-- Acceptance: `ops/daily.py` waits for the network, runs the enabled steps
-  in order, retries a failed step once, tees output to `data/daily-ops.log`,
-  writes `data/last-run.json` with per-step timing, honours `--only`,
-  `--skip`, `--list`, `--no-network-wait`, and exits 1 on any failure.
-- Acceptance: hooks (`beforeRun`, `afterRun`, `afterStep`) run in the
-  instance directory and are logged like steps without aborting the run.
-- Acceptance: launchd, cron and systemd templates plus an installer script.
-
-# Epic: MCP server [shipped]
-
-- Acceptance: stdio transport with no secret; HTTP transport that returns
-  503 with no token configured and compares tokens in constant time.
-- Acceptance: every tool is annotated read-only; tools cover the queue, a
-  single action, sites, per-site report, top queries, striking distance, CTR
-  gaps, metadata audit, time series, ops status, daily log, proposals,
-  conversions, campaigns, settings and engine info; docs exposed as
-  resources.
-
 # Epic: Engine and instance [shipped]
+
 
 - Acceptance: `N_SEO_INSTANCE` relocates every instance-owned path; in-place
   mode is unchanged when it is unset.
@@ -268,6 +277,17 @@ instead of a CLI, with the key read from `.env`.
   instance paths, and leaves the contributor (`ndx-*`) skills behind.
 - Acceptance: `n-seo upgrade` refuses to leave the engine on a commit that
   fails `npm run check` without printing the rollback command.
+
+## Feature: Portable orchestrator with hooks and scheduler templates [shipped]
+
+
+- Acceptance: `ops/daily.py` waits for the network, runs the enabled steps
+  in order, retries a failed step once, tees output to `data/daily-ops.log`,
+  writes `data/last-run.json` with per-step timing, honours `--only`,
+  `--skip`, `--list`, `--no-network-wait`, and exits 1 on any failure.
+- Acceptance: hooks (`beforeRun`, `afterRun`, `afterStep`) run in the
+  instance directory and are logged like steps without aborting the run.
+- Acceptance: launchd, cron and systemd templates plus an installer script.
 
 ## Feature: Publish the engine to npm [shipped]
 
@@ -289,19 +309,32 @@ instead of a CLI, with the key read from `.env`.
   and both compare against the engine running now — so an upgrade stops the
   notice immediately rather than at the next daily run.
 
-# Epic: Quality [shipped]
+## Feature: Weekly upgrade check on a schedule [planned]
 
-- Acceptance: `npm run check` runs typecheck, TypeScript tests (sandboxed
-  copy) and Python tests; CI runs both suites, a demo-data dashboard smoke,
-  `doctor --offline`, and a grep that fails on any private name.
+The gate and the one-command upgrade shipped in 0.4.0; what remains is running
+the check on a schedule rather than by hand.
 
-# Epic: Onboarding and docs [shipped]
+- Acceptance: a launchd plist and a cron line in `ops/templates/`, beside the
+  daily-run templates, running `n-seo upgrade --check` weekly. The check
+  reports; it never installs unattended.
+- Acceptance: documented beside the daily run in `docs/SCHEDULING.md`, and the
+  VM case (`manage upgrade`) in the Upgrades section of `docs/DEPLOY.md`.
+
+# Epic: Onboarding, docs and quality [shipped]
+
 
 - Acceptance: `npm run demo` populates every page with synthetic data before
   any Google setup.
 - Acceptance: README quickstart, SETUP-GOOGLE, SCHEDULING, ADDING-A-SITE,
   INSTANCE, MCP, OPERATING-RULES, PLAYBOOK, FAQ, CONTRIBUTING, SECURITY,
   CHANGELOG exist and match the CLI contracts.
+
+## Feature: Tests and CI [shipped]
+
+
+- Acceptance: `npm run check` runs typecheck, TypeScript tests (sandboxed
+  copy) and Python tests; CI runs both suites, a demo-data dashboard smoke,
+  `doctor --offline`, and a grep that fails on any private name.
 
 ## Feature: Interactive setup wizard [idea]
 

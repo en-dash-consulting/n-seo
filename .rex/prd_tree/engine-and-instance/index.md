@@ -15,3 +15,4 @@ startedAt: "2026-09-17T16:23:25.657Z"
 | [Instance directory and the n-seo CLI](./instance-directory-and-the-n-seo-cli.md) | completed |
 | [Portable orchestrator with hooks and scheduler templates](./portable-orchestrator-with-hooks-and.md) | completed |
 | [Publish the engine to npm](./publish-the-engine-to-npm.md) | completed |
+| [Upgrading is visible and one command](./upgrading-is-visible-and-one-command.md) | completed |
