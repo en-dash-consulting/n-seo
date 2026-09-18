@@ -8,6 +8,39 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.7.0] - 2026-09-18
+
+### Added
+- **A site's indexing problems, on its own page.** `/site/<host>` said nothing
+  about indexing, so anyone looking at one site had to leave for `/indexing`
+  and find their host in a list — while the data was already keyed by host and
+  already rendered per host one page over. The site page now carries that
+  host's coverage: indexed against checked, problems grouped by coverage
+  state, never-crawled. The explanations and the Request Indexing verdict come
+  with it, because both pages now render from one component and cannot drift
+  into disagreeing about what Google said. No new pull and no new data file.
+- A host that is all clear, or that has no sitemap Search Console can fetch,
+  says which rather than rendering an empty panel. An empty panel is
+  indistinguishable from a broken one.
+- **Update checking is documented where people schedule things.**
+  `update-check` has been a step in the daily run since 0.4.1 and
+  `modules.updateCheck` is the only module enabled by default, but nothing
+  said so in `docs/SCHEDULING.md` — the one place someone would otherwise
+  conclude they need a second scheduled job for it. They do not: a weekly
+  `n-seo upgrade --check` would ask the registry the same question the daily
+  run already asks and write the answer to a log nobody opens. The Upgrades
+  section of `docs/DEPLOY.md` says the same for a deployed instance, where
+  nobody is watching a terminal and the notice waits on the dashboard.
+
+### Fixed
+- **The package no longer ships Python bytecode.** `files` lists `ops/`,
+  `ingest/` and `probes/` wholesale, and whatever ran the tests before
+  packing left `__pycache__` beside the sources — so a release built on CI
+  carried the runner's `.pyc` files. 0.6.1 shipped thirteen of them, a little
+  over a tenth of the package, compiled for a Python version no user is
+  guaranteed to have. `.gitignore` covers `__pycache__`, which is why this was
+  invisible in a checkout and only appeared in the tarball.
+
 ## [0.6.1] - 2026-09-15
 
 ### Fixed
