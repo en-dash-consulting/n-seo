@@ -135,6 +135,28 @@ the dashboard shows as the run status chip), and appends a dated entry to
 `docs/daily-log.md`. Re-running on the same day replaces that day's entry
 rather than stacking a second one.
 
+## Checking for a newer n-seo
+
+You do not need a second scheduled job for this. `update-check` is a step in
+the daily run, and `modules.updateCheck` is the only module enabled by
+default: once a day it asks the registry whether a newer engine has been
+published and writes `data/update-check.json`. The Settings page and
+`n-seo doctor` both read that file, so the notice reaches you without either
+of them making a network request.
+
+Scheduling `n-seo upgrade --check` weekly on top of that would ask the
+registry the same question a second time and write the answer to a log nobody
+opens. Run it by hand when you want to look:
+
+```sh
+n-seo upgrade --check    # reports what is available, changes nothing
+n-seo upgrade            # performs it, prints the changelog and the rollback
+```
+
+Switch the daily check off with `modules.updateCheck.enabled: false`; nothing
+about your instance is sent either way — it is the same public metadata
+request `npm view n-seo version` makes from any machine.
+
 ## Logs, in one place
 
 | File | What |
