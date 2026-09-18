@@ -4,6 +4,7 @@
 
 ```sh
 npm install
+ops/install-git-filters.sh                       # once per clone; see "Scope and the PRD"
 cp n-seo.config.example.json n-seo.config.json   # or skip: the example is used as a fallback
 npm run demo          # synthetic data so every page renders
 npm run dev           # dashboard with reload on :4600
@@ -76,6 +77,17 @@ future reader is not blocked on a re-pull.
 capability should update both — edit `docs/PRD.md`, then reflect it in the
 tree (`ndx add`, `ndx update <id>`, or edit the markdown under
 `.rex/prd_tree/` directly; `ndx validate .` must pass).
+
+Run `ops/install-git-filters.sh` once per clone before touching the tree. rex
+stamps every item it writes with your name and email from `git config`, with
+no way to turn it off (en-dash-consulting/n-dx#377), and `no-private-names`
+rejects that in CI. The filter strips the field as the file is staged; the
+value stays in your working tree, where nothing reads it. Git filters live in
+`.git/config` and are not cloned, so an unregistered filter is silently a
+no-op — CI is the backstop, not the guard.
+
+A file rex has just stamped shows as modified in `git status` with an empty
+`git diff`. That is the stat cache, not a real change.
 
 ## Releasing
 

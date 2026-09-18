@@ -1,6 +1,14 @@
 # n-dx tools write these files with LF. Pin them so Windows checkouts
 # (core.autocrlf=true) don't show line-ending-only churn on every tool write.
-.rex/**/*.md    text eol=lf
+#
+# rex-scrub strips `lastModifiedBy` from the PRD tree on the way into git: rex
+# stamps every item with the local git identity and offers no way to disable
+# it, and no-private-names rejects the result. Register it with
+# `ops/install-git-filters.sh` — filters live in .git/config and are not
+# cloned, so an unregistered filter is silently a no-op and CI is the backstop.
+# A stamped file shows as modified in `git status` with an empty `git diff`;
+# that is the stat cache, not a real change.
+.rex/**/*.md    text eol=lf filter=rex-scrub
 .rex/**/*.json  text eol=lf
 .rex/**/*.jsonl text eol=lf
 .hench/**/*.md   text eol=lf
