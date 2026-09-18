@@ -226,7 +226,7 @@ published once and installed many times. Full reference: `docs/PROFILES.md`.
   conversions, campaigns, settings and engine info; docs exposed as
   resources.
 
-## Feature: Indexing problems on the individual site page [planned]
+## Feature: Indexing problems on the individual site page [shipped]
 
 `/site/:host` says nothing about indexing today, so someone looking at one
 site has to leave for `/indexing` and find their host in a list. The data is

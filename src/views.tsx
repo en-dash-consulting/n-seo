@@ -658,6 +658,42 @@ export const SiteDetail: FC<{ site: SiteCfg; days?: number }> = ({ site, days = 
           </table></div>
         </>
       )}
+      <SiteIndexing site={site} />
+    </>
+  );
+};
+
+/** This site's index coverage, on the page someone is already looking at.
+ *  /indexing is the cross-site view; needing to leave a site page and find
+ *  your host in a list is the thing this removes. Same snapshot, same
+ *  component, no second pull. */
+const SiteIndexing: FC<{ site: SiteCfg }> = ({ site }) => {
+  const status = data.indexStatus();
+  const s = status?.sites[site.host];
+  return (
+    <>
+      {!status ? (
+        <>
+          <h2>Indexing</h2>
+          <p class="empty">
+            No index snapshot yet — enable the <b>Index coverage sweep</b> module and run{" "}
+            <code>n-seo daily --only index-status</code>
+          </p>
+        </>
+      ) : !s ? (
+        <>
+          <h2>Indexing</h2>
+          <p class="empty">
+            Nothing for {site.host} in the latest snapshot — the sweep reads sitemap URLs, so a
+            site with no sitemap Search Console can fetch will not appear here.
+          </p>
+        </>
+      ) : (
+        <HostIndexing host={site.host} s={s} title="Indexing" />
+      )}
+      <p class="sub">
+        <a href="/indexing">Every site's coverage →</a>
+      </p>
     </>
   );
 };
@@ -794,6 +830,104 @@ const SitemapLine: FC<{ sitemap?: data.IndexStatus["sites"][string]["sitemap"] }
   );
 };
 
+/** One host's index coverage. Rendered per host on /indexing, and for a
+ *  single host on its own site page — same verdicts, same explanations, so
+ *  the two pages cannot drift into disagreeing about what Google said. */
+export const HostIndexing: FC<{
+  host: string;
+  s: data.IndexStatus["sites"][string];
+  /** Heading text when the host name would be redundant (a site page). */
+  title?: string;
+}> = ({ host, s, title }) => {
+      if (s.problems.length === 0) {
+        return (
+          <section class="idx-host">
+            <h2>
+              {title ?? host} <small>{s.indexed}/{s.checked} indexed — all clear</small>
+            </h2>
+          </section>
+        );
+      }
+      const groups = [...s.problems].sort(
+        (a, b) =>
+          (COVERAGE_ORDER.indexOf(a.coverage) + 1 || 99) -
+            (COVERAGE_ORDER.indexOf(b.coverage) + 1 || 99) ||
+          a.url.localeCompare(b.url),
+      );
+      let lastCoverage = "";
+      return (
+        <section class="idx-host">
+          <h2>
+            {title ?? host}{" "}
+            <small>
+              {s.indexed}/{s.checked} indexed · {s.neverCrawled} never crawled
+            </small>
+          </h2>
+          <SitemapLine sitemap={s.sitemap} />
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>URL</th><th>Last crawled</th></tr>
+              </thead>
+              <tbody>
+                {groups.map((p) => {
+                  const header = p.coverage !== lastCoverage ? p.coverage : null;
+                  lastCoverage = p.coverage;
+                  return (
+                    <>
+                      {header && (
+                        <tr class="idx-group">
+                          <td colspan={2}>
+                            <strong>{header}</strong>{" "}
+                            <span class="idx-help">{COVERAGE_HELP[header]?.means ?? p.detail ?? ""}</span>
+                            {COVERAGE_HELP[header] && (
+                              <div class="idx-fix">
+                                <span
+                                  class={`idx-ri ${REQUEST_INDEXING_HELPS.has(header) ? "yes" : "no"}`}
+                                  title={
+                                    REQUEST_INDEXING_HELPS.has(header)
+                                      ? "Google has not judged this content yet — a request moves it"
+                                      : "Google already fetched and judged this page; re-requesting repeats the same verdict and spends quota"
+                                  }
+                                >
+                                  {REQUEST_INDEXING_HELPS.has(header)
+                                    ? "Request Indexing helps"
+                                    : "Request Indexing will not fix this"}
+                                </span>{" "}
+                                {COVERAGE_HELP[header].fix}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td class="mono trunc">
+                          <a href={p.url} target="_blank" rel="noopener noreferrer">
+                            {p.url.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                          </a>
+                          {p.canonicalMismatch && (
+                            <span class="chip"> canonical → {p.googleCanonical}</span>
+                          )}
+                        </td>
+                        <td class="mono">
+                          {p.lastCrawl ? p.lastCrawl.slice(0, 10) : "never"}
+                          {staleVerdict(p.lastCrawl) && (
+                            <span class="idx-stale" title="Google has not looked since this verdict — recheck before treating it as a live bug">
+                              {" "}stale
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    </>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      );
+};
+
 export const IndexingPage: FC = () => {
   const status = data.indexStatus();
   if (!status) {
@@ -816,95 +950,9 @@ export const IndexingPage: FC = () => {
         Search Console's verdict on every sitemap URL · {totalProblems} not indexed,{" "}
         {totalNever} never crawled · snapshot {status.generated.slice(0, 16).replace("T", " ")}
       </p>
-      {hosts.map(([host, s]) => {
-        if (s.problems.length === 0) {
-          return (
-            <section class="idx-host">
-              <h2>
-                {host} <small>{s.indexed}/{s.checked} indexed — all clear</small>
-              </h2>
-            </section>
-          );
-        }
-        const groups = [...s.problems].sort(
-          (a, b) =>
-            (COVERAGE_ORDER.indexOf(a.coverage) + 1 || 99) -
-              (COVERAGE_ORDER.indexOf(b.coverage) + 1 || 99) ||
-            a.url.localeCompare(b.url),
-        );
-        let lastCoverage = "";
-        return (
-          <section class="idx-host">
-            <h2>
-              {host}{" "}
-              <small>
-                {s.indexed}/{s.checked} indexed · {s.neverCrawled} never crawled
-              </small>
-            </h2>
-            <SitemapLine sitemap={s.sitemap} />
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr><th>URL</th><th>Last crawled</th></tr>
-                </thead>
-                <tbody>
-                  {groups.map((p) => {
-                    const header = p.coverage !== lastCoverage ? p.coverage : null;
-                    lastCoverage = p.coverage;
-                    return (
-                      <>
-                        {header && (
-                          <tr class="idx-group">
-                            <td colspan={2}>
-                              <strong>{header}</strong>{" "}
-                              <span class="idx-help">{COVERAGE_HELP[header]?.means ?? p.detail ?? ""}</span>
-                              {COVERAGE_HELP[header] && (
-                                <div class="idx-fix">
-                                  <span
-                                    class={`idx-ri ${REQUEST_INDEXING_HELPS.has(header) ? "yes" : "no"}`}
-                                    title={
-                                      REQUEST_INDEXING_HELPS.has(header)
-                                        ? "Google has not judged this content yet — a request moves it"
-                                        : "Google already fetched and judged this page; re-requesting repeats the same verdict and spends quota"
-                                    }
-                                  >
-                                    {REQUEST_INDEXING_HELPS.has(header)
-                                      ? "Request Indexing helps"
-                                      : "Request Indexing will not fix this"}
-                                  </span>{" "}
-                                  {COVERAGE_HELP[header].fix}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                        <tr>
-                          <td class="mono trunc">
-                            <a href={p.url} target="_blank" rel="noopener noreferrer">
-                              {p.url.replace(/^https?:\/\/[^/]+/, "") || "/"}
-                            </a>
-                            {p.canonicalMismatch && (
-                              <span class="chip"> canonical → {p.googleCanonical}</span>
-                            )}
-                          </td>
-                          <td class="mono">
-                            {p.lastCrawl ? p.lastCrawl.slice(0, 10) : "never"}
-                            {staleVerdict(p.lastCrawl) && (
-                              <span class="idx-stale" title="Google has not looked since this verdict — recheck before treating it as a live bug">
-                                {" "}stale
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        );
-      })}
+      {hosts.map(([host, s]) => (
+        <HostIndexing key={host} host={host} s={s} />
+      ))}
     </>
   );
 };
