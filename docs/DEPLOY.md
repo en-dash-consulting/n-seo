@@ -273,6 +273,15 @@ checks. The instance directory is never touched by an upgrade — that
 separation is the point of `docs/INSTANCE.md`. Roll back by checking out the
 previous engine commit and running `manage up`.
 
+**You will hear about a release without going to look.** The daily run's
+`update-check` step asks the registry once a day and writes
+`data/update-check.json`; the Settings page and `doctor` read it. That matters
+more on a deployed instance than on a laptop, because nobody is watching a
+terminal here — the notice is waiting on the dashboard the next time you open
+it. Do not add a separate scheduled `n-seo upgrade --check`; it would duplicate
+the step the daily run already performs. `modules.updateCheck.enabled: false`
+turns it off.
+
 ## Watching it
 
 | Where | What |

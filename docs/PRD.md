@@ -326,16 +326,27 @@ instead of a CLI, with the key read from `.env`.
   and both compare against the engine running now — so an upgrade stops the
   notice immediately rather than at the next daily run.
 
-## Feature: Weekly upgrade check on a schedule [planned]
+## Feature: Update checking is visible where people schedule things [shipped]
 
-The gate and the one-command upgrade shipped in 0.4.0; what remains is running
-the check on a schedule rather than by hand.
+The capability shipped in 0.4.1 and nobody needs a second scheduled job for
+it: `update-check` is a step in the daily run, `modules.updateCheck` is the
+only module enabled by default, and the Settings page and `doctor` read the
+file it writes. What was missing was saying so where someone goes to set
+scheduling up, which is exactly where they would otherwise invent a redundant
+weekly job.
 
-- Acceptance: a launchd plist and a cron line in `ops/templates/`, beside the
-  daily-run templates, running `n-seo upgrade --check` weekly. The check
-  reports; it never installs unattended.
-- Acceptance: documented beside the daily run in `docs/SCHEDULING.md`, and the
-  VM case (`manage upgrade`) in the Upgrades section of `docs/DEPLOY.md`.
+- Acceptance: `docs/SCHEDULING.md` names the `update-check` step, that
+  `modules.updateCheck` is on by default, and that the result appears on
+  Settings and in `doctor` — so a reader setting up scheduling does not add a
+  second job for it.
+- Acceptance: the Upgrades section of `docs/DEPLOY.md` says the same for a
+  deployed instance, where nobody is watching a terminal.
+- Acceptance: neither document suggests scheduling `n-seo upgrade --check`
+  separately; both say why that would duplicate the daily step.
+- Decided: no weekly scheduler template. A second job would make a duplicate
+  registry request and write the answer to a log nobody opens. The narrow case
+  it would serve — an install that never schedules the daily run — is a
+  contradiction of how n-seo is meant to work.
 
 # Epic: Onboarding, docs and quality [shipped]
 
