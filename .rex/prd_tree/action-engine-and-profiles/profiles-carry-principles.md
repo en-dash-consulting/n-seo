@@ -7,7 +7,8 @@ priority: "medium"
 startedAt: "2026-09-17T16:21:58.601Z"
 completedAt: "2026-09-17T16:21:58.601Z"
 endedAt: "2026-09-17T16:21:58.601Z"
-acceptanceCriteria: []
+acceptanceCriteria:
+  - "`principles` carries the part of a method that is not a number — a title, a body, and a kind. `hard` is a constraint an agent must not cross; `guide` is judgement it should apply. They render at the top of the action queue and on Settings, and `n-seo init` writes them into the instance's `CLAUDE.md`, so the owner and their agent read the same rules."
 description: "A profile's judgement, not just its numbers: principles carry a title, a body and a kind — 'hard' is a constraint an agent must not cross, 'guide' is judgement it should apply. They render at the top of the action queue and on Settings, and n-seo init writes them into the instance's CLAUDE.md so owner and agent read the same rules. Shipped 0.6.0."
 lastModified: "2026-09-17T16:21:58.612Z"
 ---

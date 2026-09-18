@@ -4,7 +4,9 @@ level: "task"
 title: "Run doctor at the end of a guided init"
 status: "pending"
 priority: "low"
-acceptanceCriteria: []
+acceptanceCriteria:
+  - "Guided init finishes by running ops/doctor.py and reporting what still needs setup."
+  - "The two Google console grants are named explicitly rather than left to be discovered on the first daily run."
 description: "Close the loop: report what still needs setup — the two Google console grants especially — rather than leaving the owner to discover it on the first daily run."
 lastModified: "2026-09-17T16:22:51.618Z"
 ---
