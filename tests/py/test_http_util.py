@@ -34,7 +34,17 @@ class CurlJsonTests(unittest.TestCase):
         with mock.patch.object(http_util.subprocess, "run", run):
             self.assertEqual(http_util.curl_json(["http://x"]), {"ok": 1})
         self.assertEqual(len(run.calls), 2)
-        self.assertEqual(run.calls[0][:2], ["curl", "-s"])
+        self.assertEqual(run.calls[0][:2], ["curl", "-sS"])
+
+    def test_http2_errors_retry(self):
+        # 16 and 92 are HTTP/2 connection and stream errors: a dropped
+        # connection, not a bad request. One used to fail the whole
+        # index-status step on the first URL it hit.
+        for code in (16, 92):
+            run = fake_run([(code, ""), (0, '{"ok": 1}')])
+            with mock.patch.object(http_util.subprocess, "run", run):
+                self.assertEqual(http_util.curl_json(["http://x"]), {"ok": 1})
+            self.assertEqual(len(run.calls), 2)
 
     def test_http_500_then_success(self):
         run = fake_run([(0, json.dumps({"error": {"code": 503, "message": "backend"}})), (0, '{"rows": []}')])

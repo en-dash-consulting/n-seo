@@ -13,6 +13,7 @@ Stdlib only — no pip installs needed.
 import json
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -33,7 +34,15 @@ UA = "Mozilla/5.0 (compatible; n-seo-probe/0.1)"
 
 
 def fetch(url, timeout=15):
-    return fetch_text(url, timeout=timeout, ua=UA)
+    """One retry when the site doesn't answer or answers 5xx. A cold origin
+    behind a CDN can take longer than the timeout on its first request of the
+    morning, and without the retry that read as robots.txt or sitemap.xml
+    REGRESSED. A site that is really down fails both tries."""
+    status, body = fetch_text(url, timeout=timeout, ua=UA)
+    if status is None or status >= 500:
+        time.sleep(5)
+        status, body = fetch_text(url, timeout=timeout, ua=UA)
+    return status, body
 
 
 class MetaParser(HTMLParser):
