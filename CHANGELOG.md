@@ -21,6 +21,13 @@ Nothing yet.
 - **A curl failure now says why.** Requests ran with `-s`, which silences
   curl's own error line along with the progress meter, so the failure read
   `curl exit 16: ` with nothing after it. They run with `-sS` now.
+- **A slow first answer no longer reads as a regression.** The site probe
+  fetched each file once with a 15-second limit. A cold origin behind a CDN
+  can miss that on its first request of the morning, and the run then
+  alerted `robots.txt REGRESSED` for a site serving it fine. It happened
+  every few days to one site. The probe now tries once more, five seconds
+  later, when there is no answer or a 5xx. A site that is really down fails
+  both tries and is still reported.
 
 ## [0.7.0] - 2026-09-18
 
