@@ -8,6 +8,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.7.1] - 2026-09-28
+
+### Fixed
+- **One HTTP/2 hiccup no longer fails the whole index-status step.** The
+  retry helper only retried the curl exits it knew about, and treated every
+  other one as a bad request. A dropped HTTP/2 connection (curl exit 16)
+  mid-run failed the first URL Inspection call it hit, which took the step
+  down, and the daily run's one step-level retry hit the same thing. Exits
+  16 and 92 (HTTP/2 connection and stream errors) and 55 (send failure) now
+  get the same per-request backoff as timeouts and resets.
+- **A curl failure now says why.** Requests ran with `-s`, which silences
+  curl's own error line along with the progress meter, so the failure read
+  `curl exit 16: ` with nothing after it. They run with `-sS` now.
+
 ## [0.7.0] - 2026-09-18
 
 ### Added
@@ -537,7 +551,9 @@ First public release.
   `n-seo upgrade` gate — without changing the reported test counts, and an
   in-place install ran those assertions against the owner's live data.
 
-[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/en-dash-consulting/n-seo/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/en-dash-consulting/n-seo/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/en-dash-consulting/n-seo/compare/v0.4.1...v0.5.0

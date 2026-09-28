@@ -14,9 +14,10 @@ import subprocess
 import sys
 import time
 
-# curl exits worth another try: 6/7 resolve+connect, 28 timeout,
-# 35 TLS handshake, 52 empty reply, 56 recv error.
-RETRYABLE_EXITS = {6, 7, 28, 35, 52, 56}
+# curl exits worth another try: 6/7 resolve+connect, 16 HTTP/2 framing,
+# 28 timeout, 35 TLS handshake, 52 empty reply, 55 send error,
+# 56 recv error, 92 HTTP/2 stream reset.
+RETRYABLE_EXITS = {6, 7, 16, 28, 35, 52, 55, 56, 92}
 TIMEOUT = 180
 ATTEMPTS = 4
 
@@ -29,7 +30,8 @@ def curl_json(args, *, timeout=TIMEOUT, attempts=ATTEMPTS, label=""):
     """
     last = None
     for attempt in range(1, attempts + 1):
-        p = subprocess.run(["curl", "-s", "--max-time", str(timeout), *args],
+        # -sS: no progress meter, but curl still says why it failed.
+        p = subprocess.run(["curl", "-sS", "--max-time", str(timeout), *args],
                            capture_output=True, text=True)
         if p.returncode == 0:
             try:
